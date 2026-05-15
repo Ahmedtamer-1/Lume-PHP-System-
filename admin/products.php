@@ -1,0 +1,264 @@
+<?php
+/**
+ * Admin — Products & Variants (Single-Page AJAX)
+ */
+require_once __DIR__ . '/includes/auth.php';
+$pageTitle = 'Products';
+$adminPage = 'products';
+$categories = get_categories();
+$currency = currency_symbol();
+require_once __DIR__ . '/includes/header.php';
+?>
+
+<div id="alert-container"></div>
+
+<!-- ═══ LIST VIEW ═══ -->
+<div id="view-list">
+    <div class="admin-toolbar">
+        <div class="admin-toolbar__left">
+            <span style="font-size:.85rem;color:var(--a-muted)" id="product-count">Loading…</span>
+        </div>
+        <div class="admin-toolbar__right">
+            <button class="admin-btn admin-btn--primary" onclick="showProductForm(null)">
+                <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Product
+            </button>
+        </div>
+    </div>
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="products-tbody"><tr><td colspan="6" style="text-align:center;padding:40px;color:var(--a-muted)">Loading…</td></tr></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ═══ PRODUCT FORM VIEW ═══ -->
+<div id="view-form" style="display:none">
+    <div style="margin-bottom:20px;display:flex;align-items:center;gap:12px">
+        <button class="admin-btn admin-btn--sm" style="opacity:.7" onclick="showListView()">← Back to Products</button>
+        <h2 style="font-size:1rem;color:var(--a-text,#eee);margin:0" id="form-title">Add Product</h2>
+    </div>
+    <div style="max-width:720px">
+        <form id="product-form" class="admin-form">
+            <input type="hidden" name="id" value="0">
+            <input type="hidden" name="existing_image" value="">
+
+            <div class="admin-form__group">
+                <label>Product Name *</label>
+                <input type="text" name="name" required>
+            </div>
+            <div class="admin-form__group">
+                <label>Slug</label>
+                <input type="text" name="slug">
+                <span class="admin-form__hint">Leave empty to auto-generate</span>
+            </div>
+            <div class="admin-form__row">
+                <div class="admin-form__group">
+                    <label>Category</label>
+                    <select name="category_id">
+                        <option value="">— No category —</option>
+                        <?php foreach ($categories as $c): ?>
+                        <option value="<?= $c['id'] ?>"><?= h($c['name']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="admin-form__group">
+                    <label>SKU</label>
+                    <input type="text" name="sku">
+                </div>
+            </div>
+            <div class="admin-form__group">
+                <label>Description</label>
+                <textarea name="description"></textarea>
+            </div>
+            <div class="admin-form__row-3">
+                <div class="admin-form__group">
+                    <label>Price (EGP) *</label>
+                    <input type="number" name="price" step="0.01" min="0" required>
+                </div>
+                <div class="admin-form__group">
+                    <label>Sale Price</label>
+                    <input type="number" name="sale_price" step="0.01" min="0">
+                </div>
+                <div class="admin-form__group">
+                    <label>Stock</label>
+                    <input type="number" name="stock" min="0" value="0">
+                </div>
+            </div>
+
+            <!-- Main Image via Media Library -->
+            <div class="admin-form__group">
+                <label>Product Image</label>
+                <div class="admin-img-upload">
+                    <div class="admin-img-preview" id="main-img-preview">No image</div>
+                    <div>
+                        <button type="button" class="admin-btn admin-btn--sm" onclick="openMediaPicker('main_image')">📷 Choose from Media</button>
+                        <span class="admin-form__hint" style="margin-top:6px;display:block">Select from your media library</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gallery -->
+            <div class="admin-form__group">
+                <label>Gallery Images</label>
+                <div id="gallery-preview" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+                    <span style="color:var(--a-muted);font-size:.75rem">No gallery images</span>
+                </div>
+                <button type="button" class="admin-btn admin-btn--sm" onclick="openMediaPicker('gallery')">📷 Add from Media</button>
+            </div>
+
+            <!-- Size Chart -->
+            <div class="admin-form__group">
+                <label>Size Chart Image</label>
+                <div class="admin-img-upload">
+                    <div class="admin-img-preview" id="sizechart-img-preview" style="max-width:200px">No size chart</div>
+                    <div>
+                        <button type="button" class="admin-btn admin-btn--sm" onclick="openMediaPicker('size_chart')">📐 Choose Size Chart</button>
+                        <button type="button" class="admin-btn admin-btn--sm" onclick="removeSizeChart()" style="margin-left:4px;color:var(--a-danger,#c44)">✕ Remove</button>
+                        <span class="admin-form__hint" style="margin-top:6px;display:block">Image shown in the size chart popup on product page</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex;gap:24px;flex-wrap:wrap">
+                <div class="admin-form__check">
+                    <input type="checkbox" name="is_featured" id="is_featured">
+                    <label for="is_featured">Featured</label>
+                </div>
+                <div class="admin-form__check">
+                    <input type="checkbox" name="is_active" id="is_active" checked>
+                    <label for="is_active">Active</label>
+                </div>
+                <div class="admin-form__check">
+                    <input type="checkbox" name="has_variants" id="has_variants">
+                    <label for="has_variants">Has variants</label>
+                </div>
+            </div>
+
+            <div style="display:flex;gap:12px;margin-top:12px">
+                <button type="submit" class="admin-btn admin-btn--primary">Save Product</button>
+                <button type="button" class="admin-btn" onclick="showListView()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══ VARIANTS VIEW ═══ -->
+<div id="view-variants" style="display:none">
+    <div style="margin-bottom:20px">
+        <button class="admin-btn admin-btn--sm" style="opacity:.7" onclick="showListView()">← Back to Products</button>
+    </div>
+    <h2 style="font-size:1rem;margin-bottom:4px;color:var(--a-text,#eee)">Variants for: <span id="variant-product-name"></span></h2>
+    <p style="font-size:.75rem;color:var(--a-muted);margin-bottom:24px" id="variant-base-info"></p>
+
+    <div class="admin-table-wrap" style="margin-bottom:32px">
+        <table class="admin-table">
+            <thead><tr><th>Size</th><th>Color</th><th>SKU</th><th>Price Override</th><th>Stock</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="variants-tbody"><tr><td colspan="7" style="text-align:center;padding:30px;color:var(--a-muted)">Loading…</td></tr></tbody>
+        </table>
+    </div>
+
+    <!-- Variant Form -->
+    <div class="admin-variant-form">
+        <h3 class="admin-variant-form__title" id="variant-form-title">+ Add Variant</h3>
+        <form id="variant-form">
+            <input type="hidden" name="media_image_path" value="">
+            <div class="admin-variant-form__row">
+                <div class="admin-variant-form__group">
+                    <label>Size</label>
+                    <input type="text" name="size" placeholder="e.g. S, M, L, XL">
+                </div>
+                <div class="admin-variant-form__group">
+                    <label>Color Name</label>
+                    <input type="text" name="color_name" placeholder="e.g. Black, Sand">
+                </div>
+                <div class="admin-variant-form__group">
+                    <label>Color Hex</label>
+                    <input type="color" name="color_hex" value="#888888" style="height:34px;padding:2px">
+                </div>
+            </div>
+            <div class="admin-variant-form__row">
+                <div class="admin-variant-form__group">
+                    <label>SKU</label>
+                    <input type="text" name="sku" placeholder="e.g. LME-TP-001-M">
+                </div>
+                <div class="admin-variant-form__group">
+                    <label>Price Override (EGP)</label>
+                    <input type="number" name="price_override" step="0.01" min="0" placeholder="Blank = base price">
+                </div>
+                <div class="admin-variant-form__group">
+                    <label>Stock</label>
+                    <input type="number" name="stock" min="0" value="0">
+                </div>
+                <div class="admin-variant-form__group">
+                    <label>Sort Order</label>
+                    <input type="number" name="sort_order" min="0" value="0">
+                </div>
+            </div>
+            <div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-top:8px">
+                <div>
+                    <label style="font-size:.75rem;color:var(--a-muted);display:block;margin-bottom:6px">Variant Image</label>
+                    <div id="variant-img-preview" style="margin-bottom:6px"><span style="color:var(--a-muted);font-size:.75rem">None</span></div>
+                    <button type="button" class="admin-btn admin-btn--sm" onclick="openMediaPicker('variant')">📷 Choose Image</button>
+                </div>
+                <div class="admin-form__check">
+                    <input type="checkbox" name="is_active" id="v_is_active" checked>
+                    <label for="v_is_active">Active</label>
+                </div>
+                <button type="submit" class="admin-btn admin-btn--primary">Save Variant</button>
+                <button type="button" class="admin-btn" id="variant-cancel-btn" style="display:none" onclick="resetVariantForm()">Cancel</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Color Galleries Section -->
+    <div style="margin-top:32px;padding-top:24px;border-top:1px solid var(--a-border)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <h3 style="font-size:.95rem;color:var(--a-text,#eee);margin:0">🎨 Color Image Galleries</h3>
+            <button class="admin-btn admin-btn--sm admin-btn--primary" onclick="saveColorGalleries()">💾 Save Galleries</button>
+        </div>
+        <p style="font-size:.72rem;color:var(--a-muted);margin-bottom:16px">Add multiple images per color. These images will be shown when a customer selects that color on the product page.</p>
+        <div id="color-galleries-container">
+            <p style="color:var(--a-muted);font-size:.8rem">Add variants with colors first, then manage their galleries here.</p>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ MEDIA PICKER MODAL ═══ -->
+<div id="media-picker-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:300;background:rgba(0,0,0,.6);justify-content:center;align-items:center">
+    <div style="width:90%;max-width:900px;max-height:85vh;background:var(--a-surface,#1a1a1a);border:1px solid var(--a-border);border-radius:var(--a-radius,6px);display:flex;flex-direction:column;overflow:hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--a-border)">
+            <h3 style="font-size:.9rem;font-weight:600;color:var(--a-text,#eee)" id="media-picker-title">Select from Media Library</h3>
+            <button onclick="closeMediaPicker()" style="background:none;border:none;color:var(--a-muted);font-size:1.2rem;cursor:pointer">✕</button>
+        </div>
+        <div style="padding:12px 20px;border-bottom:1px solid var(--a-border);display:flex;align-items:center;gap:12px">
+            <input type="search" id="media-search-input" placeholder="Search media…" style="flex:1;max-width:300px;padding:8px 12px;background:var(--a-bg,#111);border:1px solid var(--a-border);border-radius:4px;color:var(--a-text,#eee);font-size:.82rem;outline:none">
+            <span id="media-selected-count" style="font-size:.75rem;color:var(--a-accent);display:none">0 selected</span>
+            <button id="media-done-btn" class="admin-btn admin-btn--sm admin-btn--primary" style="display:none;margin-left:auto" onclick="confirmMultiSelect()">✓ Add Selected</button>
+        </div>
+        <div id="media-picker-grid" style="padding:20px;overflow-y:auto;flex:1;display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px">
+            <p style="color:var(--a-muted);grid-column:1/-1;text-align:center">Loading…</p>
+        </div>
+    </div>
+</div>
+
+<style>
+.media-picker__item{aspect-ratio:1;overflow:hidden;border-radius:4px;cursor:pointer;position:relative;border:2px solid transparent;transition:all .2s;background:var(--a-bg,#111)}
+.media-picker__item:hover{border-color:var(--a-accent);transform:translateY(-2px)}
+.media-picker__item.selected{border-color:var(--a-accent);box-shadow:0 0 12px rgba(200,149,108,.3)}
+.media-picker__item img{width:100%;height:100%;object-fit:cover;display:block}
+.media-picker__item span{position:absolute;bottom:0;left:0;right:0;padding:4px 6px;background:linear-gradient(transparent,rgba(0,0,0,.8));font-size:.55rem;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.media-picker__check{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.5);border:2px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:.6rem;color:transparent;transition:all .2s}
+.media-picker__check.checked{background:var(--a-accent,#c8956c);border-color:var(--a-accent,#c8956c);color:#fff}
+</style>
+
+<script>
+window.PRODUCTS_API = '<?= SITE_URL ?>/api/admin-products.php';
+window.MEDIA_API = '<?= SITE_URL ?>/api/media.php';
+window.BASE_URL = '<?= SITE_URL ?>';
+window.CURRENCY = '<?= h($currency) ?>';
+</script>
+<script src="<?= SITE_URL ?>/admin/assets/js/products.js?v=<?= time() ?>"></script>
+
+<?php require_once __DIR__ . '/includes/footer.php'; ?>

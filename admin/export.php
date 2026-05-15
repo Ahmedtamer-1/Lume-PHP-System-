@@ -1,0 +1,204 @@
+<?php
+/**
+ * Admin — Export & Import Data
+ */
+require_once __DIR__ . '/includes/auth.php';
+$pageTitle = 'Export / Import';
+$adminPage = 'export';
+$success = '';
+$error   = '';
+
+// ── EXPORT ──
+if (isset($_GET['export'])) {
+    $type = $_GET['export'];
+    $filename = 'lumeegy-' . $type . '-' . date('Y-m-d') . '.csv';
+
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    $out = fopen('php://output', 'w');
+
+    switch ($type) {
+        case 'products':
+            fputcsv($out, ['ID', 'Name', 'Slug', 'Category', 'Price', 'Sale Price', 'SKU', 'Stock', 'Featured', 'Active', 'Image', 'Description', 'Created']);
+            $rows = db()->query(
+                'SELECT p.*, c.name AS category_name FROM products p LEFT JOIN categories c ON c.id = p.category_id ORDER BY p.id'
+            )->fetchAll();
+            foreach ($rows as $r) {
+                fputcsv($out, [
+                    $r['id'], $r['name'], $r['slug'], $r['category_name'] ?? '',
+                    $r['price'], $r['sale_price'] ?? '', $r['sku'] ?? '', $r['stock'],
+                    $r['is_featured'], $r['is_active'], $r['image'] ?? '',
+                    $r['description'] ?? '', $r['created_at']
+                ]);
+            }
+            break;
+
+        case 'orders':
+            fputcsv($out, ['Order #', 'Customer', 'Email', 'Status', 'Subtotal', 'Shipping', 'Discount', 'Total', 'Payment', 'City', 'Country', 'Date']);
+            $rows = db()->query('SELECT * FROM orders ORDER BY created_at DESC')->fetchAll();
+            foreach ($rows as $r) {
+                fputcsv($out, [
+                    $r['order_number'], $r['shipping_name'] ?? '',
+                    $r['guest_email'] ?? '', $r['status'],
+                    $r['subtotal'], $r['shipping_cost'], $r['discount'], $r['total'],
+                    $r['payment_method'] ?? '', $r['shipping_city'] ?? '',
+                    $r['shipping_country'] ?? '', $r['created_at']
+                ]);
+            }
+            break;
+
+        case 'customers':
+            fputcsv($out, ['ID', 'First Name', 'Last Name', 'Email', 'Role', 'Verified', 'Orders', 'Total Spent', 'Joined']);
+            $rows = db()->query(
+                'SELECT u.*,
+                 (SELECT COUNT(*) FROM orders o WHERE o.user_id = u.id) AS order_count,
+                 (SELECT COALESCE(SUM(o.total),0) FROM orders o WHERE o.user_id = u.id AND o.status NOT IN ("cancelled","refunded")) AS total_spent
+                 FROM users u ORDER BY u.created_at DESC'
+            )->fetchAll();
+            foreach ($rows as $r) {
+                fputcsv($out, [
+                    $r['id'], $r['first_name'], $r['last_name'], $r['email'],
+                    $r['role'], $r['email_verified'], $r['order_count'],
+                    $r['total_spent'], $r['created_at']
+                ]);
+            }
+            break;
+
+        case 'newsletter':
+            fputcsv($out, ['Email', 'Status', 'Source', 'Subscribed At']);
+            $rows = db()->query('SELECT * FROM newsletter_subscribers ORDER BY subscribed_at DESC')->fetchAll();
+            foreach ($rows as $r) {
+                fputcsv($out, [$r['email'], $r['status'], $r['source'] ?? '', $r['subscribed_at']]);
+            }
+            break;
+
+        default:
+            fputcsv($out, ['Error: Unknown export type']);
+    }
+
+    fclose($out);
+    exit;
+}
+
+// ── IMPORT PRODUCTS ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
+    if ($_FILES['csv_file']['error'] !== UPLOAD_ERR_OK) {
+        $error = 'File upload failed.';
+    } else {
+        $ext = strtolower(pathinfo($_FILES['csv_file']['name'], PATHINFO_EXTENSION));
+        if ($ext !== 'csv') {
+            $error = 'Please upload a CSV file.';
+        } else {
+            $handle = fopen($_FILES['csv_file']['tmp_name'], 'r');
+            $header = fgetcsv($handle); // Skip header row
+            $imported = 0;
+            $skipped  = 0;
+
+            while (($row = fgetcsv($handle)) !== false) {
+                if (count($row) < 5) { $skipped++; continue; }
+
+                $name       = trim($row[0] ?? '');
+                $slug       = trim($row[1] ?? '');
+                $category   = trim($row[2] ?? '');
+                $price      = (float)($row[3] ?? 0);
+                $salePrice  = trim($row[4] ?? '') !== '' ? (float)$row[4] : null;
+                $sku        = trim($row[5] ?? '');
+                $stock      = (int)($row[6] ?? 0);
+                $isFeatured = (int)($row[7] ?? 0);
+                $description= trim($row[8] ?? '');
+
+                if (!$name || $price <= 0) { $skipped++; continue; }
+
+                // Auto-slug
+                if (!$slug) {
+                    $slug = strtolower(preg_replace('/[^a-z0-9]+/i', '-', $name));
+                    $slug = trim($slug, '-');
+                }
+
+                // Find or skip category
+                $catId = null;
+                if ($category) {
+                    $catStmt = db()->prepare('SELECT id FROM categories WHERE name = ? OR slug = ?');
+                    $catStmt->execute([$category, $category]);
+                    $catRow = $catStmt->fetch();
+                    $catId = $catRow ? $catRow['id'] : null;
+                }
+
+                // Check duplicate slug
+                $exists = db()->prepare('SELECT id FROM products WHERE slug = ?');
+                $exists->execute([$slug]);
+                if ($exists->fetch()) {
+                    $slug .= '-' . bin2hex(random_bytes(2));
+                }
+
+                db()->prepare(
+                    'INSERT INTO products (category_id, name, slug, description, price, sale_price, sku, stock, is_featured, is_active)
+                     VALUES (?,?,?,?,?,?,?,?,?,1)'
+                )->execute([$catId, $name, $slug, $description, $price, $salePrice, $sku, $stock, $isFeatured]);
+                $imported++;
+            }
+            fclose($handle);
+            $success = "Imported {$imported} products" . ($skipped ? ", skipped {$skipped} rows" : '') . '.';
+        }
+    }
+}
+
+require_once __DIR__ . '/includes/header.php';
+?>
+
+<?php if ($success): ?><div class="admin-alert admin-alert--success"><?= h($success) ?></div><?php endif; ?>
+<?php if ($error): ?><div class="admin-alert admin-alert--error"><?= h($error) ?></div><?php endif; ?>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+    <!-- EXPORT -->
+    <div style="background:var(--a-surface);border:1px solid var(--a-border);border-radius:var(--a-radius);padding:32px">
+        <h2 style="font-size:1rem;font-weight:600;margin-bottom:4px">Export Data</h2>
+        <p style="font-size:.8rem;color:var(--a-muted);margin-bottom:24px">Download your data as CSV files.</p>
+
+        <div style="display:flex;flex-direction:column;gap:12px">
+            <a href="<?= SITE_URL ?>/admin/export.php?export=products" class="admin-btn">
+                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export Products
+            </a>
+            <a href="<?= SITE_URL ?>/admin/export.php?export=orders" class="admin-btn">
+                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export Orders
+            </a>
+            <a href="<?= SITE_URL ?>/admin/export.php?export=customers" class="admin-btn">
+                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export Customers
+            </a>
+            <a href="<?= SITE_URL ?>/admin/export.php?export=newsletter" class="admin-btn">
+                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export Newsletter Subscribers
+            </a>
+        </div>
+    </div>
+
+    <!-- IMPORT -->
+    <div style="background:var(--a-surface);border:1px solid var(--a-border);border-radius:var(--a-radius);padding:32px">
+        <h2 style="font-size:1rem;font-weight:600;margin-bottom:4px">Import Products</h2>
+        <p style="font-size:.8rem;color:var(--a-muted);margin-bottom:24px">Upload a CSV file to bulk-add products.</p>
+
+        <form method="post" enctype="multipart/form-data" class="admin-form">
+            <div class="admin-form__group">
+                <label>CSV File</label>
+                <input type="file" name="csv_file" accept=".csv" required>
+            </div>
+            <button type="submit" class="admin-btn admin-btn--primary">
+                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Import Products
+            </button>
+        </form>
+
+        <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--a-border)">
+            <p style="font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--a-gold);margin-bottom:8px">CSV Format</p>
+            <p style="font-size:.78rem;color:var(--a-muted);line-height:1.6">
+                Columns: <code style="background:var(--a-bg);padding:2px 6px;border-radius:3px;font-size:.72rem">Name, Slug, Category, Price, Sale Price, SKU, Stock, Featured (0/1), Description</code>
+            </p>
+            <p style="font-size:.72rem;color:var(--a-muted);margin-top:8px">First row should be headers (it's skipped). Category should match an existing category name or slug.</p>
+        </div>
+    </div>
+</div>
+
+<?php require_once __DIR__ . '/includes/footer.php'; ?>

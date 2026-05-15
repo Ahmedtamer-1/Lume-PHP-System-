@@ -1,0 +1,527 @@
+/**
+ * Admin Products & Variants — AJAX Manager
+ */
+const API = window.PRODUCTS_API;
+const MEDIA_API = window.MEDIA_API;
+const BASE = window.BASE_URL;
+let allProducts = [];
+let currentProductId = null;
+let galleryPaths = [];
+let allMedia = [];
+let sizeChartPath = '';
+let colorGalleries = {}; // { colorName: [path, ...] }
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', () => {
+    loadProducts();
+    loadMedia();
+    document.getElementById('product-form').addEventListener('submit', saveProduct);
+    document.getElementById('variant-form').addEventListener('submit', saveVariant);
+    document.getElementById('media-search-input')?.addEventListener('input', function(){
+        renderMediaGrid(this.value.trim().toLowerCase());
+    });
+});
+
+// ══════════════════════════════════════
+// PRODUCTS
+// ══════════════════════════════════════
+function loadProducts(){
+    fetch(API+'?action=list_products',{headers:{'X-Requested-With':'XMLHttpRequest'}})
+    .then(r=>r.json()).then(d=>{
+        if(!d.success)return;
+        allProducts=d.products;
+        document.getElementById('product-count').textContent=d.products.length+' products';
+        renderProductList();
+    });
+}
+
+function renderProductList(){
+    const tb=document.getElementById('products-tbody');
+    if(!allProducts.length){
+        tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--a-muted)">No products yet. Click "Add Product" to create one.</td></tr>';
+        return;
+    }
+    tb.innerHTML=allProducts.map(p=>{
+        const img=p.image_url?`<img src="${p.image_url}" alt="" class="admin-table__img">`:`<div class="admin-table__img" style="display:flex;align-items:center;justify-content:center;color:var(--a-muted)">—</div>`;
+        const price=p.sale_price?`<span style="color:var(--a-accent)">${money(p.sale_price)}</span><br><span style="font-size:.72rem;color:var(--a-muted);text-decoration:line-through">${money(p.price)}</span>`:money(p.price);
+        const star=p.is_featured==1?'<span style="color:var(--a-gold);font-size:.65rem;margin-left:4px">★</span>':'';
+        const badge=p.is_active==1?'<span class="admin-badge admin-badge--active">Active</span>':'<span class="admin-badge admin-badge--inactive">Inactive</span>';
+        const vBtn=p.has_variants==1?`<button class="admin-btn admin-btn--sm" style="color:var(--a-accent)" onclick="openVariants(${p.id})">Variants</button>`:'';
+        return `<tr>
+            <td><div class="admin-table__product">${img}<div><strong>${esc(p.name)}</strong>${star}<br><span style="font-size:.72rem;color:var(--a-muted)">${esc(p.sku||'')}</span></div></div></td>
+            <td style="color:var(--a-muted)">${esc(p.category_name||'—')}</td>
+            <td>${price}</td>
+            <td>${parseInt(p.stock)}</td>
+            <td>${badge}</td>
+            <td><div class="admin-table__actions">
+                <button class="admin-btn admin-btn--sm" onclick="editProduct(${p.id})">Edit</button>
+                ${vBtn}
+                <button class="admin-btn admin-btn--sm admin-btn--danger" onclick="deleteProduct(${p.id})">Delete</button>
+            </div></td>
+        </tr>`;
+    }).join('');
+}
+
+function showProductForm(product){
+    document.getElementById('view-list').style.display='none';
+    document.getElementById('view-form').style.display='block';
+    document.getElementById('view-variants').style.display='none';
+    const f=document.getElementById('product-form');
+    f.reset();
+    galleryPaths=[];
+    sizeChartPath='';
+    if(product){
+        document.getElementById('form-title').textContent='Edit Product';
+        f.querySelector('[name=id]').value=product.id;
+        f.querySelector('[name=name]').value=product.name||'';
+        f.querySelector('[name=slug]').value=product.slug||'';
+        f.querySelector('[name=category_id]').value=product.category_id||'';
+        f.querySelector('[name=description]').value=product.description||'';
+        f.querySelector('[name=price]').value=product.price||'';
+        f.querySelector('[name=sale_price]').value=product.sale_price||'';
+        f.querySelector('[name=sku]').value=product.sku||'';
+        f.querySelector('[name=stock]').value=product.stock||0;
+        f.querySelector('[name=existing_image]').value=product.image||'';
+        if(product.is_featured==1) f.querySelector('[name=is_featured]').checked=true;
+        if(product.is_active==1) f.querySelector('[name=is_active]').checked=true;
+        if(product.has_variants==1) f.querySelector('[name=has_variants]').checked=true;
+        // Show current image
+        const prev=document.getElementById('main-img-preview');
+        if(product.image_url) prev.innerHTML=`<img src="${product.image_url}" alt="">`;
+        else prev.innerHTML='No image';
+        // Gallery
+        galleryPaths=product.gallery_arr||[];
+        renderGalleryPreview();
+        // Size chart
+        sizeChartPath=product.size_chart||'';
+        renderSizeChartPreview();
+    } else {
+        document.getElementById('form-title').textContent='Add Product';
+        f.querySelector('[name=id]').value='0';
+        f.querySelector('[name=is_active]').checked=true;
+        document.getElementById('main-img-preview').innerHTML='No image';
+        renderGalleryPreview();
+        renderSizeChartPreview();
+    }
+}
+
+function editProduct(id){
+    fetch(API+'?action=get_product&id='+id,{headers:{'X-Requested-With':'XMLHttpRequest'}})
+    .then(r=>r.json()).then(d=>{
+        if(d.success) showProductForm(d.product);
+    });
+}
+
+function saveProduct(e){
+    e.preventDefault();
+    const f=e.target;
+    const fd=new FormData(f);
+    fd.append('action','save_product');
+    fd.set('gallery_paths',JSON.stringify(galleryPaths));
+    fd.set('size_chart', sizeChartPath);
+    // checkboxes
+    if(!f.querySelector('[name=is_featured]').checked) fd.delete('is_featured');
+    if(!f.querySelector('[name=is_active]').checked) fd.delete('is_active');
+    if(!f.querySelector('[name=has_variants]').checked) fd.delete('has_variants');
+
+    fetch(API,{method:'POST',body:fd,headers:{'X-Requested-With':'XMLHttpRequest'}})
+    .then(r=>r.json()).then(d=>{
+        if(d.success){
+            showAlert(d.message,'success');
+            showListView();
+            loadProducts();
+        } else {
+            showAlert(d.message||'Error saving product','error');
+        }
+    });
+}
+
+function deleteProduct(id){
+    if(!confirm('Delete this product and all its variants?'))return;
+    const fd=new FormData();
+    fd.append('action','delete_product');
+    fd.append('id',id);
+    fetch(API,{method:'POST',body:fd,headers:{'X-Requested-With':'XMLHttpRequest'}})
+    .then(r=>r.json()).then(d=>{
+        if(d.success){showAlert('Product deleted.','success');loadProducts();}
+    });
+}
+
+function showListView(){
+    document.getElementById('view-list').style.display='block';
+    document.getElementById('view-form').style.display='none';
+    document.getElementById('view-variants').style.display='none';
+}
+
+// ── Gallery management ──
+function renderGalleryPreview(){
+    const c=document.getElementById('gallery-preview');
+    if(!galleryPaths.length){c.innerHTML='<span style="color:var(--a-muted);font-size:.75rem">No gallery images</span>';return;}
+    c.innerHTML=galleryPaths.map((p,i)=>`<div style="position:relative;display:inline-block">
+        <img src="${BASE}/${p}" style="width:72px;height:72px;object-fit:cover;border-radius:4px;border:1px solid var(--a-border)">
+        <button type="button" onclick="removeGalleryImage(${i})" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;background:var(--a-danger,#c44);color:#fff;border:none;border-radius:50%;font-size:.6rem;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>`).join('');
+}
+function removeGalleryImage(i){galleryPaths.splice(i,1);renderGalleryPreview();}
+
+// ── Size chart management ──
+function renderSizeChartPreview(){
+    const prev=document.getElementById('sizechart-img-preview');
+    if(sizeChartPath){
+        prev.innerHTML=`<img src="${BASE}/${sizeChartPath}" alt="Size Chart" style="max-width:180px;border-radius:4px">`;
+    } else {
+        prev.innerHTML='No size chart';
+    }
+}
+function removeSizeChart(){
+    sizeChartPath='';
+    renderSizeChartPreview();
+}
+
+// ══════════════════════════════════════
+// VARIANTS
+// ══════════════════════════════════════
+let variantList=[];
+let editingVariantId=0;
+
+function openVariants(productId){
+    currentProductId=productId;
+    const p=allProducts.find(x=>x.id==productId);
+    document.getElementById('view-list').style.display='none';
+    document.getElementById('view-form').style.display='none';
+    document.getElementById('view-variants').style.display='block';
+    document.getElementById('variant-product-name').textContent=p?p.name:'Product';
+    document.getElementById('variant-base-info').textContent=p?`Base price: ${money(p.price)} · SKU: ${p.sku||'—'}`:'';
+    resetVariantForm();
+    loadVariants();
+}
+
+function loadVariants(){
+    fetch(API+'?action=get_variants&product_id='+currentProductId,{headers:{'X-Requested-With':'XMLHttpRequest'}})
+    .then(r=>r.json()).then(d=>{
+        if(!d.success)return;
+        variantList=d.variants;
+        renderVariantTable();
+        // Load color galleries AFTER variants are ready
+        loadColorGalleries();
+    });
+}
+
+function renderVariantTable(){
+    const tb=document.getElementById('variants-tbody');
+    if(!variantList.length){
+        tb.innerHTML='<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--a-muted)">No variants yet. Add one below.</td></tr>';
+        return;
+    }
+    tb.innerHTML=variantList.map(v=>{
+        const colorDot=v.color_hex?`<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${esc(v.color_hex)};border:1px solid rgba(255,255,255,.15);vertical-align:middle;margin-right:4px"></span>`:'';
+        const imgThumb=v.image_url?`<img src="${v.image_url}" style="width:28px;height:28px;object-fit:cover;border-radius:3px;margin-top:4px;display:block">`:'';
+        const badge=v.is_active==1?'<span class="admin-badge admin-badge--active">Active</span>':'<span class="admin-badge admin-badge--inactive">Inactive</span>';
+        const priceCol=v.price_override!==null?money(v.price_override):'<span style="color:var(--a-muted)">—</span>';
+        return `<tr>
+            <td>${esc(v.size||'—')}</td>
+            <td>${v.color_name?colorDot+esc(v.color_name):'—'}${imgThumb}</td>
+            <td style="font-size:.75rem;color:var(--a-muted)">${esc(v.sku||'—')}</td>
+            <td>${priceCol}</td>
+            <td>${parseInt(v.stock)}</td>
+            <td>${badge}</td>
+            <td><div class="admin-table__actions">
+                <button class="admin-btn admin-btn--sm" onclick="editVariant(${v.id})">Edit</button>
+                <button class="admin-btn admin-btn--sm admin-btn--danger" onclick="deleteVariant(${v.id})">Delete</button>
+            </div></td>
+        </tr>`;
+    }).join('');
+}
+
+function editVariant(id){
+    fetch(API+'?action=get_variant&id='+id+'&product_id='+currentProductId,{headers:{'X-Requested-With':'XMLHttpRequest'}})
+    .then(r=>r.json()).then(d=>{
+        if(!d.success||!d.variant)return;
+        const v=d.variant;
+        editingVariantId=v.id;
+        const f=document.getElementById('variant-form');
+        f.querySelector('[name=size]').value=v.size||'';
+        f.querySelector('[name=color_name]').value=v.color_name||'';
+        f.querySelector('[name=color_hex]').value=v.color_hex||'#888888';
+        f.querySelector('[name=sku]').value=v.sku||'';
+        f.querySelector('[name=price_override]').value=v.price_override??'';
+        f.querySelector('[name=stock]').value=v.stock||0;
+        f.querySelector('[name=sort_order]').value=v.sort_order||0;
+        f.querySelector('[name=is_active]').checked=v.is_active==1;
+        f.querySelector('[name=media_image_path]').value=v.image||'';
+        // Show selected image
+        const prev=document.getElementById('variant-img-preview');
+        if(v.image_url) prev.innerHTML=`<img src="${v.image_url}" style="width:60px;height:60px;object-fit:cover;border-radius:4px">`;
+        else prev.innerHTML='<span style="color:var(--a-muted);font-size:.75rem">None</span>';
+        document.getElementById('variant-form-title').textContent='✎ Edit Variant';
+        document.getElementById('variant-cancel-btn').style.display='inline-block';
+    });
+}
+
+function resetVariantForm(){
+    editingVariantId=0;
+    const f=document.getElementById('variant-form');
+    f.reset();
+    f.querySelector('[name=is_active]').checked=true;
+    f.querySelector('[name=color_hex]').value='#888888';
+    f.querySelector('[name=media_image_path]').value='';
+    document.getElementById('variant-img-preview').innerHTML='<span style="color:var(--a-muted);font-size:.75rem">None</span>';
+    document.getElementById('variant-form-title').textContent='+ Add Variant';
+    document.getElementById('variant-cancel-btn').style.display='none';
+}
+
+function saveVariant(e){
+    e.preventDefault();
+    const f=e.target;
+    const fd=new FormData(f);
+    fd.append('action','save_variant');
+    fd.append('product_id',currentProductId);
+    fd.append('variant_id',editingVariantId);
+    if(!f.querySelector('[name=is_active]').checked) fd.delete('is_active');
+
+    fetch(API,{method:'POST',body:fd,headers:{'X-Requested-With':'XMLHttpRequest'}})
+    .then(r=>r.json()).then(d=>{
+        if(d.success){showAlert(d.message,'success');resetVariantForm();loadVariants();}
+        else showAlert(d.message||'Error','error');
+    });
+}
+
+function deleteVariant(id){
+    if(!confirm('Delete this variant?'))return;
+    const fd=new FormData();
+    fd.append('action','delete_variant');
+    fd.append('id',id);
+    fd.append('product_id',currentProductId);
+    fetch(API,{method:'POST',body:fd,headers:{'X-Requested-With':'XMLHttpRequest'}})
+    .then(r=>r.json()).then(d=>{
+        if(d.success){showAlert('Variant deleted.','success');loadVariants();}
+    });
+}
+
+// ══════════════════════════════════════
+// COLOR GALLERIES
+// ══════════════════════════════════════
+let colorGalleryPickerTarget = null;
+
+function loadColorGalleries(){
+    fetch(API+'?action=get_color_galleries&product_id='+currentProductId,{headers:{'X-Requested-With':'XMLHttpRequest'}})
+    .then(r=>r.json()).then(d=>{
+        colorGalleries = (d.success && d.color_galleries) ? d.color_galleries : {};
+        renderColorGalleriesSection();
+    }).catch(()=>{
+        colorGalleries = {};
+        renderColorGalleriesSection();
+    });
+}
+
+function renderColorGalleriesSection(){
+    const container = document.getElementById('color-galleries-container');
+    // Extract unique colors from variants
+    const uniqueColors = {};
+    variantList.forEach(v=>{
+        if(v.color_name && !uniqueColors[v.color_name]){
+            uniqueColors[v.color_name] = v.color_hex || '#888';
+        }
+    });
+
+    const colorNames = Object.keys(uniqueColors);
+    if(!colorNames.length){
+        container.innerHTML='<p style="color:var(--a-muted);font-size:.8rem">Add variants with colors first, then manage their galleries here.</p>';
+        return;
+    }
+
+    container.innerHTML = colorNames.map(cn => {
+        const hex = uniqueColors[cn];
+        const imgs = colorGalleries[cn] || [];
+        const thumbs = imgs.map((p,i)=>`
+            <div style="position:relative;display:inline-block">
+                <img src="${BASE}/${p}" style="width:72px;height:72px;object-fit:cover;border-radius:4px;border:1px solid var(--a-border)">
+                <button type="button" onclick="removeColorGalleryImage('${esc(cn)}',${i})" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;background:var(--a-danger,#c44);color:#fff;border:none;border-radius:50%;font-size:.6rem;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
+            </div>
+        `).join('');
+        return `
+        <div style="margin-bottom:20px;padding:16px;background:var(--a-bg,#0d0d0d);border:1px solid var(--a-border);border-radius:6px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+                <span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:${esc(hex)};border:1px solid rgba(255,255,255,.15)"></span>
+                <strong style="color:var(--a-text,#eee);font-size:.85rem">${esc(cn)}</strong>
+                <span style="font-size:.7rem;color:var(--a-muted);margin-left:auto">${imgs.length} image${imgs.length!==1?'s':''}</span>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+                ${thumbs || '<span style="color:var(--a-muted);font-size:.75rem">No images yet</span>'}
+            </div>
+            <button type="button" class="admin-btn admin-btn--sm" onclick="openColorGalleryPicker('${esc(cn)}')">📷 Add Image</button>
+        </div>`;
+    }).join('');
+}
+
+function openColorGalleryPicker(colorName){
+    colorGalleryPickerTarget = colorName;
+    openMediaPicker('color_gallery');
+}
+
+function removeColorGalleryImage(colorName, index){
+    if(colorGalleries[colorName]) {
+        colorGalleries[colorName].splice(index, 1);
+        renderColorGalleriesSection();
+    }
+}
+
+function saveColorGalleries(){
+    const fd = new FormData();
+    fd.append('action','save_color_galleries');
+    fd.append('product_id', currentProductId);
+    fd.append('color_galleries', JSON.stringify(colorGalleries));
+    fetch(API,{method:'POST',body:fd,headers:{'X-Requested-With':'XMLHttpRequest'}})
+    .then(r=>r.json()).then(d=>{
+        if(d.success) showAlert(d.message,'success');
+        else showAlert('Error saving galleries','error');
+    });
+}
+
+// ══════════════════════════════════════
+// MEDIA PICKER MODAL (with multi-select)
+// ══════════════════════════════════════
+let mediaPickerCallback=null;
+let multiSelectMode = false;
+let selectedMediaPaths = []; // [{filepath, url}, ...]
+
+function isMultiMode(mode) {
+    return mode === 'gallery' || mode === 'color_gallery';
+}
+
+function openMediaPicker(mode){
+    mediaPickerCallback=mode;
+    multiSelectMode = isMultiMode(mode);
+    selectedMediaPaths = [];
+    document.getElementById('media-picker-overlay').style.display='flex';
+    
+    // Update title and show/hide multi-select controls
+    const title = document.getElementById('media-picker-title');
+    const countEl = document.getElementById('media-selected-count');
+    const doneBtn = document.getElementById('media-done-btn');
+    
+    if(multiSelectMode) {
+        if(title) title.textContent = 'Select Images (click multiple)';
+        if(countEl) { countEl.style.display = 'inline'; countEl.textContent = '0 selected'; }
+        if(doneBtn) doneBtn.style.display = 'inline-block';
+    } else {
+        if(title) title.textContent = 'Select from Media Library';
+        if(countEl) countEl.style.display = 'none';
+        if(doneBtn) doneBtn.style.display = 'none';
+    }
+    
+    loadMedia();
+}
+
+function closeMediaPicker(){
+    document.getElementById('media-picker-overlay').style.display='none';
+    mediaPickerCallback=null;
+    colorGalleryPickerTarget=null;
+    multiSelectMode=false;
+    selectedMediaPaths=[];
+}
+
+function loadMedia(){
+    fetch(MEDIA_API+'?page=1',{headers:{'X-Requested-With':'XMLHttpRequest'}})
+    .then(r=>r.json()).then(d=>{
+        if(!d.success)return;
+        allMedia=d.items;
+        renderMediaGrid('');
+    });
+}
+
+function renderMediaGrid(search){
+    const grid=document.getElementById('media-picker-grid');
+    let items=allMedia;
+    if(search) items=items.filter(m=>m.filename.toLowerCase().includes(search));
+    if(!items.length){grid.innerHTML='<p style="color:var(--a-muted);grid-column:1/-1;text-align:center;padding:30px">No media found.</p>';return;}
+    
+    grid.innerHTML=items.map(m=>{
+        const isSelected = selectedMediaPaths.some(s => s.filepath === m.filepath);
+        const checkmark = multiSelectMode ? `<div class="media-picker__check ${isSelected?'checked':''}" data-fp="${esc(m.filepath)}">✓</div>` : '';
+        return `<div class="media-picker__item ${isSelected?'selected':''}" onclick="handleMediaClick('${esc(m.filepath)}','${esc(m.url)}')">
+            <img src="${m.url}" alt="${esc(m.filename)}" loading="lazy">
+            <span>${esc(m.filename)}</span>
+            ${checkmark}
+        </div>`;
+    }).join('');
+}
+
+function handleMediaClick(filepath, url) {
+    if(multiSelectMode) {
+        // Toggle selection
+        const idx = selectedMediaPaths.findIndex(s => s.filepath === filepath);
+        if(idx >= 0) {
+            selectedMediaPaths.splice(idx, 1);
+        } else {
+            selectedMediaPaths.push({filepath, url});
+        }
+        // Update counter
+        const countEl = document.getElementById('media-selected-count');
+        if(countEl) countEl.textContent = selectedMediaPaths.length + ' selected';
+        // Re-render to show checkmarks
+        const search = document.getElementById('media-search-input')?.value?.trim().toLowerCase() || '';
+        renderMediaGrid(search);
+    } else {
+        // Single select — immediate apply
+        selectMedia(filepath, url);
+    }
+}
+
+function confirmMultiSelect() {
+    if(!selectedMediaPaths.length) { closeMediaPicker(); return; }
+    
+    if(mediaPickerCallback === 'gallery') {
+        selectedMediaPaths.forEach(s => {
+            if(!galleryPaths.includes(s.filepath)) galleryPaths.push(s.filepath);
+        });
+        renderGalleryPreview();
+    } else if(mediaPickerCallback === 'color_gallery' && colorGalleryPickerTarget) {
+        if(!colorGalleries[colorGalleryPickerTarget]) colorGalleries[colorGalleryPickerTarget] = [];
+        selectedMediaPaths.forEach(s => {
+            if(!colorGalleries[colorGalleryPickerTarget].includes(s.filepath)) {
+                colorGalleries[colorGalleryPickerTarget].push(s.filepath);
+            }
+        });
+        renderColorGalleriesSection();
+    }
+    closeMediaPicker();
+}
+
+function selectMedia(filepath,url){
+    if(mediaPickerCallback==='main_image'){
+        document.querySelector('[name=existing_image]').value=filepath;
+        document.getElementById('main-img-preview').innerHTML=`<img src="${url}" alt="">`;
+    } else if(mediaPickerCallback==='gallery'){
+        if(!galleryPaths.includes(filepath)){
+            galleryPaths.push(filepath);
+            renderGalleryPreview();
+        }
+    } else if(mediaPickerCallback==='variant'){
+        document.querySelector('#variant-form [name=media_image_path]').value=filepath;
+        document.getElementById('variant-img-preview').innerHTML=`<img src="${url}" style="width:60px;height:60px;object-fit:cover;border-radius:4px">`;
+    } else if(mediaPickerCallback==='size_chart'){
+        sizeChartPath = filepath;
+        renderSizeChartPreview();
+    } else if(mediaPickerCallback==='color_gallery' && colorGalleryPickerTarget){
+        if(!colorGalleries[colorGalleryPickerTarget]) colorGalleries[colorGalleryPickerTarget]=[];
+        if(!colorGalleries[colorGalleryPickerTarget].includes(filepath)){
+            colorGalleries[colorGalleryPickerTarget].push(filepath);
+            renderColorGalleriesSection();
+        }
+    }
+    closeMediaPicker();
+}
+
+// ══════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════
+function money(v){return window.CURRENCY+(+v).toFixed(2);}
+function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+function showAlert(msg,type){
+    const c=document.getElementById('alert-container');
+    const cls=type==='success'?'admin-alert--success':'admin-alert--error';
+    c.innerHTML=`<div class="admin-alert ${cls}">${esc(msg)}</div>`;
+    setTimeout(()=>c.innerHTML='',4000);
+}
