@@ -2,4 +2,4 @@
 
 Welcome to the Lume PHP System.
 
-This branch was created to help unlock GitHub achievements!
+Currently the testing on vercel is down since its not connected to the database anymore
