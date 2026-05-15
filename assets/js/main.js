@@ -170,7 +170,10 @@ document.addEventListener('DOMContentLoaded',initReveal);
 // ─── Page transition ───
 (function(){
   const curtain=document.createElement('div');curtain.className='lume-curtain';
-  document.body.prepend(curtain);curtain.addEventListener('animationend',()=>curtain.remove());
+  document.body.prepend(curtain);
+  curtain.addEventListener('animationend',()=>curtain.remove());
+  // Safety net: force-remove curtain after 1.5s even if animation stalls
+  setTimeout(()=>{if(curtain.parentNode){curtain.classList.add('lume-curtain--done');setTimeout(()=>curtain.remove(),100);}},1500);
 })();
 
 // ─── Toast ───
@@ -491,18 +494,13 @@ window.lumePixel={
   sizeSwatches.forEach(swatch => {
     swatch.addEventListener('click', () => {
       if(swatch.classList.contains('is-disabled')) return;
-      if(swatch.classList.contains('is-active')) {
-        swatch.classList.remove('is-active');
-        selected.size = null;
-        const lbl = document.getElementById('selected-size-label');
-        if(lbl) lbl.textContent = 'Select a size';
-      } else {
-        sizeSwatches.forEach(s => s.classList.remove('is-active'));
-        swatch.classList.add('is-active');
-        selected.size = swatch.dataset.size;
-        const lbl = document.getElementById('selected-size-label');
-        if(lbl) lbl.textContent = selected.size;
-      }
+      // Don't allow deselection — clicking active size does nothing
+      if(swatch.classList.contains('is-active')) return;
+      sizeSwatches.forEach(s => s.classList.remove('is-active'));
+      swatch.classList.add('is-active');
+      selected.size = swatch.dataset.size;
+      const lbl = document.getElementById('selected-size-label');
+      if(lbl) lbl.textContent = selected.size;
       update();
     });
   });
@@ -511,20 +509,14 @@ window.lumePixel={
   swatches.forEach(swatch => {
     swatch.addEventListener('click', () => {
       if(swatch.classList.contains('is-disabled')) return;
-      if(swatch.classList.contains('is-active')) {
-        swatch.classList.remove('is-active');
-        selected.color = null;
-        const lbl = document.getElementById('selected-color-label');
-        if(lbl) lbl.textContent = 'Select a color';
-        if(window.lumeGallery) window.lumeGallery.filterByColor(null);
-      } else {
-        swatches.forEach(s => s.classList.remove('is-active'));
-        swatch.classList.add('is-active');
-        selected.color = swatch.dataset.color;
-        const lbl = document.getElementById('selected-color-label');
-        if(lbl) lbl.textContent = selected.color;
-        if(window.lumeGallery) window.lumeGallery.filterByColor(selected.color);
-      }
+      // Don't allow deselection — clicking active color does nothing
+      if(swatch.classList.contains('is-active')) return;
+      swatches.forEach(s => s.classList.remove('is-active'));
+      swatch.classList.add('is-active');
+      selected.color = swatch.dataset.color;
+      const lbl = document.getElementById('selected-color-label');
+      if(lbl) lbl.textContent = selected.color;
+      if(window.lumeGallery) window.lumeGallery.filterByColor(selected.color);
       update();
     });
   });
@@ -534,7 +526,7 @@ window.lumePixel={
 })();
 
 // ═══════════════════════════════════════════
-// SHOP CARD — Hover image swap + color swatch hover
+// SHOP CARD — Hover image swap + color swatch hover/click
 // ═══════════════════════════════════════════
 (function(){
   document.querySelectorAll('.lume-product-card').forEach(card => {
@@ -543,18 +535,47 @@ window.lumePixel={
     const originalSrc = mainImg.src;
     const hoverSrc = mainImg.dataset.hoverSrc;
 
+    // Store original src for restoration
+    mainImg.dataset.originalSrc = originalSrc;
+
     // Hover on card => show second image
     if(hoverSrc) {
-      card.addEventListener('mouseenter', () => { mainImg.src = hoverSrc; });
-      card.addEventListener('mouseleave', () => { mainImg.src = originalSrc; });
+      card.addEventListener('mouseenter', () => {
+        // Only swap if not showing a swatch-selected image
+        if(!card.dataset.swatchActive) mainImg.src = hoverSrc;
+      });
+      card.addEventListener('mouseleave', () => {
+        if(!card.dataset.swatchActive) mainImg.src = originalSrc;
+      });
     }
 
-    // Hover on color swatch => show that color's image
+    // Color swatches: hover shows preview, click persists selection
     card.querySelectorAll('.lume-product-card__swatch-dot').forEach(dot => {
       const colorImg = dot.dataset.image;
       if(!colorImg) return;
+
       dot.addEventListener('mouseenter', () => { mainImg.src = colorImg; });
-      dot.addEventListener('mouseleave', () => { mainImg.src = originalSrc; });
+      dot.addEventListener('mouseleave', () => {
+        // Restore to swatch-selected or original
+        mainImg.src = card.dataset.swatchActive || originalSrc;
+      });
+
+      dot.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        // Toggle: if same swatch clicked, deselect
+        if(card.dataset.swatchActive === colorImg) {
+          delete card.dataset.swatchActive;
+          mainImg.src = originalSrc;
+          card.querySelectorAll('.lume-product-card__swatch-dot').forEach(d => d.style.outline = '');
+        } else {
+          card.dataset.swatchActive = colorImg;
+          mainImg.src = colorImg;
+          card.querySelectorAll('.lume-product-card__swatch-dot').forEach(d => d.style.outline = '');
+          dot.style.outline = '2px solid var(--gold)';
+          dot.style.outlineOffset = '2px';
+        }
+      });
     });
   });
 })();

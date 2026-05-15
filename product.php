@@ -45,34 +45,24 @@ $stockDisplay = $hasVariants ? $totalVariantStock    : (int)$product['stock'];
 $colorGalleries = json_decode($product['color_galleries'] ?? 'null', true) ?: [];
 $hasColorGalleries = !empty($colorGalleries);
 
-// General images (no color)
-$generalImages = [];
-$mainSrc = product_image($product);
-$generalImages[] = $mainSrc;
-$extraImages = json_decode($product['gallery'] ?? 'null', true) ?: [];
-foreach ($extraImages as $img) {
-    if ($img && $img !== $mainSrc) {
-        $generalImages[] = $img;
-    }
-}
-
-// Per-color image arrays
+// Per-color image arrays (this is the primary gallery source)
 $colorImageArrays = [];
 if ($hasColorGalleries) {
-    // Use explicitly set color galleries
+    // Use explicitly set color galleries — include ALL images per color
     foreach ($colorGalleries as $cName => $imgs) {
-        $colorImageArrays[$cName] = $imgs;
+        if (is_array($imgs) && !empty($imgs)) {
+            $colorImageArrays[$cName] = array_values($imgs);
+        }
     }
-} else {
-    // Fall back to variant images grouped by color
-    foreach ($variants as $v) {
-        if (!empty($v['image']) && !empty($v['color_name'])) {
-            if (!isset($colorImageArrays[$v['color_name']])) {
-                $colorImageArrays[$v['color_name']] = [];
-            }
-            if (!in_array($v['image'], $colorImageArrays[$v['color_name']])) {
-                $colorImageArrays[$v['color_name']][] = $v['image'];
-            }
+}
+// Also merge in variant images for colors that don't yet have gallery entries
+foreach ($variants as $v) {
+    if (!empty($v['image']) && !empty($v['color_name'])) {
+        if (!isset($colorImageArrays[$v['color_name']])) {
+            $colorImageArrays[$v['color_name']] = [];
+        }
+        if (!in_array($v['image'], $colorImageArrays[$v['color_name']])) {
+            $colorImageArrays[$v['color_name']][] = $v['image'];
         }
     }
 }
@@ -80,7 +70,24 @@ if ($hasColorGalleries) {
 // Determine first color to auto-select
 $firstColor = !empty($colors) ? array_key_first($colors) : null;
 
-// Active gallery: if we have a first color with images, show those; otherwise general
+// General images: if product has color variants, use the first color's gallery
+// instead of the generic product gallery (which may contain unrelated images)
+$generalImages = [];
+if ($firstColor && !empty($colorImageArrays[$firstColor])) {
+    $generalImages = $colorImageArrays[$firstColor];
+} else {
+    // No colors: fall back to product's main image + gallery
+    $mainSrc = product_image($product);
+    $generalImages[] = $mainSrc;
+    $extraImages = json_decode($product['gallery'] ?? 'null', true) ?: [];
+    foreach ($extraImages as $img) {
+        if ($img && $img !== $mainSrc) {
+            $generalImages[] = $img;
+        }
+    }
+}
+
+// Active gallery: start with first color's images if available, else general
 $activeImages = $generalImages;
 if ($firstColor && !empty($colorImageArrays[$firstColor])) {
     $activeImages = $colorImageArrays[$firstColor];

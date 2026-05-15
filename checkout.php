@@ -213,13 +213,13 @@ endif;
                 <!-- Payment Method -->
                 <h2 style="font-family:var(--font-serif);font-size:1.4rem;text-transform:uppercase;margin:32px 0 16px">Payment Method</h2>
                 <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px">
-                    <label style="display:flex;align-items:center;gap:10px;padding:16px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer" id="label-online">
-                        <input type="radio" name="payment_method" value="online" checked style="accent-color:var(--accent);width:18px;height:18px">
+                    <label style="display:flex;align-items:center;gap:10px;padding:16px;border:1px solid var(--border);border-radius:4px;cursor:pointer" id="label-online">
+                        <input type="radio" name="payment_method" value="online" checked style="accent-color:var(--terracotta);width:18px;height:18px">
                         <span>Online Payment (Credit / Debit)</span>
                     </label>
                     <?php if ($codEnabled): ?>
-                    <label style="display:flex;align-items:center;gap:10px;padding:16px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer" id="label-cod">
-                        <input type="radio" name="payment_method" value="cod" style="accent-color:var(--accent);width:18px;height:18px">
+                    <label style="display:flex;align-items:center;gap:10px;padding:16px;border:1px solid var(--border);border-radius:4px;cursor:pointer" id="label-cod">
+                        <input type="radio" name="payment_method" value="cod" style="accent-color:var(--terracotta);width:18px;height:18px">
                         <span><?= h($codLabel) ?> <?= $codFee > 0 ? '(+ '.money($codFee).')' : '' ?></span>
                     </label>
                     <?php endif; ?>
@@ -297,9 +297,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (r.value === 'cod') {
                     isCod = true;
                     total += codFee;
-                    if(labelCod) labelCod.style.borderColor = 'var(--accent)';
+                    if(labelCod) labelCod.style.borderColor = 'var(--terracotta)';
                 } else {
-                    if(labelOnline) labelOnline.style.borderColor = 'var(--accent)';
+                    if(labelOnline) labelOnline.style.borderColor = 'var(--terracotta)';
                 }
             }
         });

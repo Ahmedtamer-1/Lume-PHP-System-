@@ -58,8 +58,9 @@ $total = $subtotal + $shipping;
                         <input type="hidden" name="cart_id" value="<?= (int)$item['id'] ?>">
                         <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
                         <input type="number" name="quantity" value="<?= (int)$item['quantity'] ?>" min="1" max="99"
-                               class="lume-form__input" style="width:60px;padding:8px;text-align:center">
-                        <button type="submit" class="lume-btn" style="padding:8px 12px;font-size:.6rem">Update</button>
+                               class="lume-form__input" style="width:60px;padding:8px;text-align:center"
+                               onchange="let v=parseInt(this.value)||1;this.value=Math.max(1,Math.min(99,v));this.closest('form').submit()">
+                        <noscript><button type="submit" class="lume-btn" style="padding:8px 12px;font-size:.6rem">Update</button></noscript>
                     </form>
                 </td>
                 <td><?= money($lineTotal) ?></td>

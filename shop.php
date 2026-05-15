@@ -14,25 +14,82 @@ $products = get_products([
 $productIds = array_column($products, 'id');
 $productColors = get_product_color_swatches($productIds);
 
-// Build second images for hover effect (from gallery or variant images)
-$hoverImages = [];
+// Track which products have variants (need variant selection before adding to cart)
+$variantProducts = [];
+if (!empty($productIds)) {
+    $placeholders = implode(',', array_fill(0, count($productIds), '?'));
+    $stmt = db()->prepare("SELECT id, has_variants FROM products WHERE id IN ($placeholders)");
+    $stmt->execute($productIds);
+    foreach ($stmt->fetchAll() as $row) {
+        if (!empty($row['has_variants'])) {
+            $variantProducts[(int)$row['id']] = true;
+        }
+    }
+}
+
+// Build display images for each product card
+$displayImages = []; // Primary image to show per product
+$hoverImages = [];   // Hover image per product
 foreach ($products as $p) {
     $pid = (int)$p['id'];
-    // Try gallery first
-    $gallery = json_decode($p['gallery'] ?? 'null', true) ?: [];
     $mainImg = product_image($p);
+    
+    // Check if main image is valid (not the placeholder)
+    $hasValidMain = !empty($p['image']) && $p['image'] !== 'assets/images/placeholder.jpg';
+    
+    // Try to get a better image from color galleries or variant images
+    $colorGals = json_decode($p['color_galleries'] ?? 'null', true) ?: [];
+    $firstColorImg = null;
+    $secondColorImg = null;
+    
+    // First try color galleries
+    foreach ($colorGals as $cName => $imgs) {
+        if (is_array($imgs) && !empty($imgs)) {
+            if (!$firstColorImg) $firstColorImg = $imgs[0];
+            if (count($imgs) > 1 && !$secondColorImg) $secondColorImg = $imgs[1];
+            break;
+        }
+    }
+    
+    // Then try variant images
+    if (!$firstColorImg && !empty($productColors[$pid])) {
+        foreach ($productColors[$pid] as $cn => $cData) {
+            if (!empty($cData['image'])) {
+                $firstColorImg = $cData['image'];
+                break;
+            }
+        }
+    }
+    
+    // Set display image: prefer main product image, fall back to first color image
+    if ($hasValidMain) {
+        $displayImages[$pid] = $mainImg;
+    } elseif ($firstColorImg) {
+        $displayImages[$pid] = $firstColorImg;
+    } else {
+        $displayImages[$pid] = $mainImg; // fallback to placeholder
+    }
+    
+    // Build hover image
+    $gallery = json_decode($p['gallery'] ?? 'null', true) ?: [];
     foreach ($gallery as $gImg) {
-        if ($gImg && $gImg !== $mainImg) {
+        if ($gImg && $gImg !== $displayImages[$pid]) {
             $hoverImages[$pid] = $gImg;
             break;
         }
     }
-    // Fall back to first variant image if no gallery hover
-    if (!isset($hoverImages[$pid]) && !empty($productColors[$pid])) {
-        foreach ($productColors[$pid] as $cn => $cData) {
-            if (!empty($cData['image']) && $cData['image'] !== $mainImg) {
-                $hoverImages[$pid] = $cData['image'];
-                break;
+    // Fall back to second color gallery image or variant image for hover
+    if (!isset($hoverImages[$pid])) {
+        if ($secondColorImg && $secondColorImg !== $displayImages[$pid]) {
+            $hoverImages[$pid] = $secondColorImg;
+        } elseif ($firstColorImg && $firstColorImg !== $displayImages[$pid]) {
+            $hoverImages[$pid] = $firstColorImg;
+        } elseif (!empty($productColors[$pid])) {
+            foreach ($productColors[$pid] as $cn => $cData) {
+                if (!empty($cData['image']) && $cData['image'] !== $displayImages[$pid]) {
+                    $hoverImages[$pid] = $cData['image'];
+                    break;
+                }
             }
         }
     }
@@ -65,7 +122,7 @@ foreach ($products as $p) {
         <?php $pid = (int)$p['id']; ?>
         <div class="lume-product-card lume-reveal">
             <a href="<?= SITE_URL ?>/product.php?slug=<?= h($p['slug']) ?>" class="lume-product-card__img-wrap">
-                <img src="<?= SITE_URL ?>/<?= product_image($p) ?>" 
+            <img src="<?= SITE_URL ?>/<?= h($displayImages[$pid] ?? product_image($p)) ?>" 
                      alt="<?= h($p['name']) ?>" 
                      class="lume-product-card__img" 
                      loading="lazy"
@@ -95,7 +152,11 @@ foreach ($products as $p) {
                 <?php endif; ?>
 
                 <div class="lume-product-card__actions">
+                    <?php if (!empty($variantProducts[$pid])): ?>
+                    <a href="<?= SITE_URL ?>/product.php?slug=<?= h($p['slug']) ?>" class="btn-add-cart" style="display:block;text-align:center;text-decoration:none">Select Options</a>
+                    <?php else: ?>
                     <button class="btn-add-cart" onclick="addToCart(<?= (int)$p['id'] ?>)">Add to Bag</button>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
