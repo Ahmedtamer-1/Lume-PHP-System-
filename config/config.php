@@ -7,44 +7,44 @@
  */
 
 // ── Environment ──────────────────────────────────────────────
-define('ENV', 'production'); // 'development' | 'production'
-define('SITE_URL', 'https://darkorange-kangaroo-844530.hostingersite.com');
-define('SITE_NAME', 'LUMEEGY');
-define('SITE_TAGLINE', 'Illuminate Your Ritual');
+if(!defined('ENV')) define('ENV', 'production'); // 'development' | 'production'
+if(!defined('SITE_URL')) define('SITE_URL', 'https://darkorange-kangaroo-844530.hostingersite.com');
+if(!defined('SITE_NAME')) define('SITE_NAME', 'LUMEEGY');
+if(!defined('SITE_TAGLINE')) define('SITE_TAGLINE', 'Illuminate Your Ritual');
 
 // ── Database ─────────────────────────────────────────────────
 // Hostinger: use credentials from hPanel → Databases
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'u670046331_Lume_database');
-define('DB_USER', 'u670046331_lume');
-define('DB_PASS', ':/eIZO@V3Si');
-define('DB_CHARSET', 'utf8mb4');
+if(!defined('DB_HOST')) define('DB_HOST', 'localhost');
+if(!defined('DB_NAME')) define('DB_NAME', 'u670046331_Lume_database');
+if(!defined('DB_USER')) define('DB_USER', 'u670046331_lume');
+if(!defined('DB_PASS')) define('DB_PASS', ':/eIZO@V3Si');
+if(!defined('DB_CHARSET')) define('DB_CHARSET', 'utf8mb4');
 
 // ── Meta Pixel ───────────────────────────────────────────────
 // Paste your Pixel ID from Meta Events Manager
-define('META_PIXEL_ID', '');        // e.g. '1234567890123456'
+if(!defined('META_PIXEL_ID')) define('META_PIXEL_ID', '');        // e.g. '1234567890123456'
 
 // ── Payment Gateway ──────────────────────────────────────────
 // Supports: paymob | fawry | stripe (set below)
-define('GATEWAY_PROVIDER', 'paymob');
-define('GATEWAY_API_KEY', '');      // Your gateway secret key
-define('GATEWAY_IFRAME_ID', '');    // Paymob iframe integration ID (if Paymob)
-define('GATEWAY_HMAC_SECRET', ''); // Paymob HMAC secret
+if(!defined('GATEWAY_PROVIDER')) define('GATEWAY_PROVIDER', 'paymob');
+if(!defined('GATEWAY_API_KEY')) define('GATEWAY_API_KEY', '');      // Your gateway secret key
+if(!defined('GATEWAY_IFRAME_ID')) define('GATEWAY_IFRAME_ID', '');    // Paymob iframe integration ID (if Paymob)
+if(!defined('GATEWAY_HMAC_SECRET')) define('GATEWAY_HMAC_SECRET', ''); // Paymob HMAC secret
 
 // ── Currency ─────────────────────────────────────────────────
-define('CURRENCY_CODE',   'EGP');
-define('CURRENCY_SYMBOL', 'EGP ');
-define('FREE_SHIPPING_OVER', 2000);  // Order total for free shipping
-define('FLAT_SHIPPING_RATE',  100);
+if(!defined('CURRENCY_CODE')) define('CURRENCY_CODE',   'EGP');
+if(!defined('CURRENCY_SYMBOL')) define('CURRENCY_SYMBOL', 'EGP ');
+if(!defined('FREE_SHIPPING_OVER')) define('FREE_SHIPPING_OVER', 2000);  // Order total for free shipping
+if(!defined('FLAT_SHIPPING_RATE')) define('FLAT_SHIPPING_RATE',  100);
 
 // ── Security ─────────────────────────────────────────────────
-define('SESSION_NAME', 'lumeegy_session');
-define('CSRF_TOKEN_NAME', '_lume_csrf');
+if(!defined('SESSION_NAME')) define('SESSION_NAME', 'lumeegy_session');
+if(!defined('CSRF_TOKEN_NAME')) define('CSRF_TOKEN_NAME', '_lume_csrf');
 
 // ── Paths ─────────────────────────────────────────────────────
-define('ROOT_PATH', dirname(__DIR__));
-define('UPLOADS_PATH', ROOT_PATH . '/assets/images/products');
-define('UPLOADS_URL',  SITE_URL . '/assets/images/products');
+if(!defined('ROOT_PATH')) define('ROOT_PATH', dirname(__DIR__));
+if(!defined('UPLOADS_PATH')) define('UPLOADS_PATH', ROOT_PATH . '/assets/images/products');
+if(!defined('UPLOADS_URL')) define('UPLOADS_URL',  SITE_URL . '/assets/images/products');
 
 // ── Display errors (dev only) ─────────────────────────────────
 if (ENV === 'development') {
