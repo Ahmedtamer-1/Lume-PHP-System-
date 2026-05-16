@@ -9,7 +9,8 @@ let currentProductId = null;
 let galleryPaths = [];
 let allMedia = [];
 let sizeChartPath = '';
-let colorGalleries = {}; // { colorName: [path, ...] }
+let colorGalleries = {};
+let productColors = [];
 
 // ── INIT ──
 document.addEventListener('DOMContentLoaded', () => {
@@ -201,10 +202,47 @@ function loadVariants(){
     .then(r=>r.json()).then(d=>{
         if(!d.success)return;
         variantList=d.variants;
+        extractColorsFromVariants();
+        renderColorsSection();
         renderVariantTable();
-        // Load color galleries AFTER variants are ready
         loadColorGalleries();
     });
+}
+function extractColorsFromVariants(){
+    const seen={};
+    variantList.forEach(v=>{if(v.color_name&&!seen[v.color_name])seen[v.color_name]=v.color_hex||'#888';});
+    productColors.forEach(c=>{if(!seen[c.name])seen[c.name]=c.hex;});
+    productColors=Object.entries(seen).map(([name,hex])=>({name,hex}));
+}
+function renderColorsSection(){
+    const el=document.getElementById('product-colors-list');if(!el)return;
+    if(!productColors.length){el.innerHTML='<span style="color:var(--a-muted);font-size:.75rem">No colors defined yet</span>';}
+    else{el.innerHTML=productColors.map(c=>`<div style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:var(--a-bg,#111);border:1px solid var(--a-border);border-radius:20px"><span style="width:16px;height:16px;border-radius:50%;background:${esc(c.hex)};border:1px solid rgba(255,255,255,.15)"></span><span style="font-size:.8rem;color:var(--a-text,#eee)">${esc(c.name)}</span><button type="button" onclick="removeColor('${esc(c.name).replace(/'/g,"\\'")}')" style="background:none;border:none;color:var(--a-muted);cursor:pointer;font-size:.85rem;padding:0 2px;line-height:1">&times;</button></div>`).join('');}
+    populateColorDropdown();
+}
+function addNewColor(){
+    const n=document.getElementById('new-color-name'),h=document.getElementById('new-color-hex');
+    const name=n.value.trim(),hex=h.value||'#888';
+    if(!name){showAlert('Enter a color name','error');return;}
+    if(productColors.some(c=>c.name.toLowerCase()===name.toLowerCase())){showAlert('Color already exists','error');return;}
+    productColors.push({name,hex});n.value='';h.value='#888888';
+    renderColorsSection();
+}
+function removeColor(name){
+    if(variantList.some(v=>v.color_name===name)&&!confirm('Color "'+name+'" has variants. Remove from list?'))return;
+    productColors=productColors.filter(c=>c.name!==name);renderColorsSection();
+}
+function populateColorDropdown(){
+    const s=document.getElementById('variant-color-select');if(!s)return;
+    const cur=s.value;
+    s.innerHTML='<option value="">— No Color —</option>'+productColors.map(c=>`<option value="${esc(c.name)}" data-hex="${esc(c.hex)}">${esc(c.name)}</option>`).join('');
+    if(cur)s.value=cur;
+}
+function handleColorSelect(sel){
+    const hex=sel.selectedOptions[0]?.dataset?.hex||'';
+    document.querySelector('#variant-form [name=color_name]').value=sel.value;
+    document.querySelector('#variant-form [name=color_hex]').value=hex;
+    const dot=document.getElementById('variant-color-dot');if(dot)dot.style.background=hex||'#888';
 }
 
 function renderVariantTable(){
@@ -242,7 +280,10 @@ function editVariant(id){
         const f=document.getElementById('variant-form');
         f.querySelector('[name=size]').value=v.size||'';
         f.querySelector('[name=color_name]').value=v.color_name||'';
-        f.querySelector('[name=color_hex]').value=v.color_hex||'#888888';
+        f.querySelector('[name=color_hex]').value=v.color_hex||'';
+        const sel=document.getElementById('variant-color-select');
+        if(sel){sel.value=v.color_name||'';}
+        const dot=document.getElementById('variant-color-dot');if(dot)dot.style.background=v.color_hex||'#888';
         f.querySelector('[name=sku]').value=v.sku||'';
         f.querySelector('[name=price_override]').value=v.price_override??'';
         f.querySelector('[name=stock]').value=v.stock||0;
@@ -263,8 +304,11 @@ function resetVariantForm(){
     const f=document.getElementById('variant-form');
     f.reset();
     f.querySelector('[name=is_active]').checked=true;
-    f.querySelector('[name=color_hex]').value='#888888';
+    f.querySelector('[name=color_name]').value='';
+    f.querySelector('[name=color_hex]').value='';
     f.querySelector('[name=media_image_path]').value='';
+    const sel=document.getElementById('variant-color-select');if(sel)sel.value='';
+    const dot=document.getElementById('variant-color-dot');if(dot)dot.style.background='#888';
     document.getElementById('variant-img-preview').innerHTML='<span style="color:var(--a-muted);font-size:.75rem">None</span>';
     document.getElementById('variant-form-title').textContent='+ Add Variant';
     document.getElementById('variant-cancel-btn').style.display='none';

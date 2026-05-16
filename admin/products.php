@@ -159,23 +159,38 @@ require_once __DIR__ . '/includes/header.php';
         </table>
     </div>
 
+    <!-- Define Product Colors -->
+    <div style="margin-bottom:24px;padding:20px;background:var(--a-surface,#1a1a1a);border:1px solid var(--a-border);border-radius:6px">
+        <h3 style="font-size:.9rem;color:var(--a-text,#eee);margin:0 0 6px 0">🎨 Define Product Colors</h3>
+        <p style="font-size:.72rem;color:var(--a-muted);margin-bottom:14px">Define colors first, then add size variants for each color below.</p>
+        <div id="product-colors-list" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px"><span style="color:var(--a-muted);font-size:.75rem">No colors defined yet</span></div>
+        <div style="display:flex;gap:8px;align-items:center">
+            <input type="text" id="new-color-name" placeholder="Color name (e.g. Black)" style="padding:8px 12px;background:var(--a-bg,#111);border:1px solid var(--a-border);border-radius:4px;color:var(--a-text,#eee);font-size:.82rem;width:180px">
+            <input type="color" id="new-color-hex" value="#888888" style="height:34px;width:40px;padding:2px;border:1px solid var(--a-border);border-radius:4px;cursor:pointer">
+            <button type="button" class="admin-btn admin-btn--sm admin-btn--primary" onclick="addNewColor()">+ Add Color</button>
+        </div>
+    </div>
+
     <!-- Variant Form -->
     <div class="admin-variant-form">
         <h3 class="admin-variant-form__title" id="variant-form-title">+ Add Variant</h3>
         <form id="variant-form">
             <input type="hidden" name="media_image_path" value="">
+            <input type="hidden" name="color_name" value="">
+            <input type="hidden" name="color_hex" value="">
             <div class="admin-variant-form__row">
+                <div class="admin-variant-form__group">
+                    <label>Color</label>
+                    <div style="display:flex;gap:8px;align-items:center">
+                        <select name="color_select" id="variant-color-select" onchange="handleColorSelect(this)" style="flex:1;padding:8px 12px;background:var(--a-bg,#111);border:1px solid var(--a-border);border-radius:4px;color:var(--a-text,#eee);font-size:.82rem">
+                            <option value="">— No Color —</option>
+                        </select>
+                        <span id="variant-color-dot" style="width:24px;height:24px;border-radius:50%;border:1px solid rgba(255,255,255,.15);background:#888;flex-shrink:0"></span>
+                    </div>
+                </div>
                 <div class="admin-variant-form__group">
                     <label>Size</label>
                     <input type="text" name="size" placeholder="e.g. S, M, L, XL">
-                </div>
-                <div class="admin-variant-form__group">
-                    <label>Color Name</label>
-                    <input type="text" name="color_name" placeholder="e.g. Black, Sand">
-                </div>
-                <div class="admin-variant-form__group">
-                    <label>Color Hex</label>
-                    <input type="color" name="color_hex" value="#888888" style="height:34px;padding:2px">
                 </div>
             </div>
             <div class="admin-variant-form__row">

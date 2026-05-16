@@ -235,16 +235,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'delete_variant') {
     exit;
 }
 
+// ── Helper: ensure color_galleries column exists ──
+function ensure_color_galleries_column() {
+    static $checked = false;
+    if ($checked) return;
+    $checked = true;
+    try {
+        $cols = array_column(db()->query('SHOW COLUMNS FROM products')->fetchAll(), 'Field');
+        if (!in_array('color_galleries', $cols)) {
+            db()->exec('ALTER TABLE products ADD COLUMN color_galleries TEXT DEFAULT NULL');
+        }
+        if (!in_array('size_chart', $cols) && !in_array('size_chart', array_column(db()->query('SHOW COLUMNS FROM products')->fetchAll(), 'Field'))) {
+            db()->exec('ALTER TABLE products ADD COLUMN size_chart VARCHAR(500) DEFAULT NULL');
+        }
+    } catch (Exception $e) { /* silently skip */ }
+}
+
 // ── POST: save color galleries ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'save_color_galleries') {
     $productId = (int)($_POST['product_id'] ?? 0);
     $galleries = $_POST['color_galleries'] ?? '{}';
     if (!$productId) { echo json_encode(['success' => false]); exit; }
     try {
+        ensure_color_galleries_column();
         db()->prepare('UPDATE products SET color_galleries = ? WHERE id = ?')->execute([$galleries, $productId]);
         echo json_encode(['success' => true, 'message' => 'Color galleries saved.']);
     } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => 'Run the migration first: /migrate_color_galleries.php']);
+        echo json_encode(['success' => false, 'message' => 'DB error: ' . $e->getMessage()]);
     }
     exit;
 }
@@ -254,6 +271,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'get_color_galleries') {
     $productId = (int)($_GET['product_id'] ?? 0);
     if (!$productId) { echo json_encode(['success' => false]); exit; }
     try {
+        ensure_color_galleries_column();
         $stmt = db()->prepare('SELECT color_galleries FROM products WHERE id = ?');
         $stmt->execute([$productId]);
         $val = $stmt->fetchColumn();
