@@ -418,7 +418,9 @@ function saveColorGalleries(){
     fetch(API,{method:'POST',body:fd,headers:{'X-Requested-With':'XMLHttpRequest'}})
     .then(r=>r.json()).then(d=>{
         if(d.success) showAlert(d.message,'success');
-        else showAlert('Error saving galleries','error');
+        else showAlert(d.message || 'Error saving galleries','error');
+    }).catch(e=>{
+        showAlert('Error: ' + e.message, 'error');
     });
 }
 

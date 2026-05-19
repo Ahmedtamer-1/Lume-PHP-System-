@@ -44,12 +44,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $vid = (int)($_POST['variant_id'] ?? 0) ?: null;
         if ($pid <= 0) { if ($isAjax) json_response(['success'=>false,'message'=>'Invalid product'],400); else redirect('/cart.php'); }
         
-        $product = db()->prepare('SELECT has_variants FROM products WHERE id = ?');
+        $product = db()->prepare('SELECT name, has_variants, stock FROM products WHERE id = ?');
         $product->execute([$pid]);
         $prodData = $product->fetch();
 
-        if ($prodData && !empty($prodData['has_variants']) && !$vid) {
-            if ($isAjax) json_response(['success' => false, 'message' => 'Please select a size/color.'], 400); else redirect('/cart.php');
+        if (!$prodData) {
+            if ($isAjax) json_response(['success'=>false,'message'=>'Product not found'], 404); else redirect('/cart.php');
+        }
+
+        $maxStock = 0;
+        if (!empty($prodData['has_variants'])) {
+            if (!$vid) {
+                if ($isAjax) json_response(['success' => false, 'message' => 'Please select a size/color.'], 400); else redirect('/cart.php');
+            }
+            $vStmt = db()->prepare('SELECT stock FROM product_variants WHERE id = ?');
+            $vStmt->execute([$vid]);
+            $maxStock = (int)$vStmt->fetchColumn();
+        } else {
+            $maxStock = (int)$prodData['stock'];
+        }
+
+        // Get current quantity in cart
+        $currentCartQty = 0;
+        $items = cart_items();
+        foreach ($items as $i) {
+            if ($i['product_id'] == $pid && ($i['variant_id'] ?? null) == $vid) {
+                $currentCartQty += (int)$i['quantity'];
+            }
+        }
+
+        if ($currentCartQty + $qty > $maxStock) {
+            if ($isAjax) json_response(['success' => false, 'message' => "Only $maxStock available in stock."], 400); else redirect('/cart.php?err=stock');
         }
         
         cart_add($pid, $qty, $vid);
@@ -60,6 +85,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'update') {
         $cid = (int)($_POST['cart_id'] ?? 0);
         $qty = (int)($_POST['quantity'] ?? 1);
+        
+        // Find cart item to check max stock
+        $items = cart_items();
+        $cartItem = null;
+        foreach ($items as $i) {
+            if ($i['id'] == $cid) {
+                $cartItem = $i;
+                break;
+            }
+        }
+        
+        if ($cartItem) {
+            $maxStock = !empty($cartItem['has_variants']) ? (int)$cartItem['variant_stock'] : (int)$cartItem['stock'];
+            if ($qty > $maxStock) {
+                if ($isAjax) json_response(['success' => false, 'message' => "Only $maxStock available in stock.", 'max_stock' => $maxStock], 400); 
+                else redirect('/cart.php?err=stock');
+            }
+        }
+
         cart_update($cid, $qty);
         if ($isAjax) json_response(['success'=>true,'count'=>cart_count()]);
         redirect('/cart.php');

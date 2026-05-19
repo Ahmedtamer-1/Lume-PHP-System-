@@ -15,6 +15,12 @@ $total = $subtotal + $shipping;
 </section>
 
 <section class="lume-cart-page container">
+    <?php if (isset($_GET['err']) && $_GET['err'] === 'stock'): ?>
+    <div style="background:var(--terracotta,#c44);color:#fff;padding:12px;margin-bottom:24px;text-align:center;border-radius:4px">
+        Sorry, you cannot add more of this item as we don't have enough in stock.
+    </div>
+    <?php endif; ?>
+
     <?php if (empty($items)): ?>
     <div style="text-align:center;padding:60px 0">
         <p style="color:var(--muted);font-size:1rem;margin-bottom:24px">Your bag is empty</p>
@@ -57,9 +63,10 @@ $total = $subtotal + $shipping;
                         <input type="hidden" name="action" value="update">
                         <input type="hidden" name="cart_id" value="<?= (int)$item['id'] ?>">
                         <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
-                        <input type="number" name="quantity" value="<?= (int)$item['quantity'] ?>" min="1" max="99"
+                        <?php $max = !empty($item['has_variants']) ? (int)$item['variant_stock'] : (int)$item['stock']; ?>
+                        <input type="number" name="quantity" value="<?= (int)$item['quantity'] ?>" min="1" max="<?= $max ?>"
                                class="lume-form__input" style="width:60px;padding:8px;text-align:center"
-                               onchange="let v=parseInt(this.value)||1;this.value=Math.max(1,Math.min(99,v));this.closest('form').submit()">
+                               onchange="let v=parseInt(this.value)||1;this.value=Math.max(1,Math.min(<?= $max ?>,v));this.closest('form').submit()">
                         <noscript><button type="submit" class="lume-btn" style="padding:8px 12px;font-size:.6rem">Update</button></noscript>
                     </form>
                 </td>
