@@ -7,6 +7,20 @@
  */
 
 // ── Environment ──────────────────────────────────────────────
+$envFile = dirname(__DIR__) . '/.env';
+if (file_exists($envFile)) {
+    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos(trim($line), '#') === 0) continue;
+        list($name, $value) = explode('=', $line, 2) + [NULL, NULL];
+        if ($name !== null && $value !== null) {
+            $name = trim($name);
+            $value = trim($value, " \t\n\r\0\x0B\"'");
+            if (!defined($name)) define($name, $value);
+        }
+    }
+}
+
 if(!defined('ENV')) define('ENV', 'production'); // 'development' | 'production'
 if(!defined('SITE_URL')) define('SITE_URL', 'https://darkorange-kangaroo-844530.hostingersite.com');
 if(!defined('SITE_NAME')) define('SITE_NAME', 'LUMEEGY');
@@ -15,9 +29,9 @@ if(!defined('SITE_TAGLINE')) define('SITE_TAGLINE', 'Illuminate Your Ritual');
 // ── Database ─────────────────────────────────────────────────
 // Hostinger: use credentials from hPanel → Databases
 if(!defined('DB_HOST')) define('DB_HOST', 'localhost');
-if(!defined('DB_NAME')) define('DB_NAME', 'u670046331_Lume_database');
-if(!defined('DB_USER')) define('DB_USER', 'u670046331_lume');
-if(!defined('DB_PASS')) define('DB_PASS', ':/eIZO@V3Si');
+if(!defined('DB_NAME')) define('DB_NAME', 'database_name');
+if(!defined('DB_USER')) define('DB_USER', 'database_user');
+if(!defined('DB_PASS')) define('DB_PASS', '');
 if(!defined('DB_CHARSET')) define('DB_CHARSET', 'utf8mb4');
 
 // ── Meta Pixel ───────────────────────────────────────────────

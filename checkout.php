@@ -71,52 +71,72 @@ if (!$showSuccess && $_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!$selectedZone) {
                 $error = 'Invalid shipping zone selected.';
             } else {
-                // Calculate final shipping
-                $shipping = ($freeShippingOver > 0 && $subtotal >= $freeShippingOver) ? 0 : (float)$selectedZone['cost'];
-                $total = $subtotal + $shipping;
-                
-                if ($paymentMethod === 'cod') {
-                    $total += $codFee;
-                }
-
-                $orderItems = [];
+                // Check inventory
+                $stockError = null;
                 foreach ($items as $i) {
-                    $orderItems[] = [
-                        'product_id'    => $i['product_id'],
-                        'variant_id'    => $i['pv_id'] ?? null,
-                        'variant_size'  => $i['variant_size'] ?? null,
-                        'variant_color' => $i['variant_color'] ?? null,
-                        'name'          => $i['name'],
-                        'sku'           => $i['variant_sku'] ?? $i['sku'] ?? null,
-                        'price'         => item_effective_price($i),
-                        'quantity'      => (int)$i['quantity'],
-                    ];
+                    $reqQty = (int)$i['quantity'];
+                    if (!empty($i['has_variants'])) {
+                        if ((int)$i['variant_stock'] < $reqQty) {
+                            $stockError = "Sorry, we don't have enough stock for " . $i['name'] . " (" . trim($i['variant_size'] . ' ' . $i['variant_color']) . ").";
+                            break;
+                        }
+                    } else {
+                        if ((int)$i['stock'] < $reqQty) {
+                            $stockError = "Sorry, we don't have enough stock for " . $i['name'] . ".";
+                            break;
+                        }
+                    }
                 }
 
-                // Insert the order
-                $orderId = create_order([
-                    'user_id'        => $user['id'] ?? null,
-                    'guest_email'    => $user ? null : $email,
-                    'subtotal'       => $subtotal,
-                    'shipping_cost'  => $shipping,
-                    'total'          => $total,
-                    'payment_method' => $paymentMethod,
-                    'shipping_name'  => $name,
-                    'shipping_addr'  => $addr,
-                    'shipping_city'  => $selectedZone['name'],
-                    'shipping_country' => $country,
-                    'notes'          => $notes,
-                    'items'          => $orderItems,
-                ]);
+                if ($stockError) {
+                    $error = $stockError;
+                } else {
+                    // Calculate final shipping
+                    $shipping = ($freeShippingOver > 0 && $subtotal >= $freeShippingOver) ? 0 : (float)$selectedZone['cost'];
+                    $total = $subtotal + $shipping;
+                    
+                    if ($paymentMethod === 'cod') {
+                        $total += $codFee;
+                    }
 
-                // Update the phone & zone explicitly
-                db()->prepare('UPDATE orders SET phone = ?, shipping_zone = ? WHERE id = ?')->execute([$phone, $selectedZone['name'], $orderId]);
+                    $orderItems = [];
+                    foreach ($items as $i) {
+                        $orderItems[] = [
+                            'product_id'    => $i['product_id'],
+                            'variant_id'    => $i['pv_id'] ?? null,
+                            'variant_size'  => $i['variant_size'] ?? null,
+                            'variant_color' => $i['variant_color'] ?? null,
+                            'name'          => $i['name'],
+                            'sku'           => $i['variant_sku'] ?? $i['sku'] ?? null,
+                            'price'         => item_effective_price($i),
+                            'quantity'      => (int)$i['quantity'],
+                        ];
+                    }
 
-                cart_clear();
+                    // Insert the order
+                    $orderId = create_order([
+                        'user_id'        => $user['id'] ?? null,
+                        'guest_email'    => $user ? null : $email,
+                        'subtotal'       => $subtotal,
+                        'shipping_cost'  => $shipping,
+                        'total'          => $total,
+                        'payment_method' => $paymentMethod,
+                        'shipping_name'  => $name,
+                        'shipping_addr'  => $addr,
+                        'shipping_city'  => $selectedZone['name'],
+                        'shipping_country' => $country,
+                        'notes'          => $notes,
+                        'phone'          => $phone,
+                        'shipping_zone'  => $selectedZone['name'],
+                        'items'          => $orderItems,
+                    ]);
 
-                // Set session and redirect — NO HTML has been output yet, so this works
-                $_SESSION['order_success'] = $orderId;
-                redirect('/checkout.php?success=1');
+                    cart_clear();
+
+                    // Set session and redirect — NO HTML has been output yet, so this works
+                    $_SESSION['order_success'] = $orderId;
+                    redirect('/checkout.php?success=1');
+                }
             }
         }
     }
@@ -254,76 +274,14 @@ endif;
     </div>
 </section>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const subtotal = <?= $subtotal ?>;
-    const freeShippingOver = <?= $freeShippingOver ?>;
-    const codFee = <?= $codFee ?>;
-    const currency = <?= json_encode(currency_symbol()) ?>;
-    
-    const selectZone = document.getElementById('shipping_zone');
-    const radios = document.querySelectorAll('input[name="payment_method"]');
-    const txtShipping = document.getElementById('txt-shipping');
-    const txtTotal = document.getElementById('txt-total');
-    const btnSubmit = document.getElementById('checkout-btn');
-    const rowCod = document.getElementById('row-cod');
-    const labelOnline = document.getElementById('label-online');
-    const labelCod = document.getElementById('label-cod');
-
-    function formatMoney(amount) {
-        return currency + parseFloat(amount).toFixed(2);
-    }
-
-    function updateTotal() {
-        let shipping = 0;
-        const opt = selectZone.options[selectZone.selectedIndex];
-        
-        if (opt && opt.value) {
-            shipping = parseFloat(opt.getAttribute('data-cost')) || 0;
-            if (freeShippingOver > 0 && subtotal >= freeShippingOver) {
-                shipping = 0;
-            }
-        }
-
-        let total = subtotal + shipping;
-        let isCod = false;
-        
-        // Active border styling for radio buttons
-        if(labelOnline) labelOnline.style.borderColor = 'var(--border)';
-        if(labelCod) labelCod.style.borderColor = 'var(--border)';
-
-        radios.forEach(r => {
-            if (r.checked) {
-                if (r.value === 'cod') {
-                    isCod = true;
-                    total += codFee;
-                    if(labelCod) labelCod.style.borderColor = 'var(--terracotta)';
-                } else {
-                    if(labelOnline) labelOnline.style.borderColor = 'var(--terracotta)';
-                }
-            }
-        });
-
-        // Update UI
-        if (!opt || !opt.value) {
-            txtShipping.innerText = 'Select a city';
-        } else {
-            txtShipping.innerText = shipping === 0 ? 'Free' : formatMoney(shipping);
-        }
-
-        if (rowCod) {
-            rowCod.style.display = (isCod && codFee > 0) ? 'flex' : 'none';
-        }
-
-        txtTotal.innerText = formatMoney(total);
-        btnSubmit.innerText = 'Place Order — ' + formatMoney(total);
-    }
-
-    selectZone.addEventListener('change', updateTotal);
-    radios.forEach(r => r.addEventListener('change', updateTotal));
-    
-    updateTotal(); // initial run
-});
+<script id="checkout-config" type="application/json">
+<?= json_encode([
+    'subtotal' => $subtotal,
+    'freeShippingOver' => $freeShippingOver,
+    'codFee' => $codFee,
+    'currency' => currency_symbol()
+]) ?>
 </script>
+<script src="<?= SITE_URL ?>/assets/js/checkout.js"></script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

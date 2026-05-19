@@ -52,7 +52,7 @@ if(searchInput){
         }
         searchResults.innerHTML=data.results.map(p=>`
           <a href="${BASE}/product.php?slug=${p.slug}" class="lume-search-result">
-            <img src="${BASE}/${p.image}" class="lume-search-thumb" alt="${p.name}">
+            <img src="${p.image.startsWith('http') ? p.image : BASE+'/'+p.image}" class="lume-search-thumb" alt="${p.name}">
             <div class="lume-search-info">
               <span class="lume-search-type">${p.category_name||'Product'}</span>
               <span class="lume-search-title">${p.name}</span>
@@ -104,7 +104,7 @@ function loadCart(){
     }
     cartItems.innerHTML=data.items.map(i=>`
       <div class="lume-cart-item" data-cart-id="${i.id}">
-        <img src="${BASE}/${i.image}" alt="${i.name}">
+        <img src="${i.image.startsWith('http') ? i.image : BASE+'/'+i.image}" alt="${i.name}">
         <div class="lume-cart-item-info">
           <span class="lume-cart-item-name">${i.name}</span>
           ${(i.variant_size||i.variant_color)?`<span class="lume-cart-variant-meta">${i.variant_size||''} ${i.variant_size&&i.variant_color?'/':''} ${i.variant_color||''}</span>`:''}
@@ -282,7 +282,7 @@ window.lumePixel={
     if(currentImages.length <= 1) { thumbWrap.innerHTML = ''; return; }
     thumbWrap.innerHTML = currentImages.map((src, i) =>
       `<button class="lume-gallery__thumb ${i===0?'active':''}" data-index="${i}" aria-label="View image ${i+1}">
-        <img src="${BASE}/${src}" alt="" loading="lazy">
+        <img src="${src.startsWith('http') ? src : BASE+'/'+src}" alt="" loading="lazy">
       </button>`
     ).join('');
     thumbWrap.querySelectorAll('.lume-gallery__thumb').forEach(t => {
@@ -297,7 +297,7 @@ window.lumePixel={
     if(mainImg) {
       mainImg.style.opacity = '0';
       setTimeout(() => {
-        mainImg.src = BASE + '/' + currentImages[idx];
+        mainImg.src = currentImages[idx].startsWith('http') ? currentImages[idx] : BASE + '/' + currentImages[idx];
         mainImg.style.opacity = '1';
       }, 150);
     }
@@ -340,7 +340,7 @@ window.lumePixel={
 
   function openLightbox() {
     if(!lightbox || !currentImages.length) return;
-    lbImg.src = BASE + '/' + currentImages[currentIndex];
+    lbImg.src = currentImages[currentIndex].startsWith('http') ? currentImages[currentIndex] : BASE + '/' + currentImages[currentIndex];
     if(lbCounter) lbCounter.textContent = (currentIndex+1) + ' / ' + currentImages.length;
     lightbox.classList.add('active');
     document.body.style.overflow = 'hidden';
@@ -348,7 +348,7 @@ window.lumePixel={
   function closeLightbox() { if(!lightbox) return; lightbox.classList.remove('active'); document.body.style.overflow = ''; }
   function lbGo(dir) {
     showImage(currentIndex + dir);
-    lbImg.src = BASE + '/' + currentImages[currentIndex];
+    lbImg.src = currentImages[currentIndex].startsWith('http') ? currentImages[currentIndex] : BASE + '/' + currentImages[currentIndex];
     if(lbCounter) lbCounter.textContent = (currentIndex+1) + ' / ' + currentImages.length;
   }
 

@@ -122,12 +122,12 @@ foreach ($products as $p) {
         <?php $pid = (int)$p['id']; ?>
         <div class="lume-product-card lume-reveal">
             <a href="<?= SITE_URL ?>/product.php?slug=<?= h($p['slug']) ?>" class="lume-product-card__img-wrap">
-            <img src="<?= SITE_URL ?>/<?= h($displayImages[$pid] ?? product_image($p)) ?>" 
+            <img src="<?= asset_url(h($displayImages[$pid] ?? product_image($p))) ?>" 
                      alt="<?= h($p['name']) ?>" 
                      class="lume-product-card__img" 
                      loading="lazy"
                      <?php if (!empty($hoverImages[$pid])): ?>
-                     data-hover-src="<?= SITE_URL ?>/<?= h($hoverImages[$pid]) ?>"
+                     data-hover-src="<?= asset_url(h($hoverImages[$pid])) ?>"
                      <?php endif; ?>>
                 <?php if (!empty($p['sale_price'])): ?>
                 <span class="lume-product-card__badge">Sale</span>
@@ -145,7 +145,7 @@ foreach ($products as $p) {
                           style="background:<?= h($cData['hex']) ?>" 
                           title="<?= h($cn) ?>"
                           <?php if (!empty($cData['image'])): ?>
-                          data-image="<?= SITE_URL ?>/<?= h($cData['image']) ?>"
+                          data-image="<?= asset_url(h($cData['image'])) ?>"
                           <?php endif; ?>></span>
                     <?php endforeach; ?>
                 </div>

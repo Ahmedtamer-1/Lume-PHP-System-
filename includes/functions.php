@@ -104,12 +104,17 @@ function verify_nonce(string $nonce, string $action, int $ttlHours = 24): bool
 // ════════════════════════════════════════════════════════
 function current_user(): ?array
 {
+    static $user = null;
+    if ($user !== null) return $user;
+
     lume_session_start();
     if (empty($_SESSION['user_id']))
         return null;
+    
     $stmt = db()->prepare('SELECT id, first_name, last_name, email, role FROM users WHERE id = ?');
     $stmt->execute([$_SESSION['user_id']]);
-    return $stmt->fetch() ?: null;
+    $user = $stmt->fetch() ?: null;
+    return $user;
 }
 
 function is_logged_in(): bool
@@ -199,7 +204,7 @@ function get_product_color_swatches(array $productIds): array
  */
 function item_effective_price(array $item): float
 {
-    if (!empty($item['variant_price']))
+    if (isset($item['variant_price']) && $item['variant_price'] !== null)
         return (float) $item['variant_price'];
     if (!empty($item['sale_price']))
         return (float) $item['sale_price'];
@@ -411,10 +416,17 @@ function product_price(array $product): string
     return '<span class="price">' . money((float) $product['price']) . '</span>';
 }
 
+function asset_url(?string $path): string
+{
+    if (empty($path)) return SITE_URL . '/assets/images/placeholder.jpg';
+    if (strpos($path, 'http') === 0) return $path;
+    return SITE_URL . '/' . ltrim($path, '/');
+}
+
 function product_image(array $product): string
 {
-    $img = !empty($product['image']) ? h($product['image']) : 'assets/images/placeholder.jpg';
-    return $img;
+    $img = !empty($product['image']) ? h($product['image']) : '';
+    return asset_url($img);
 }
 
 // ════════════════════════════════════════════════════════
@@ -430,50 +442,59 @@ function create_order(array $data): int
     $pdo = db();
     $number = generate_order_number();
 
-    $pdo->prepare(
-        'INSERT INTO orders
-         (order_number, user_id, guest_email, subtotal, shipping_cost, discount, tax, total,
-          currency, payment_method, shipping_name, shipping_addr, shipping_city, shipping_country, notes)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
-    )->execute([
-                $number,
-                $data['user_id'] ?? null,
-                $data['guest_email'] ?? null,
-                $data['subtotal'],
-                $data['shipping_cost'],
-                $data['discount'] ?? 0,
-                $data['tax'] ?? 0,
-                $data['total'],
-                CURRENCY_CODE,
-                $data['payment_method'],
-                $data['shipping_name'],
-                $data['shipping_addr'],
-                $data['shipping_city'],
-                $data['shipping_country'],
-                $data['notes'] ?? null,
-            ]);
-
-    $orderId = (int) $pdo->lastInsertId();
-
-    foreach ($data['items'] as $item) {
+    $pdo->beginTransaction();
+    try {
         $pdo->prepare(
-            'INSERT INTO order_items (order_id, product_id, variant_id, variant_size, variant_color, name, sku, price, quantity, subtotal)
-             VALUES (?,?,?,?,?,?,?,?,?,?)'
+            'INSERT INTO orders
+             (order_number, user_id, guest_email, subtotal, shipping_cost, discount, tax, total,
+              currency, payment_method, shipping_name, shipping_addr, shipping_city, shipping_country, notes, phone, shipping_zone)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
         )->execute([
-                    $orderId,
-                    $item['product_id'] ?? null,
-                    $item['variant_id'] ?? null,
-                    $item['variant_size'] ?? null,
-                    $item['variant_color'] ?? null,
-                    $item['name'],
-                    $item['sku'] ?? null,
-                    $item['price'],
-                    $item['quantity'],
-                    $item['price'] * $item['quantity'],
+                    $number,
+                    $data['user_id'] ?? null,
+                    $data['guest_email'] ?? null,
+                    $data['subtotal'],
+                    $data['shipping_cost'],
+                    $data['discount'] ?? 0,
+                    $data['tax'] ?? 0,
+                    $data['total'],
+                    CURRENCY_CODE,
+                    $data['payment_method'],
+                    $data['shipping_name'],
+                    $data['shipping_addr'],
+                    $data['shipping_city'],
+                    $data['shipping_country'],
+                    $data['notes'] ?? null,
+                    $data['phone'] ?? null,
+                    $data['shipping_zone'] ?? null,
                 ]);
-    }
 
-    return $orderId;
+        $orderId = (int) $pdo->lastInsertId();
+
+        foreach ($data['items'] as $item) {
+            $pdo->prepare(
+                'INSERT INTO order_items (order_id, product_id, variant_id, variant_size, variant_color, name, sku, price, quantity, subtotal)
+                 VALUES (?,?,?,?,?,?,?,?,?,?)'
+            )->execute([
+                        $orderId,
+                        $item['product_id'] ?? null,
+                        $item['variant_id'] ?? null,
+                        $item['variant_size'] ?? null,
+                        $item['variant_color'] ?? null,
+                        $item['name'],
+                        $item['sku'] ?? null,
+                        $item['price'],
+                        $item['quantity'],
+                        $item['price'] * $item['quantity'],
+                    ]);
+        }
+
+        $pdo->commit();
+        return $orderId;
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        throw $e;
+    }
 }
 
 // ════════════════════════════════════════════════════════
@@ -481,20 +502,30 @@ function create_order(array $data): int
 // ════════════════════════════════════════════════════════
 function media_upload(array $file, ?int $userId = null): ?array
 {
-    $allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
-    if (!in_array($file['type'], $allowed))
-        return null;
     if ($file['error'] !== UPLOAD_ERR_OK)
         return null;
 
-    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mime = $finfo->file($file['tmp_name']);
+    $allowedMimes = [
+        'image/jpeg' => 'jpg',
+        'image/png' => 'png',
+        'image/webp' => 'webp',
+        'image/gif' => 'gif',
+        'image/svg+xml' => 'svg'
+    ];
+
+    if (!array_key_exists($mime, $allowedMimes))
+        return null;
+
+    $ext = $allowedMimes[$mime];
     $newName = 'media_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
-    $dest = ROOT_PATH . '/assets/images/uploads/' . $newName;
+    $dest = UPLOADS_PATH . '/' . $newName;
+    $filepath = 'assets/images/products/' . $newName; // Keep relative for DB storage
 
     // Ensure uploads directory exists
-    $dir = ROOT_PATH . '/assets/images/uploads';
-    if (!is_dir($dir))
-        mkdir($dir, 0755, true);
+    if (!is_dir(UPLOADS_PATH))
+        mkdir(UPLOADS_PATH, 0755, true);
 
     if (!move_uploaded_file($file['tmp_name'], $dest))
         return null;
@@ -608,10 +639,8 @@ function is_ajax(): bool
 
 function get_client_ip(): string
 {
-    foreach (['HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR'] as $key) {
-        if (!empty($_SERVER[$key])) {
-            return filter_var(explode(',', $_SERVER[$key])[0], FILTER_VALIDATE_IP) ?: 'unknown';
-        }
+    if (!empty($_SERVER['REMOTE_ADDR'])) {
+        return filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP) ?: 'unknown';
     }
     return 'unknown';
 }

@@ -42,7 +42,7 @@ $total = $subtotal + $shipping;
             <tr>
                 <td>
                     <div class="lume-cart-table__product">
-                        <img src="<?= SITE_URL ?>/<?= !empty($item['variant_image']) ? h($item['variant_image']) : product_image($item) ?>" alt="<?= h($item['name']) ?>">
+                        <img src="<?= asset_url(!empty($item['variant_image']) ? h($item['variant_image']) : product_image($item)) ?>" alt="<?= h($item['name']) ?>">
                         <div>
                             <a href="<?= SITE_URL ?>/product.php?slug=<?= h($item['slug']) ?>" style="font-size:.9rem"><?= h($item['name']) ?></a>
                             <?php if ($variantLabel): ?>

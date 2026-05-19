@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $out = [];
         foreach ($items as $i) {
             $p = item_effective_price($i);
-            $img = !empty($i['variant_image']) ? h($i['variant_image']) : product_image($i);
+            $img = !empty($i['variant_image']) ? SITE_URL . '/' . ltrim(h($i['variant_image']), '/') : product_image($i);
             $out[] = [
                 'id'            => (int)$i['id'],
                 'product_id'    => (int)$i['product_id'],
@@ -33,11 +33,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Non-AJAX form submissions (from cart page)
     $isAjax = is_ajax();
 
+    if (!csrf_verify($_POST['csrf'] ?? '')) {
+        if ($isAjax) json_response(['success' => false, 'message' => 'Invalid CSRF token'], 400);
+        else redirect('/cart.php');
+    }
+
     if ($action === 'add') {
         $pid = (int)($_POST['product_id'] ?? 0);
         $qty = max(1, (int)($_POST['quantity'] ?? 1));
         $vid = (int)($_POST['variant_id'] ?? 0) ?: null;
         if ($pid <= 0) { if ($isAjax) json_response(['success'=>false,'message'=>'Invalid product'],400); else redirect('/cart.php'); }
+        
+        $product = db()->prepare('SELECT has_variants FROM products WHERE id = ?');
+        $product->execute([$pid]);
+        $prodData = $product->fetch();
+
+        if ($prodData && !empty($prodData['has_variants']) && !$vid) {
+            if ($isAjax) json_response(['success' => false, 'message' => 'Please select a size/color.'], 400); else redirect('/cart.php');
+        }
+        
         cart_add($pid, $qty, $vid);
         if ($isAjax) json_response(['success'=>true,'count'=>cart_count()]);
         redirect('/cart.php');

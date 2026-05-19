@@ -123,7 +123,7 @@ $sizeChart = $product['size_chart'] ?? null;
 
                 <div class="lume-gallery__main-wrap" id="gallery-main-wrap">
                     <img class="lume-gallery__main" id="gallery-main-img"
-                         src="<?= SITE_URL ?>/<?= h($activeImages[0]) ?>"
+                         src="<?= asset_url(h($activeImages[0])) ?>"
                          alt="<?= h($product['name']) ?>">
                     <!-- Zoom hint -->
                     <div class="lume-gallery__zoom-hint" id="zoom-hint">
@@ -139,7 +139,7 @@ $sizeChart = $product['size_chart'] ?? null;
                 <button class="lume-gallery__thumb <?= $idx === 0 ? 'active' : '' ?>"
                         data-index="<?= $idx ?>"
                         aria-label="View image <?= $idx + 1 ?>">
-                    <img src="<?= SITE_URL ?>/<?= h($img) ?>" alt="" loading="lazy">
+                    <img src="<?= asset_url(h($img)) ?>" alt="" loading="lazy">
                 </button>
                 <?php endforeach; ?>
             </div>
@@ -172,7 +172,7 @@ $sizeChart = $product['size_chart'] ?? null;
                             data-hex="<?= h($hex) ?>" 
                             data-image="<?= h($colorImages[$name] ?? '') ?>"
                             aria-label="<?= h($name) ?>" title="<?= h($name) ?>">
-                        <span class="lume-color-swatch__inner" style="<?= !empty($colorImages[$name]) ? 'background-image:url('.SITE_URL.'/'.h($colorImages[$name]).');background-size:cover;background-position:center' : 'background:'.h($hex) ?>"></span>
+                        <span class="lume-color-swatch__inner" style="<?= !empty($colorImages[$name]) ? 'background-image:url('.asset_url(h($colorImages[$name])).');background-size:cover;background-position:center' : 'background:'.h($hex) ?>"></span>
                         <span class="lume-color-swatch__tooltip"><?= h($name) ?></span>
                     </button>
                     <?php endforeach; ?>
@@ -263,7 +263,7 @@ $sizeChart = $product['size_chart'] ?? null;
             <button class="lume-sizechart-modal__close" id="sizechart-close" aria-label="Close">✕</button>
         </div>
         <div class="lume-sizechart-modal__body">
-            <img src="<?= SITE_URL ?>/<?= h($sizeChart) ?>" alt="Size Chart for <?= h($product['name']) ?>">
+            <img src="<?= asset_url(h($sizeChart)) ?>" alt="Size Chart for <?= h($product['name']) ?>">
         </div>
     </div>
 </div>

@@ -72,7 +72,7 @@ foreach ($sections as $section):
         <?php foreach ($featured as $p): ?>
         <div class="lume-product-card lume-reveal">
             <a href="<?= SITE_URL ?>/product.php?slug=<?= h($p['slug']) ?>" class="lume-product-card__img-wrap">
-                <img src="<?= SITE_URL ?>/<?= product_image($p) ?>" alt="<?= h($p['name']) ?>" class="lume-product-card__img" loading="lazy">
+                <img src="<?= product_image($p) ?>" alt="<?= h($p['name']) ?>" class="lume-product-card__img" loading="lazy">
                 <?php if (!empty($p['sale_price'])): ?>
                 <span class="lume-product-card__badge">Sale</span>
                 <?php endif; ?>
