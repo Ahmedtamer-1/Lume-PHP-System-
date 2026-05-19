@@ -209,7 +209,7 @@ $sizeChart = $product['size_chart'] ?? null;
             <?php if ($inStock): ?>
             <div class="lume-product-single__qty">
                 <button class="lume-qty-btn" data-dir="minus">&#8722;</button>
-                <span class="lume-qty-val" id="qty-val">1</span>
+                <span class="lume-qty-val" id="qty-val" data-max="<?= $stockDisplay ?>">1</span>
                 <button class="lume-qty-btn" data-dir="plus">+</button>
             </div>
             <button class="lume-btn lume-btn--full lume-btn--solid" id="btn-add-single"

@@ -192,7 +192,9 @@ document.addEventListener('click',(e)=>{
   const wrap=btn.closest('.lume-product-single__qty');
   const val=wrap&&wrap.querySelector('.lume-qty-val');if(!val)return;
   let n=parseInt(val.textContent)||1;
-  if(btn.dataset.dir==='minus')n=Math.max(1,n-1);else n++;
+  let max=val.dataset.max ? parseInt(val.dataset.max) : 99;
+  if(btn.dataset.dir==='minus')n=Math.max(1,n-1);
+  else n=Math.min(max,n+1);
   val.textContent=n;
 });
 
@@ -449,6 +451,12 @@ window.lumePixel={
         btnAdd.style.opacity = '1';
         btnAdd.style.cursor  = 'pointer';
         btnAdd.textContent   = 'Add to Bag';
+        const qtyVal = document.getElementById('qty-val');
+        if(qtyVal) {
+            qtyVal.dataset.max = matched.stock;
+            let currentN = parseInt(qtyVal.textContent) || 1;
+            if (currentN > matched.stock) qtyVal.textContent = Math.max(1, matched.stock);
+        }
         btnAdd.onclick = () => {
           const qty = parseInt(document.getElementById('qty-val')?.textContent || '1');
           window.addToCart(btnAdd.dataset.productId, qty, matched.id);
