@@ -21,7 +21,7 @@ if (file_exists($envFile)) {
     }
 }
 
-if(!defined('ENV')) define('ENV', 'production'); // 'development' | 'production'
+if(!defined('ENV')) define('ENV', 'development'); // 'development' | 'production'
 if(!defined('SITE_URL')) define('SITE_URL', 'https://darkorange-kangaroo-844530.hostingersite.com');
 if(!defined('SITE_NAME')) define('SITE_NAME', 'LUMEEGY');
 if(!defined('SITE_TAGLINE')) define('SITE_TAGLINE', 'Illuminate Your Ritual');
