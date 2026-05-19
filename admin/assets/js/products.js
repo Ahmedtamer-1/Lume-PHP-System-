@@ -350,7 +350,7 @@ let colorGalleryPickerTarget = null;
 function loadColorGalleries(){
     fetch(API+'?action=get_color_galleries&product_id='+currentProductId,{headers:{'X-Requested-With':'XMLHttpRequest'}})
     .then(r=>r.json()).then(d=>{
-        colorGalleries = (d.success && d.color_galleries) ? d.color_galleries : {};
+        colorGalleries = (d.success && d.color_galleries && !Array.isArray(d.color_galleries)) ? d.color_galleries : {};
         renderColorGalleriesSection();
     }).catch(()=>{
         colorGalleries = {};
