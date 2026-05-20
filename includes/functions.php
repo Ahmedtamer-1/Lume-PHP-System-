@@ -529,8 +529,6 @@ function media_upload(array $file, ?int $userId = null): ?array
 
     if (!move_uploaded_file($file['tmp_name'], $dest))
         return null;
-
-    $filepath = 'assets/images/uploads/' . $newName;
     $size = filesize($dest);
 
     // Get dimensions for images

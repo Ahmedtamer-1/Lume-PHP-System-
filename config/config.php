@@ -22,7 +22,32 @@ if (file_exists($envFile)) {
 }
 
 if(!defined('ENV')) define('ENV', 'production'); // 'development' | 'production'
-if(!defined('SITE_URL')) define('SITE_URL', 'https://darkorange-kangaroo-844530.hostingersite.com');
+
+// Detect dynamic SITE_URL if not explicitly set in .env
+if(!defined('SITE_URL')) {
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443)) ? "https://" : "http://";
+    $domainName = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    
+    // Auto-detect if it's in a subfolder (e.g., localhost/PHPLUME)
+    $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+    $dirName = dirname($scriptName);
+    
+    // Strip trailing slashes and common known subdirs like /admin or /api if we are deep in the app
+    if (strpos($dirName, '/admin') !== false) {
+        $dirName = substr($dirName, 0, strpos($dirName, '/admin'));
+    } elseif (strpos($dirName, '/api') !== false) {
+        $dirName = substr($dirName, 0, strpos($dirName, '/api'));
+    }
+    
+    $dirName = str_replace('\\', '/', $dirName);
+    if ($dirName === '/' || $dirName === '.') {
+        $dirName = '';
+    }
+    
+    // For simpler setups, if HTTP_HOST is localhost, we might just want to let the user define it in .env,
+    // but this fallback is usually robust.
+    define('SITE_URL', rtrim($protocol . $domainName . $dirName, '/'));
+}
 if(!defined('SITE_NAME')) define('SITE_NAME', 'LUMEEGY');
 if(!defined('SITE_TAGLINE')) define('SITE_TAGLINE', 'Illuminate Your Ritual');
 
