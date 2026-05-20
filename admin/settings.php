@@ -20,6 +20,7 @@ $settingKeys = [
     'cod_enabled', 'cod_label', 'cod_extra_fee',
     'currency', 'currency_symbol', 'shipping_flat_rate', 'free_shipping_over',
     'phone_display_name',
+    'paymob_api_key', 'paymob_integration_id', 'paymob_iframe_id', 'paymob_hmac',
     // Theme colors
     'theme_color_bg', 'theme_color_bg_card', 'theme_color_cream',
     'theme_color_gold', 'theme_color_accent', 'theme_color_muted',
@@ -430,6 +431,34 @@ require_once __DIR__ . '/includes/header.php';
                 <label>Free Shipping Over</label>
                 <input type="number" name="free_shipping_over" value="<?= h($s('free_shipping_over', '2000')) ?>" min="0" step="1">
                 <span class="admin-form__hint">0 = never free shipping</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Paymob Integration ── -->
+    <div class="admin-settings-section">
+        <h2 class="admin-settings-section__title">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2" ry="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            Paymob Integration
+        </h2>
+        <p style="font-size:.75rem;color:var(--a-muted);margin-bottom:16px">Configure Paymob for online card payments. Ensure your webhook URL is set to <code><?= SITE_URL ?>/api/paymob_callback.php</code> in your Paymob dashboard.</p>
+        <div class="admin-form__group">
+            <label>API Key</label>
+            <input type="password" name="paymob_api_key" value="<?= h($s('paymob_api_key')) ?>" placeholder="Enter API Key">
+        </div>
+        <div class="admin-form__row-3">
+            <div class="admin-form__group">
+                <label>Integration ID (Card)</label>
+                <input type="text" name="paymob_integration_id" value="<?= h($s('paymob_integration_id')) ?>" placeholder="e.g. 4345234">
+            </div>
+            <div class="admin-form__group">
+                <label>Iframe ID</label>
+                <input type="text" name="paymob_iframe_id" value="<?= h($s('paymob_iframe_id')) ?>" placeholder="e.g. 123456">
+            </div>
+            <div class="admin-form__group">
+                <label>HMAC Secret</label>
+                <input type="password" name="paymob_hmac" value="<?= h($s('paymob_hmac')) ?>" placeholder="Enter HMAC Secret">
+                <span class="admin-form__hint">Required for secure webhook validation</span>
             </div>
         </div>
     </div>

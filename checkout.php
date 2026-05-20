@@ -131,11 +131,37 @@ if (!$showSuccess && $_SERVER['REQUEST_METHOD'] === 'POST') {
                         'items'          => $orderItems,
                     ]);
 
-                    cart_clear();
-
-                    // Set session and redirect — NO HTML has been output yet, so this works
-                    $_SESSION['order_success'] = $orderId;
-                    redirect('/checkout.php?success=1');
+                    // Handle Payment Method
+                    if ($paymentMethod === 'online') {
+                        try {
+                            require_once __DIR__ . '/includes/paymob.php';
+                            
+                            $names = explode(' ', $name, 2);
+                            $billingData = [
+                                'first_name' => $names[0] ?? 'NA',
+                                'last_name' => $names[1] ?? 'NA',
+                                'email' => $email,
+                                'phone_number' => $phone,
+                                'street' => $addr,
+                                'city' => $selectedZone['name'],
+                            ];
+                            
+                            $iframeUrl = paymob_generate_iframe_url($orderId, $total * 100, $billingData);
+                            
+                            // Clear cart since order is generated and user is leaving to pay
+                            cart_clear();
+                            $_SESSION['paymob_pending_order'] = $orderId;
+                            
+                            redirect($iframeUrl);
+                        } catch (Exception $e) {
+                            $error = "Payment initiation failed: " . $e->getMessage();
+                        }
+                    } else {
+                        cart_clear();
+                        // Set session and redirect — NO HTML has been output yet, so this works
+                        $_SESSION['order_success'] = $orderId;
+                        redirect('/checkout.php?success=1');
+                    }
                 }
             }
         }
