@@ -14,9 +14,11 @@ require_once __DIR__ . '/includes/header.php';
 <section class="container">
     <div class="lume-contact">
         <div class="lume-contact__info lume-reveal-left">
-            <p class="lume-section__eyebrow">Get In Touch</p>
-            <h2>We'd Love to Hear From You</h2>
-            <p>Whether you have a question about a product, need help with an order, or just want to say hello — our team is here for you.</p>
+            <p class="lume-section__eyebrow"><?= h(setting('page_contact_eyebrow', 'Get In Touch')) ?></p>
+            <h2><?= h(setting('page_contact_title', 'We\'d Love to Hear From You')) ?></h2>
+            <div class="lume-legal__body" style="color:var(--muted);font-size:.9rem;line-height:1.8;margin-bottom:16px">
+                <?= nl2br(h(setting('page_contact_text', 'Whether you have a question about a product, need help with an order, or just want to say hello — our team is here for you.'))) ?>
+            </div>
             <div style="margin-top:32px">
                 <div class="lume-contact__detail">
                     <span>✉</span>

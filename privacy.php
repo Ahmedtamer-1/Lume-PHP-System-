@@ -14,6 +14,7 @@ $contactEmail = setting('contact_email', 'hello@lumeegy.com');
         <p class="lume-legal__updated lume-reveal">Last updated: <?= date('F j, Y') ?></p>
 
         <div class="lume-legal__body lume-reveal">
+            <?php $content = setting('page_privacy_content'); if ($content): echo $content; else: ?>
 
             <h2>1. Introduction</h2>
             <p><?= h($brandName) ?> ("we", "us", or "our") operates the <?= h($brandName) ?> website. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website or make a purchase.</p>
@@ -96,6 +97,7 @@ $contactEmail = setting('contact_email', 'hello@lumeegy.com');
                 <li>Contact page: <a href="<?= SITE_URL ?>/contact.php" style="color:var(--gold)">Contact Us</a></li>
             </ul>
 
+            <?php endif; ?>
         </div>
     </div>
 </section>

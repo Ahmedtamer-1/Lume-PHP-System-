@@ -14,6 +14,7 @@ $freeShipOver = setting('free_shipping_over', '2000');
         <div class="lume-divider lume-reveal" style="margin-bottom:12px"></div>
 
         <div class="lume-legal__body lume-reveal">
+            <?php $content = setting('page_shipping_content'); if ($content): echo $content; else: ?>
 
             <h2>Shipping</h2>
 
@@ -70,6 +71,7 @@ $freeShipOver = setting('free_shipping_over', '2000');
             <h2>Questions?</h2>
             <p>If you have any questions about shipping or returns, please <a href="<?= SITE_URL ?>/contact.php" style="color:var(--gold)">contact us</a> and we'll be happy to help.</p>
 
+            <?php endif; ?>
         </div>
     </div>
 </section>

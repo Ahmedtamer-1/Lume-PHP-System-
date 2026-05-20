@@ -38,6 +38,7 @@ $csrfToken       = csrf_token();
 $pixelId         = setting('meta_pixel_id') ?: META_PIXEL_ID;
 $siteLogo        = setting('site_logo');
 $siteFavicon     = setting('site_favicon');
+$googleAnalyticsId = setting('google_analytics_id');
 
 // ── Theme settings ──
 $themeBg        = setting('theme_color_bg', '#0A0A0A');
@@ -125,6 +126,17 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     </script>
     <noscript><img height="1" width="1" style="display:none"
     src="https://www.facebook.com/tr?id=<?= h($pixelId) ?>&ev=PageView&noscript=1"/></noscript>
+    <?php endif; ?>
+
+    <?php if ($googleAnalyticsId): ?>
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=<?= h($googleAnalyticsId) ?>"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '<?= h($googleAnalyticsId) ?>');
+    </script>
     <?php endif; ?>
 </head>
 <body>

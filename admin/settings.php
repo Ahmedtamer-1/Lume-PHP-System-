@@ -289,7 +289,7 @@ require_once __DIR__ . '/includes/header.php';
             <div class="admin-form__group">
                 <label>Site Logo</label>
                 <div class="admin-img-upload">
-                    <div class="admin-img-preview">
+                    <div class="admin-img-preview" id="preview-site_logo">
                         <?php if ($s('site_logo')): ?>
                             <img src="<?= SITE_URL . '/' . h($s('site_logo')) ?>" alt="Logo">
                         <?php else: ?>
@@ -297,14 +297,17 @@ require_once __DIR__ . '/includes/header.php';
                         <?php endif; ?>
                     </div>
                 </div>
-                <input type="file" name="site_logo_file" accept="image/*" style="margin-top:8px">
-                <input type="hidden" name="site_logo" value="<?= h($s('site_logo')) ?>">
+                <div style="margin-top:8px">
+                    <button type="button" class="admin-btn admin-btn--sm" onclick="openSettingsMediaPicker('site_logo')">Choose from Gallery</button>
+                    <button type="button" class="admin-btn admin-btn--sm admin-btn--danger" onclick="clearSettingsMedia('site_logo')">Clear</button>
+                </div>
+                <input type="hidden" name="site_logo" id="input-site_logo" value="<?= h($s('site_logo')) ?>">
                 <span class="admin-form__hint">Recommended: SVG or PNG, max 300×80px</span>
             </div>
             <div class="admin-form__group">
                 <label>Favicon</label>
                 <div class="admin-img-upload">
-                    <div class="admin-img-preview" style="width:64px;height:64px">
+                    <div class="admin-img-preview" id="preview-site_favicon" style="width:64px;height:64px">
                         <?php if ($s('site_favicon')): ?>
                             <img src="<?= SITE_URL . '/' . h($s('site_favicon')) ?>" alt="Favicon">
                         <?php else: ?>
@@ -312,14 +315,17 @@ require_once __DIR__ . '/includes/header.php';
                         <?php endif; ?>
                     </div>
                 </div>
-                <input type="file" name="site_favicon_file" accept="image/*,.ico" style="margin-top:8px">
-                <input type="hidden" name="site_favicon" value="<?= h($s('site_favicon')) ?>">
+                <div style="margin-top:8px">
+                    <button type="button" class="admin-btn admin-btn--sm" onclick="openSettingsMediaPicker('site_favicon')">Choose from Gallery</button>
+                    <button type="button" class="admin-btn admin-btn--sm admin-btn--danger" onclick="clearSettingsMedia('site_favicon')">Clear</button>
+                </div>
+                <input type="hidden" name="site_favicon" id="input-site_favicon" value="<?= h($s('site_favicon')) ?>">
                 <span class="admin-form__hint">ICO, PNG or SVG — 32×32 or 180×180</span>
             </div>
             <div class="admin-form__group">
                 <label>OG / Share Image</label>
                 <div class="admin-img-upload">
-                    <div class="admin-img-preview">
+                    <div class="admin-img-preview" id="preview-og_image">
                         <?php if ($s('og_image')): ?>
                             <img src="<?= SITE_URL . '/' . h($s('og_image')) ?>" alt="OG">
                         <?php else: ?>
@@ -327,8 +333,11 @@ require_once __DIR__ . '/includes/header.php';
                         <?php endif; ?>
                     </div>
                 </div>
-                <input type="file" name="og_image_file" accept="image/*" style="margin-top:8px">
-                <input type="hidden" name="og_image" value="<?= h($s('og_image')) ?>">
+                <div style="margin-top:8px">
+                    <button type="button" class="admin-btn admin-btn--sm" onclick="openSettingsMediaPicker('og_image')">Choose from Gallery</button>
+                    <button type="button" class="admin-btn admin-btn--sm admin-btn--danger" onclick="clearSettingsMedia('og_image')">Clear</button>
+                </div>
+                <input type="hidden" name="og_image" id="input-og_image" value="<?= h($s('og_image')) ?>">
                 <span class="admin-form__hint">1200×630px — shown when shared on social media</span>
             </div>
         </div>
@@ -433,10 +442,27 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </form>
 
+<!-- Media Picker Modal -->
+<div class="hp-modal-overlay" id="media-picker-modal" style="display:none">
+    <div class="hp-modal" style="max-width:800px;background:var(--a-surface);border:1px solid var(--a-border);border-radius:var(--a-radius);padding:32px;width:100%;max-height:90vh;overflow-y:auto;animation:modalIn .3s ease">
+        <div class="hp-modal__head" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+            <h3 style="font-size:1rem;font-weight:600;margin:0">Select Media</h3>
+            <button type="button" onclick="closeSettingsMediaPicker()" style="background:none;border:none;color:var(--a-muted);font-size:1.2rem;cursor:pointer">✕</button>
+        </div>
+        <div class="media-grid" id="picker-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:16px;max-height:60vh;overflow-y:auto;padding:16px 0"></div>
+    </div>
+</div>
+
 <style>
 .admin-settings-section{margin-bottom:32px;padding:24px;background:var(--a-surface);border:1px solid var(--a-border);border-radius:var(--a-radius)}
 .admin-settings-section__title{display:flex;align-items:center;gap:8px;font-size:.9rem;font-weight:600;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--a-border)}
 .admin-settings-section__title svg{flex-shrink:0}
+.hp-modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;z-index:200;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:24px}
+@keyframes modalIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.media-grid__item{cursor:pointer;border-radius:4px;overflow:hidden;border:2px solid transparent;transition:all .2s;text-align:center}
+.media-grid__item:hover{border-color:var(--a-accent)}
+.media-grid__item img{width:100%;height:120px;object-fit:cover;display:block}
+.media-grid__item__name{font-size:.65rem;color:var(--a-muted);padding:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 </style>
 
 <script>
@@ -462,6 +488,57 @@ document.querySelectorAll('input[data-color-key]').forEach(picker => {
             }
         });
     }
+});
+
+// Media Picker
+let pickerTargetField = null;
+
+function openSettingsMediaPicker(field) {
+    pickerTargetField = field;
+    const grid = document.getElementById('picker-grid');
+    grid.innerHTML = '<div style="text-align:center;padding:24px;color:var(--a-muted);grid-column:1/-1">Loading…</div>';
+    document.getElementById('media-picker-modal').style.display = 'flex';
+
+    fetch('<?= SITE_URL ?>/api/media.php?page=1', {headers:{'X-Requested-With':'XMLHttpRequest'}})
+    .then(r => r.json()).then(data => {
+        if (!data.items || !data.items.length) {
+            grid.innerHTML = '<div style="text-align:center;padding:24px;color:var(--a-muted);grid-column:1/-1">No media uploaded yet.</div>';
+            return;
+        }
+        grid.innerHTML = data.items.map(m => `
+            <div class="media-grid__item" onclick="pickSettingsMedia('${m.filepath}')">
+                <img src="${m.url}" alt="${m.filename}" loading="lazy">
+                <div class="media-grid__item__name">${m.filename}</div>
+            </div>
+        `).join('');
+    });
+}
+
+function pickSettingsMedia(filepath) {
+    if (pickerTargetField) {
+        document.getElementById('input-' + pickerTargetField).value = filepath;
+        const preview = document.getElementById('preview-' + pickerTargetField);
+        if (preview) {
+            preview.innerHTML = `<img src="<?= SITE_URL ?>/${filepath}" alt="Preview">`;
+        }
+    }
+    closeSettingsMediaPicker();
+}
+
+function clearSettingsMedia(field) {
+    document.getElementById('input-' + field).value = '';
+    const preview = document.getElementById('preview-' + field);
+    if (preview) {
+        preview.innerHTML = field === 'site_favicon' ? 'No icon' : 'No ' + (field === 'og_image' ? 'image' : 'logo');
+    }
+}
+
+function closeSettingsMediaPicker() {
+    document.getElementById('media-picker-modal').style.display = 'none';
+}
+
+document.getElementById('media-picker-modal').addEventListener('click', function(e) { 
+    if (e.target === this) closeSettingsMediaPicker(); 
 });
 </script>
 
