@@ -94,7 +94,7 @@ require_once __DIR__ . '/includes/header.php';
 <div id="cropper-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:999;background:rgba(0,0,0,0.8);justify-content:center;align-items:center;">
     <div style="background:var(--a-surface);border-radius:var(--a-radius);padding:20px;max-width:90vw;max-height:90vh;display:flex;flex-direction:column;">
         <h3 style="margin-top:0;">Crop Image</h3>
-        <div style="flex:1;overflow:hidden;max-height:60vh;margin-bottom:20px;">
+        <div id="cropper-container" style="flex:1;overflow:hidden;max-height:60vh;margin-bottom:20px;">
             <img id="cropper-image" style="max-width:100%;display:block;" src="" alt="Picture">
         </div>
         <div style="display:flex;gap:10px;justify-content:flex-end;">
@@ -267,36 +267,41 @@ function uploadFiles(files) {
     // Check if single image file for cropping
     if (files.length === 1 && files[0].type.startsWith('image/')) {
         const file = files[0];
-        const url = URL.createObjectURL(file);
         pendingFileToUpload = file;
         
-        const img = document.getElementById('cropper-image');
-        
-        document.getElementById('cropper-modal').style.display = 'flex';
-        
-        if (cropperInstance) {
-            cropperInstance.destroy();
-            cropperInstance = null;
-        }
-        
-        // Ensure image is fully loaded before initializing cropper
-        img.onload = () => {
-            cropperInstance = new Cropper(img, {
-                viewMode: 1,
-                dragMode: 'crop',
-                autoCropArea: 0.8,
-                restore: false,
-                guides: true,
-                center: true,
-                highlight: false,
-                cropBoxMovable: true,
-                cropBoxResizable: true,
-                toggleDragModeOnDblclick: false,
-            });
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const dataUrl = e.target.result;
+            
+            // Recreate the image element completely to avoid Cropper state issues
+            const container = document.getElementById('cropper-container');
+            container.innerHTML = '<img id="cropper-image" style="max-width:100%;display:block;" src="' + dataUrl + '" alt="Picture">';
+            const img = document.getElementById('cropper-image');
+            
+            document.getElementById('cropper-modal').style.display = 'flex';
+            
+            if (cropperInstance) {
+                cropperInstance.destroy();
+                cropperInstance = null;
+            }
+            
+            // Give browser a tick to render modal before calculating sizes
+            setTimeout(() => {
+                cropperInstance = new Cropper(img, {
+                    viewMode: 1,
+                    dragMode: 'crop',
+                    autoCropArea: 0.8,
+                    restore: false,
+                    guides: true,
+                    center: true,
+                    highlight: false,
+                    cropBoxMovable: true,
+                    cropBoxResizable: true,
+                    toggleDragModeOnDblclick: false,
+                });
+            }, 50);
         };
-        
-        // Set the src AFTER destroying previous instance
-        img.src = url;
+        reader.readAsDataURL(file);
         return;
     }
     
