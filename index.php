@@ -38,7 +38,7 @@ foreach ($sections as $section):
 ?>
 <section class="lume-hero" id="hero">
     <div class="lume-hero__bg" style="background-image:url('<?= SITE_URL ?>/<?= h($bgImage) ?>')"></div>
-    <div class="lume-hero__overlay"></div>
+    <div class="lume-hero__overlay" style="opacity: <?= h($sett['overlay'] ?? '1') ?>;"></div>
     <?php if ($showParticles): ?>
     <div class="lume-hero__particles">
         <div class="lume-particle"></div><div class="lume-particle"></div><div class="lume-particle"></div>
