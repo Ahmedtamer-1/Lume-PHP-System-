@@ -273,10 +273,14 @@ function uploadFiles(files) {
         reader.onload = function(e) {
             const dataUrl = e.target.result;
             
-            // Recreate the image element completely to avoid Cropper state issues
             const container = document.getElementById('cropper-container');
-            container.innerHTML = '<img id="cropper-image" style="max-width:100%;display:block;" src="' + dataUrl + '" alt="Picture">';
-            const img = document.getElementById('cropper-image');
+            container.innerHTML = ''; // Clear out the old image
+            
+            const img = document.createElement('img');
+            img.id = 'cropper-image';
+            img.style.maxWidth = '100%';
+            img.style.display = 'block';
+            img.alt = 'Picture';
             
             document.getElementById('cropper-modal').style.display = 'flex';
             
@@ -285,8 +289,8 @@ function uploadFiles(files) {
                 cropperInstance = null;
             }
             
-            // Give browser a tick to render modal before calculating sizes
-            setTimeout(() => {
+            // Wait for the browser to fully decode the image before passing to Cropper
+            img.onload = () => {
                 cropperInstance = new Cropper(img, {
                     viewMode: 1,
                     dragMode: 'crop',
@@ -299,7 +303,10 @@ function uploadFiles(files) {
                     cropBoxResizable: true,
                     toggleDragModeOnDblclick: false,
                 });
-            }, 50);
+            };
+            
+            img.src = dataUrl;
+            container.appendChild(img);
         };
         reader.readAsDataURL(file);
         return;
