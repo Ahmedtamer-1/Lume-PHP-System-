@@ -22,7 +22,7 @@ $marqueeText    = setting('marquee_text', '');
             $items = array_map('trim', explode('|', $marqueeText));
         } else {
             $freeShipOver = setting('free_shipping_over', '2000');
-            $items = ['Illuminate Your Ritual', '✦', 'Luxury Fashion', '✦', 'Crafted in Egypt', '✦'];
+            $items = [setting('site_tagline', SITE_TAGLINE), '✦', 'Luxury Fashion', '✦', 'Crafted in Egypt', '✦'];
             if ($freeShipOver > 0) {
                 $items[] = 'Free Shipping Over ' . currency_symbol() . number_format((float)$freeShipOver, 0);
                 $items[] = '✦';

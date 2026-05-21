@@ -1,6 +1,7 @@
 <?php
-$pageTitle = 'LUMEEGY — Illuminate Your Ritual';
-$pageDescription = 'Discover LUMEEGY — a luxury Egyptian fashion brand. Clothing and accessories crafted to illuminate your style.';
+require_once __DIR__ . '/includes/functions.php';
+$pageTitle = setting('site_name', SITE_NAME) . ' — ' . setting('site_tagline', SITE_TAGLINE);
+$pageDescription = setting('default_meta_description', 'Discover ' . setting('site_name', SITE_NAME) . ' — a luxury fashion brand.');
 require_once __DIR__ . '/includes/header.php';
 
 // Load dynamic homepage sections from DB
