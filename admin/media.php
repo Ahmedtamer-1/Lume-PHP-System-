@@ -271,16 +271,16 @@ function uploadFiles(files) {
         pendingFileToUpload = file;
         
         const img = document.getElementById('cropper-image');
-        img.src = url;
         
         document.getElementById('cropper-modal').style.display = 'flex';
         
         if (cropperInstance) {
             cropperInstance.destroy();
+            cropperInstance = null;
         }
         
-        // Initialize cropper after a short delay to ensure modal is visible
-        setTimeout(() => {
+        // Ensure image is fully loaded before initializing cropper
+        img.onload = () => {
             cropperInstance = new Cropper(img, {
                 viewMode: 1,
                 dragMode: 'crop',
@@ -293,7 +293,10 @@ function uploadFiles(files) {
                 cropBoxResizable: true,
                 toggleDragModeOnDblclick: false,
             });
-        }, 100);
+        };
+        
+        // Set the src AFTER destroying previous instance
+        img.src = url;
         return;
     }
     
