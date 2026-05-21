@@ -355,7 +355,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'bulk_action') {
         echo json_encode(['success' => false, 'message' => 'No products selected']);
         exit;
     }
-    $cleanIds = array_map('intval', $ids);
+    $cleanIds = array_values(array_map('intval', $ids));
     $placeholders = implode(',', array_fill(0, count($cleanIds), '?'));
     
     if ($bulkAction === 'delete') {
