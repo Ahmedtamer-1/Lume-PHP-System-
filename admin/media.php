@@ -282,6 +282,10 @@ function uploadFiles(files) {
             img.style.display = 'block';
             img.alt = 'Picture';
             
+            // MUST append to DOM before setting src, so if onload fires instantly,
+            // the image is already in the document for Cropper to calculate sizes.
+            container.appendChild(img);
+            
             document.getElementById('cropper-modal').style.display = 'flex';
             
             if (cropperInstance) {
@@ -289,24 +293,25 @@ function uploadFiles(files) {
                 cropperInstance = null;
             }
             
-            // Wait for the browser to fully decode the image before passing to Cropper
             img.onload = () => {
-                cropperInstance = new Cropper(img, {
-                    viewMode: 1,
-                    dragMode: 'crop',
-                    autoCropArea: 0.8,
-                    restore: false,
-                    guides: true,
-                    center: true,
-                    highlight: false,
-                    cropBoxMovable: true,
-                    cropBoxResizable: true,
-                    toggleDragModeOnDblclick: false,
+                // Ensure the browser has painted the modal and image before initializing
+                requestAnimationFrame(() => {
+                    cropperInstance = new Cropper(img, {
+                        viewMode: 1,
+                        dragMode: 'crop',
+                        autoCropArea: 0.8,
+                        restore: false,
+                        guides: true,
+                        center: true,
+                        highlight: false,
+                        cropBoxMovable: true,
+                        cropBoxResizable: true,
+                        toggleDragModeOnDblclick: false,
+                    });
                 });
             };
             
             img.src = dataUrl;
-            container.appendChild(img);
         };
         reader.readAsDataURL(file);
         return;
