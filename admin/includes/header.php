@@ -24,7 +24,7 @@ $totalNotifs = $unreadMessages + $pendingOrders;
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="<?= SITE_URL ?>/admin/assets/css/admin.css">
+    <link rel="stylesheet" href="<?= SITE_URL ?>/admin/assets/css/admin.css?v=<?= time() ?>">
 </head>
 <body data-page="<?= h($adminPage) ?>">
 <div class="admin-layout">
