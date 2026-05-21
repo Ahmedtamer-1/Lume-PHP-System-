@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/includes/functions.php';
 $categorySlug = $_GET['category'] ?? null;
 $search = $_GET['q'] ?? null;
 $pageTitle = 'Shop — ' . setting('site_name', SITE_NAME);
