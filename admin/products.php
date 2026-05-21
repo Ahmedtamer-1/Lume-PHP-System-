@@ -17,8 +17,14 @@ require_once __DIR__ . '/includes/header.php';
     <div class="admin-toolbar">
         <div class="admin-toolbar__left">
             <span style="font-size:.85rem;color:var(--a-muted)" id="product-count">Loading…</span>
+            <div class="admin-filter-tabs" id="product-filter-tabs">
+                <button type="button" class="admin-filter-tab active" data-filter="all">All</button>
+                <button type="button" class="admin-filter-tab" data-filter="active">Active</button>
+                <button type="button" class="admin-filter-tab" data-filter="inactive">Inactive</button>
+            </div>
         </div>
         <div class="admin-toolbar__right">
+            <input type="text" id="product-search" placeholder="Search products…" class="admin-search-input">
             <button class="admin-btn admin-btn--primary" onclick="showProductForm(null)">
                 <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 Add Product

@@ -122,8 +122,9 @@ if (isset($_GET['id'])) {
                 </form>
             </div>
 
-            <div style="margin-top:16px">
+            <div style="margin-top:16px;display:flex;gap:8px">
                 <a href="<?= SITE_URL ?>/admin/orders.php" class="admin-btn admin-btn--full">← Back to Orders</a>
+                <button type="button" class="admin-btn" onclick="window.print()" title="Print Invoice"><svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg></button>
             </div>
             <div style="margin-top:12px">
                 <a href="<?= SITE_URL ?>/admin/orders.php?action=delete&id=<?= $order['id'] ?>" class="admin-btn admin-btn--danger admin-btn--full"
@@ -138,7 +139,28 @@ if (isset($_GET['id'])) {
 }
 
 // ── LIST ──
-$orders = db()->query('SELECT * FROM orders ORDER BY created_at DESC')->fetchAll();
+$search = trim($_GET['search'] ?? '');
+$filterStatus = $_GET['status_filter'] ?? '';
+
+$query = 'SELECT * FROM orders WHERE 1=1';
+$params = [];
+
+if ($search) {
+    $query .= ' AND (order_number LIKE ? OR shipping_name LIKE ?)';
+    $term = '%' . $search . '%';
+    $params[] = $term;
+    $params[] = $term;
+}
+
+if ($filterStatus && in_array($filterStatus, ['pending','paid','processing','shipped','delivered','cancelled','refunded'])) {
+    $query .= ' AND status = ?';
+    $params[] = $filterStatus;
+}
+
+$query .= ' ORDER BY created_at DESC';
+$stmt = db()->prepare($query);
+$stmt->execute($params);
+$orders = $stmt->fetchAll();
 require_once __DIR__ . '/includes/header.php';
 ?>
 
@@ -147,6 +169,19 @@ require_once __DIR__ . '/includes/header.php';
 <div class="admin-toolbar">
     <div class="admin-toolbar__left">
         <span style="font-size:.85rem;color:var(--a-muted)"><?= count($orders) ?> orders</span>
+        <div class="admin-filter-tabs">
+            <a href="?status_filter=&search=<?= urlencode($search) ?>" class="admin-filter-tab <?= empty($filterStatus) ? 'active' : '' ?>">All</a>
+            <?php foreach(['pending','paid','processing','shipped','delivered','cancelled','refunded'] as $st): ?>
+            <a href="?status_filter=<?= $st ?>&search=<?= urlencode($search) ?>" class="admin-filter-tab <?= $filterStatus === $st ? 'active' : '' ?>"><?= ucfirst($st) ?></a>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <div class="admin-toolbar__right">
+        <form method="get" style="display:flex;gap:8px">
+            <input type="hidden" name="status_filter" value="<?= h($filterStatus) ?>">
+            <input type="text" name="search" value="<?= h($search) ?>" placeholder="Search orders…" class="admin-search-input">
+            <button type="submit" class="admin-btn admin-btn--sm">Search</button>
+        </form>
     </div>
 </div>
 
