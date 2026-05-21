@@ -58,6 +58,26 @@
     });
 
     // ═══════════════════════════════════════════════════
+    // NOTIFICATION DROPDOWN
+    // ═══════════════════════════════════════════════════
+    const notifBtn = document.getElementById('admin-notif-btn');
+    const notifDropdown = document.getElementById('admin-notif-dropdown');
+
+    if (notifBtn && notifDropdown) {
+        notifBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            notifDropdown.classList.toggle('show');
+        });
+
+        // Close when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!notifBtn.contains(e.target) && !notifDropdown.contains(e.target)) {
+                notifDropdown.classList.remove('show');
+            }
+        });
+    }
+
+    // ═══════════════════════════════════════════════════
     // GLOBAL SEARCH (Ctrl+K)
     // ═══════════════════════════════════════════════════
     const searchOverlay = document.getElementById('admin-search-overlay');

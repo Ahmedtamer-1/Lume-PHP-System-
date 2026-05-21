@@ -144,12 +144,45 @@ $totalNotifs = $unreadMessages + $pendingOrders;
                     <span class="admin-topbar__search-shortcut">⌘K</span>
                 </div>
                 <!-- Notification bell -->
-                <button class="admin-notif-btn" onclick="window.location.href='<?= SITE_URL ?>/admin/messages.php'" title="<?= $totalNotifs ?> notifications">
-                    <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                    <?php if ($totalNotifs > 0): ?>
-                        <span class="admin-notif-badge"><?= $totalNotifs > 9 ? '9+' : $totalNotifs ?></span>
-                    <?php endif; ?>
-                </button>
+                <div style="position:relative" id="admin-notif-wrapper">
+                    <button class="admin-notif-btn" id="admin-notif-btn" title="<?= $totalNotifs ?> notifications">
+                        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                        <?php if ($totalNotifs > 0): ?>
+                            <span class="admin-notif-badge"><?= $totalNotifs > 9 ? '9+' : $totalNotifs ?></span>
+                        <?php endif; ?>
+                    </button>
+                    
+                    <div class="admin-notif-dropdown" id="admin-notif-dropdown">
+                        <div class="admin-notif-dropdown__header">Notifications</div>
+                        <div class="admin-notif-dropdown__list">
+                            <?php if ($pendingOrders > 0): ?>
+                            <a href="<?= SITE_URL ?>/admin/orders.php?status=pending" class="admin-notif-item">
+                                <div class="admin-notif-icon" style="background:rgba(88,129,87,.1);color:var(--a-green)">
+                                    <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
+                                </div>
+                                <div class="admin-notif-text">
+                                    <strong><?= $pendingOrders ?> pending order(s)</strong>
+                                    <span>Needs processing</span>
+                                </div>
+                            </a>
+                            <?php endif; ?>
+                            <?php if ($unreadMessages > 0): ?>
+                            <a href="<?= SITE_URL ?>/admin/messages.php?filter=unread" class="admin-notif-item">
+                                <div class="admin-notif-icon" style="background:rgba(212,163,115,.1);color:var(--a-accent)">
+                                    <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                                </div>
+                                <div class="admin-notif-text">
+                                    <strong><?= $unreadMessages ?> unread message(s)</strong>
+                                    <span>Check your inbox</span>
+                                </div>
+                            </a>
+                            <?php endif; ?>
+                            <?php if ($totalNotifs === 0): ?>
+                            <div style="padding:16px;text-align:center;color:var(--a-muted);font-size:.85rem">No new notifications</div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
                 <span class="admin-topbar__user">Hi, <?= h($adminUser['first_name']) ?></span>
             </div>
         </header>

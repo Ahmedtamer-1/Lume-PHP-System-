@@ -448,3 +448,78 @@ button{cursor:pointer;font-family:inherit}
   .admin-btn--full{padding:12px}
   .admin-login-box{padding:28px 18px}
 }
+
+/* Notification Dropdown */
+.admin-notif-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: -10px;
+    width: 300px;
+    background: var(--a-bg);
+    border: 1px solid var(--a-border);
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all 0.2s ease;
+    z-index: 100;
+}
+.admin-notif-dropdown.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+.admin-notif-dropdown__header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--a-border);
+    font-weight: 600;
+    font-size: .95rem;
+}
+.admin-notif-dropdown__list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+.admin-notif-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--a-border);
+    text-decoration: none;
+    color: var(--a-text);
+    transition: background 0.2s;
+}
+.admin-notif-item:hover {
+    background: var(--a-surface);
+}
+.admin-notif-item:last-child {
+    border-bottom: none;
+}
+.admin-notif-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.admin-notif-icon svg {
+    width: 18px;
+    height: 18px;
+}
+.admin-notif-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.admin-notif-text strong {
+    font-size: .85rem;
+    font-weight: 500;
+}
+.admin-notif-text span {
+    font-size: .75rem;
+    color: var(--a-muted);
+}
+
