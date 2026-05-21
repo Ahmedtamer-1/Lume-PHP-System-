@@ -129,11 +129,10 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
             </div>
 
-            <div class="admin-form__group" id="form-settings-wrap">
-                <label>Extra Settings (JSON)</label>
-                <textarea name="settings" id="form-settings" rows="3" placeholder='{"eyebrow": "text", "product_count": 4}'></textarea>
-                <span class="admin-form__hint">Optional JSON for section-specific options like eyebrow text, product count, etc.</span>
+            <div id="dynamic-fields-wrap" style="background: rgba(0,0,0,0.02); padding: 16px; border-radius: 4px; margin-bottom: 16px; border: 1px solid var(--a-border);">
+                <!-- Dynamic fields will be injected here via JS -->
             </div>
+            <input type="hidden" name="settings" id="form-settings" value="{}">
 
             <div class="admin-form__check" style="margin-top:8px">
                 <input type="checkbox" name="is_active" id="form-active" value="1" checked>
@@ -195,6 +194,7 @@ function showAddModal() {
     document.getElementById('section-form').reset();
     document.getElementById('form-active').checked = true;
     document.getElementById('form-settings').value = '{}';
+    onTypeChange();
     document.getElementById('add-modal').style.display = 'flex';
 }
 
@@ -217,7 +217,17 @@ function editSection(id) {
         document.getElementById('form-image').value = s.image || '';
         document.getElementById('form-btn-text').value = s.button_text || '';
         document.getElementById('form-btn-url').value = s.button_url || '';
-        document.getElementById('form-settings').value = JSON.stringify(s.settings || {}, null, 2);
+        document.getElementById('form-settings').value = JSON.stringify(s.settings || {});
+        onTypeChange();
+        // Populate dynamic fields
+        const wrap = document.getElementById('dynamic-fields-wrap');
+        const inputs = wrap.querySelectorAll('[data-setting]');
+        inputs.forEach(input => {
+            const key = input.getAttribute('data-setting');
+            if (s.settings && s.settings[key] !== undefined) {
+                input.value = s.settings[key];
+            }
+        });
         document.getElementById('form-active').checked = !!s.is_active;
         document.getElementById('add-modal').style.display = 'flex';
     });
@@ -226,6 +236,18 @@ function editSection(id) {
 // ── Save Section ──
 function saveSection(e) {
     e.preventDefault();
+    
+    // Serialize dynamic fields into JSON string
+    const wrap = document.getElementById('dynamic-fields-wrap');
+    const inputs = wrap.querySelectorAll('[data-setting]');
+    let settingsObj = {};
+    inputs.forEach(input => {
+        if (input.value !== '') {
+            settingsObj[input.getAttribute('data-setting')] = input.value;
+        }
+    });
+    document.getElementById('form-settings').value = JSON.stringify(settingsObj);
+    
     const form = document.getElementById('section-form');
     const fd = new FormData(form);
     const id = fd.get('section_id');
@@ -318,7 +340,27 @@ function closeMediaPicker() {
 document.getElementById('add-modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
 document.getElementById('media-picker-modal').addEventListener('click', function(e) { if (e.target === this) closeMediaPicker(); });
 
-function onTypeChange() { /* placeholder for future type-specific UI logic */ }
+function onTypeChange() {
+    const type = document.getElementById('form-type').value;
+    const wrap = document.getElementById('dynamic-fields-wrap');
+    let html = '';
+    
+    if (type === 'hero') {
+        html += '<div class="admin-form__group"><label>Text Alignment</label><select data-setting="alignment"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></div>';
+        html += '<div class="admin-form__group"><label>Overlay Opacity (0.0 to 1.0)</label><input type="number" step="0.1" min="0" max="1" data-setting="overlay" value="0.5"></div>';
+    } else if (type === 'featured_products') {
+        html += '<div class="admin-form__group"><label>Product Count</label><input type="number" data-setting="product_count" value="4"></div>';
+        html += '<div class="admin-form__group"><label>Specific Category ID (Optional)</label><input type="number" data-setting="category_id" placeholder="Leave empty for all products"></div>';
+    } else if (type === 'category_grid') {
+        html += '<div class="admin-form__group"><label>Grid Columns</label><select data-setting="columns"><option value="3">3 Columns</option><option value="4">4 Columns</option></select></div>';
+    } else if (type === 'brand_story' || type === 'text_block') {
+        html += '<div class="admin-form__group"><label>Background Color</label><input type="color" data-setting="bg_color" value="#ffffff" style="height:38px;padding:2px"></div>';
+    } else {
+        html = '<div style="font-size:0.8rem;color:var(--a-muted)">No specific extra settings for this section type.</div>';
+    }
+    
+    wrap.innerHTML = '<h4 style="font-size:0.85rem;margin-bottom:12px;text-transform:uppercase;color:var(--a-muted)">Specific Settings</h4>' + html;
+}
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

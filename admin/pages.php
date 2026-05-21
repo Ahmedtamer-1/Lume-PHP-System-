@@ -112,14 +112,17 @@ require_once __DIR__ . '/includes/header.php';
             <div class="admin-form__group">
                 <label>Eyebrow Text</label>
                 <input type="text" name="page_about_eyebrow" value="<?= h($s('page_about_eyebrow', 'The Beginning')) ?>">
+                <span class="admin-form__hint" style="color:var(--a-accent)">Appears directly above the main title in small, uppercase text.</span>
             </div>
             <div class="admin-form__group">
                 <label>Title</label>
                 <input type="text" name="page_about_title" value="<?= h($s('page_about_title', 'Born from Light')) ?>">
+                <span class="admin-form__hint" style="color:var(--a-accent)">The primary large heading displayed on the About page.</span>
             </div>
             <div class="admin-form__group">
                 <label>Text Content</label>
                 <textarea name="page_about_text" rows="6"><?= h($s('page_about_text', "LUMEEGY was born from a simple belief — that style is a ritual, not a routine. Rooted in the spirit of Egyptian elegance, each piece is crafted to bring a moment of luxury into your everyday.\n\nWe source the finest fabrics and craft each piece with meticulous attention to detail. The result is a collection that honours heritage while delivering timeless, modern style.\n\nEvery texture, every scent, every detail is intentional. Because we believe the way you care for yourself says everything about who you are.")) ?></textarea>
+                <span class="admin-form__hint" style="color:var(--a-accent)">The main body paragraph text. It will appear next to or below the hero image depending on screen size.</span>
             </div>
         </div>
 

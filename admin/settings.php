@@ -458,7 +458,22 @@ require_once __DIR__ . '/includes/header.php';
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2" ry="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
             Paymob Integration
         </h2>
-        <p style="font-size:.75rem;color:var(--a-muted);margin-bottom:16px">Configure Paymob for online card payments. Ensure your webhook URL is set to <code><?= SITE_URL ?>/api/paymob_callback.php</code> in your Paymob dashboard.</p>
+        
+        <div style="background:var(--a-surface2);padding:16px;border-radius:var(--a-radius);margin-bottom:20px;font-size:0.82rem;border:1px solid var(--a-border);line-height:1.5;">
+            <strong style="display:block;margin-bottom:8px;color:var(--a-text);">How to configure Paymob:</strong>
+            <ol style="margin:0;padding-left:20px;color:var(--a-muted);">
+                <li>Find your <strong>API Key</strong> in Paymob Dashboard > Settings > API Keys.</li>
+                <li>Find your <strong>Integration ID</strong> in Paymob Dashboard > Developers > Payment Integrations. Ensure it is for Online Card integration.</li>
+                <li>Find your <strong>Iframe ID</strong> in Paymob Dashboard > Developers > iframes.</li>
+                <li>Find your <strong>HMAC Secret</strong> in Paymob Dashboard > Settings > HMAC Secret.</li>
+            </ol>
+            <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--a-border);">
+                <strong style="color:var(--a-accent);">Required Webhook:</strong> 
+                Ensure your "Transaction Processed" callback URL in Paymob is set exactly to: 
+                <code style="background:var(--a-bg);padding:2px 6px;border-radius:4px;color:var(--a-text);"><?= SITE_URL ?>/api/paymob_callback.php</code>
+            </div>
+        </div>
+
         <div class="admin-form__group">
             <label>API Key</label>
             <input type="password" name="paymob_api_key" value="<?= h($s('paymob_api_key')) ?>" placeholder="Enter API Key">
@@ -475,7 +490,7 @@ require_once __DIR__ . '/includes/header.php';
             <div class="admin-form__group">
                 <label>HMAC Secret</label>
                 <input type="password" name="paymob_hmac" value="<?= h($s('paymob_hmac')) ?>" placeholder="Enter HMAC Secret">
-                <span class="admin-form__hint">Required for secure webhook validation</span>
+                <span class="admin-form__hint">Required to verify secure webhook callbacks.</span>
             </div>
         </div>
     </div>
