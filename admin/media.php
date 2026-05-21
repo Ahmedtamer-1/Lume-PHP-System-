@@ -10,6 +10,10 @@ $adminPage = 'media';
 require_once __DIR__ . '/includes/header.php';
 ?>
 
+<!-- Include Cropper.js -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
 <div class="admin-toolbar">
     <div class="admin-toolbar__left">
         <span style="font-size:.85rem;color:var(--a-muted)" id="media-count">Loading…</span>
@@ -86,6 +90,20 @@ require_once __DIR__ . '/includes/header.php';
     <button type="button" class="admin-btn admin-btn--danger admin-btn--sm" onclick="deleteSelectedMedia()">Delete Selected</button>
 </div>
 
+<!-- Cropper Modal -->
+<div id="cropper-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:999;background:rgba(0,0,0,0.8);justify-content:center;align-items:center;">
+    <div style="background:var(--a-surface);border-radius:var(--a-radius);padding:20px;max-width:90vw;max-height:90vh;display:flex;flex-direction:column;">
+        <h3 style="margin-top:0;">Crop Image</h3>
+        <div style="flex:1;overflow:hidden;max-height:60vh;margin-bottom:20px;">
+            <img id="cropper-image" style="max-width:100%;display:block;" src="" alt="Picture">
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button class="admin-btn" onclick="closeCropper()">Cancel</button>
+            <button class="admin-btn admin-btn--primary" onclick="doCropUpload()">Crop & Upload</button>
+        </div>
+    </div>
+</div>
+
 <style>
 .media-dropzone{border:2px dashed var(--a-border);border-radius:var(--a-radius);padding:40px;text-align:center;margin-bottom:24px;transition:all .3s;cursor:pointer}
 .media-dropzone:hover,.media-dropzone.drag-over{border-color:var(--a-accent);background:rgba(196,113,74,.05)}
@@ -118,6 +136,9 @@ let allMedia = [];
 let selectedMediaIds = [];
 let currentMediaId = null;
 let searchTimer;
+
+let cropperInstance = null;
+let pendingFileToUpload = null;
 
 // ── Load media ──
 function loadMedia(search = '') {
@@ -242,6 +263,71 @@ function deleteMedia() {
 // ── Upload ──
 function uploadFiles(files) {
     if (!files.length) return;
+    
+    // Check if single image file for cropping
+    if (files.length === 1 && files[0].type.startsWith('image/')) {
+        const file = files[0];
+        const url = URL.createObjectURL(file);
+        pendingFileToUpload = file;
+        
+        const img = document.getElementById('cropper-image');
+        img.src = url;
+        
+        document.getElementById('cropper-modal').style.display = 'flex';
+        
+        if (cropperInstance) {
+            cropperInstance.destroy();
+        }
+        
+        // Initialize cropper after a short delay to ensure modal is visible
+        setTimeout(() => {
+            cropperInstance = new Cropper(img, {
+                viewMode: 1,
+                dragMode: 'crop',
+                autoCropArea: 0.8,
+                restore: false,
+                guides: true,
+                center: true,
+                highlight: false,
+                cropBoxMovable: true,
+                cropBoxResizable: true,
+                toggleDragModeOnDblclick: false,
+            });
+        }, 100);
+        return;
+    }
+    
+    // Fallback for multiple files or non-images
+    performUpload(files);
+}
+
+function closeCropper() {
+    document.getElementById('cropper-modal').style.display = 'none';
+    if (cropperInstance) {
+        cropperInstance.destroy();
+        cropperInstance = null;
+    }
+    pendingFileToUpload = null;
+}
+
+function doCropUpload() {
+    if (!cropperInstance || !pendingFileToUpload) return;
+    
+    cropperInstance.getCroppedCanvas({
+        maxWidth: 2000,
+        maxHeight: 2000,
+        fillColor: '#fff',
+    }).toBlob((blob) => {
+        // Create a new File object from the blob
+        const fileName = pendingFileToUpload.name;
+        const newFile = new File([blob], fileName, { type: pendingFileToUpload.type });
+        closeCropper();
+        
+        performUpload([newFile]);
+    }, pendingFileToUpload.type, 0.9);
+}
+
+function performUpload(files) {
     const fd = new FormData();
     fd.append('action', 'upload');
     for (let i = 0; i < files.length; i++) {

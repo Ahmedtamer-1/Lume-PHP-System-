@@ -113,11 +113,14 @@ require_once __DIR__ . '/includes/header.php';
             <!-- Main Image via Media Library -->
             <div class="admin-form__group">
                 <label>Product Image</label>
-                <div class="admin-img-upload">
-                    <div class="admin-img-preview" id="main-img-preview">No image</div>
-                    <div>
-                        <button type="button" class="admin-btn admin-btn--sm" onclick="openMediaPicker('main_image')">📷 Choose from Media</button>
-                        <span class="admin-form__hint" style="margin-top:6px;display:block">Select from your media library</span>
+                <div style="display:flex;align-items:flex-start;gap:16px">
+                    <div id="main-img-preview" style="width:90px;height:90px;border-radius:6px;border:1px solid var(--a-border);background:var(--a-bg,#111);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;color:var(--a-muted);font-size:.72rem;text-align:center">No image</div>
+                    <div style="display:flex;flex-direction:column;gap:8px;justify-content:center">
+                        <div style="display:flex;gap:8px;flex-wrap:wrap">
+                            <button type="button" class="admin-btn admin-btn--sm" onclick="openMediaPicker('main_image')">📷 Choose from Media</button>
+                            <button type="button" id="main-img-remove-btn" class="admin-btn admin-btn--sm" onclick="removeMainImage()" style="color:var(--a-danger,#c44);display:none">✕ Remove</button>
+                        </div>
+                        <span class="admin-form__hint">Select from your media library</span>
                     </div>
                 </div>
             </div>
@@ -241,8 +244,13 @@ require_once __DIR__ . '/includes/header.php';
             <div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-top:8px">
                 <div>
                     <label style="font-size:.75rem;color:var(--a-muted);display:block;margin-bottom:6px">Variant Image</label>
-                    <div id="variant-img-preview" style="margin-bottom:6px"><span style="color:var(--a-muted);font-size:.75rem">None</span></div>
-                    <button type="button" class="admin-btn admin-btn--sm" onclick="openMediaPicker('variant')">📷 Choose Image</button>
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                        <div id="variant-img-preview" style="width:60px;height:60px;border-radius:4px;border:1px solid var(--a-border);background:var(--a-bg,#111);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0"><span style="color:var(--a-muted);font-size:.65rem">None</span></div>
+                        <div style="display:flex;flex-direction:column;gap:6px">
+                            <button type="button" class="admin-btn admin-btn--sm" onclick="openMediaPicker('variant')">📷 Choose Image</button>
+                            <button type="button" id="variant-img-remove-btn" class="admin-btn admin-btn--sm" onclick="removeVariantImage()" style="color:var(--a-danger,#c44);display:none">✕ Remove</button>
+                        </div>
+                    </div>
                 </div>
                 <div class="admin-form__check">
                     <input type="checkbox" name="is_active" id="v_is_active" checked>

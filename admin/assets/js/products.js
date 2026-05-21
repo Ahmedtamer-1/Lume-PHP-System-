@@ -189,8 +189,14 @@ function showProductForm(product){
         if(product.has_variants==1) f.querySelector('[name=has_variants]').checked=true;
         // Show current image
         const prev=document.getElementById('main-img-preview');
-        if(product.image_url) prev.innerHTML=`<img src="${product.image_url}" alt="">`;
-        else prev.innerHTML='No image';
+        const removeBtn=document.getElementById('main-img-remove-btn');
+        if(product.image_url){
+            prev.innerHTML=`<img src="${product.image_url}" alt="" style="width:100%;height:100%;object-fit:cover">`;
+            if(removeBtn) removeBtn.style.display='inline-block';
+        } else {
+            prev.innerHTML='No image';
+            if(removeBtn) removeBtn.style.display='none';
+        }
         // Gallery
         galleryPaths=product.gallery_arr||[];
         renderGalleryPreview();
@@ -202,6 +208,8 @@ function showProductForm(product){
         f.querySelector('[name=id]').value='0';
         f.querySelector('[name=is_active]').checked=true;
         document.getElementById('main-img-preview').innerHTML='No image';
+        const removeBtn=document.getElementById('main-img-remove-btn');
+        if(removeBtn) removeBtn.style.display='none';
         renderGalleryPreview();
         renderSizeChartPreview();
     }
@@ -278,6 +286,20 @@ function renderSizeChartPreview(){
 function removeSizeChart(){
     sizeChartPath='';
     renderSizeChartPreview();
+}
+
+function removeMainImage() {
+    document.querySelector('[name=existing_image]').value = '';
+    document.getElementById('main-img-preview').innerHTML = 'No image';
+    const removeBtn=document.getElementById('main-img-remove-btn');
+    if(removeBtn) removeBtn.style.display='none';
+}
+
+function removeVariantImage() {
+    document.querySelector('#variant-form [name=media_image_path]').value = '';
+    document.getElementById('variant-img-preview').innerHTML = '<span style="color:var(--a-muted);font-size:.65rem">None</span>';
+    const removeBtn=document.getElementById('variant-img-remove-btn');
+    if(removeBtn) removeBtn.style.display='none';
 }
 
 // ══════════════════════════════════════
@@ -394,8 +416,14 @@ function editVariant(id){
         f.querySelector('[name=media_image_path]').value=v.image||'';
         // Show selected image
         const prev=document.getElementById('variant-img-preview');
-        if(v.image_url) prev.innerHTML=`<img src="${v.image_url}" style="width:60px;height:60px;object-fit:cover;border-radius:4px">`;
-        else prev.innerHTML='<span style="color:var(--a-muted);font-size:.75rem">None</span>';
+        const removeBtn=document.getElementById('variant-img-remove-btn');
+        if(v.image_url){
+            prev.innerHTML=`<img src="${v.image_url}" style="width:100%;height:100%;object-fit:cover">`;
+            if(removeBtn) removeBtn.style.display='inline-block';
+        } else {
+            prev.innerHTML='<span style="color:var(--a-muted);font-size:.65rem">None</span>';
+            if(removeBtn) removeBtn.style.display='none';
+        }
         document.getElementById('variant-form-title').textContent='✎ Edit Variant';
         document.getElementById('variant-cancel-btn').style.display='inline-block';
     });
@@ -411,7 +439,9 @@ function resetVariantForm(){
     f.querySelector('[name=media_image_path]').value='';
     const sel=document.getElementById('variant-color-select');if(sel)sel.value='';
     const dot=document.getElementById('variant-color-dot');if(dot)dot.style.background='#888';
-    document.getElementById('variant-img-preview').innerHTML='<span style="color:var(--a-muted);font-size:.75rem">None</span>';
+    document.getElementById('variant-img-preview').innerHTML='<span style="color:var(--a-muted);font-size:.65rem">None</span>';
+    const removeBtn=document.getElementById('variant-img-remove-btn');
+    if(removeBtn) removeBtn.style.display='none';
     document.getElementById('variant-form-title').textContent='+ Add Variant';
     document.getElementById('variant-cancel-btn').style.display='none';
 }
@@ -639,7 +669,9 @@ function confirmMultiSelect() {
 function selectMedia(filepath,url){
     if(mediaPickerCallback==='main_image'){
         document.querySelector('[name=existing_image]').value=filepath;
-        document.getElementById('main-img-preview').innerHTML=`<img src="${url}" alt="">`;
+        document.getElementById('main-img-preview').innerHTML=`<img src="${url}" alt="" style="width:100%;height:100%;object-fit:cover">`;
+        const removeBtn=document.getElementById('main-img-remove-btn');
+        if(removeBtn) removeBtn.style.display='inline-block';
     } else if(mediaPickerCallback==='gallery'){
         if(!galleryPaths.includes(filepath)){
             galleryPaths.push(filepath);
@@ -647,7 +679,9 @@ function selectMedia(filepath,url){
         }
     } else if(mediaPickerCallback==='variant'){
         document.querySelector('#variant-form [name=media_image_path]').value=filepath;
-        document.getElementById('variant-img-preview').innerHTML=`<img src="${url}" style="width:60px;height:60px;object-fit:cover;border-radius:4px">`;
+        document.getElementById('variant-img-preview').innerHTML=`<img src="${url}" style="width:100%;height:100%;object-fit:cover">`;
+        const removeBtn=document.getElementById('variant-img-remove-btn');
+        if(removeBtn) removeBtn.style.display='inline-block';
     } else if(mediaPickerCallback==='size_chart'){
         sizeChartPath = filepath;
         renderSizeChartPreview();
