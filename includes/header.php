@@ -100,7 +100,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <style>
     :root {
         --bg: <?= h($themeBg) ?>;
-        --bg-card: <?= h($themeBgCard) ?>;
+        --bg-card: <?= h($themeBg) ?>;
         --cream: <?= h($themeCream) ?>;
         --gold: <?= h($themeGold) ?>;
         --terracotta: <?= h($themeAccent) ?>;

@@ -181,11 +181,6 @@ require_once __DIR__ . '/includes/header.php';
             </div>
             <?php endforeach; ?>
         </div>
-        <div class="admin-form__group" style="margin-top:16px">
-            <label>Card Background (rgba)</label>
-            <input type="text" name="theme_color_bg_card" value="<?= h($s('theme_color_bg_card', 'rgba(10,10,10,0.88)')) ?>" placeholder="rgba(10,10,10,0.88)" style="max-width:300px">
-            <span class="admin-form__hint">Use rgba() format for glassmorphism / transparency effects</span>
-        </div>
     </div>
 
     <!-- ── Typography ── -->
