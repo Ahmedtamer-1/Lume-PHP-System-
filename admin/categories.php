@@ -16,6 +16,7 @@ if ($action === 'delete' && isset($_GET['id'])) {
     // Set products in this category to NULL instead of deleting them
     db()->prepare('UPDATE products SET category_id = NULL WHERE category_id = ?')->execute([$id]);
     db()->prepare('DELETE FROM categories WHERE id = ?')->execute([$id]);
+    log_activity('delete_category', 'category', $id);
     header('Location: ' . SITE_URL . '/admin/categories.php?msg=deleted');
     exit;
 }
@@ -39,11 +40,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($id > 0) {
             db()->prepare('UPDATE categories SET name=?, slug=?, description=?, sort_order=? WHERE id=?')
                 ->execute([$name, $slug, $description, $sortOrder, $id]);
+            log_activity('update_category', 'category', $id);
             header('Location: ' . SITE_URL . '/admin/categories.php?msg=updated');
             exit;
         } else {
             db()->prepare('INSERT INTO categories (name, slug, description, sort_order) VALUES (?,?,?,?)')
                 ->execute([$name, $slug, $description, $sortOrder]);
+            log_activity('create_category', 'category', (int)db()->lastInsertId());
             header('Location: ' . SITE_URL . '/admin/categories.php?msg=added');
             exit;
         }

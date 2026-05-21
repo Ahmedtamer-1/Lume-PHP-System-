@@ -11,6 +11,7 @@ if (($_GET['action'] ?? '') === 'delete' && isset($_GET['id'])) {
     $delId = (int) $_GET['id'];
     db()->prepare('DELETE FROM order_items WHERE order_id = ?')->execute([$delId]);
     db()->prepare('DELETE FROM orders WHERE id = ?')->execute([$delId]);
+    log_activity('delete_order', 'order', $delId);
     header('Location: ' . SITE_URL . '/admin/orders.php?msg=deleted');
     exit;
 }
@@ -22,6 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'], $_POST['s
     if (in_array($newStatus, $validStatuses)) {
         db()->prepare('UPDATE orders SET status = ? WHERE id = ?')
             ->execute([$newStatus, (int) $_POST['order_id']]);
+        log_activity('update_order_status', 'order', (int) $_POST['order_id'], "Status: $newStatus");
         header('Location: ' . SITE_URL . '/admin/orders.php?msg=updated');
         exit;
     }

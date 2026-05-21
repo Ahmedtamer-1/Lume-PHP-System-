@@ -154,6 +154,18 @@ function logout_user(): void
     session_destroy();
 }
 
+function log_activity(string $action, ?string $entityType = null, ?int $entityId = null, ?string $details = null): void
+{
+    $user = current_user();
+    $userId = $user ? (int)$user['id'] : null;
+    $ip = get_client_ip();
+
+    db()->prepare(
+        'INSERT INTO activity_log (user_id, action, entity_type, entity_id, details, ip_address, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, NOW())'
+    )->execute([$userId, $action, $entityType, $entityId, $details, $ip]);
+}
+
 // ════════════════════════════════════════════════════════
 // VARIANTS
 // ════════════════════════════════════════════════════════

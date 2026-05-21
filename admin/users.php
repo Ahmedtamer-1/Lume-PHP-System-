@@ -17,6 +17,7 @@ if ($action === 'delete' && isset($_GET['id'])) {
         $error = 'You cannot delete your own account.';
     } else {
         db()->prepare('DELETE FROM users WHERE id = ?')->execute([$id]);
+        log_activity('delete_user', 'user', $id);
         header('Location: ' . SITE_URL . '/admin/users.php?msg=deleted');
         exit;
     }
@@ -32,6 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'], $_POST['ro
         $error = 'You cannot remove your own admin role.';
     } else {
         db()->prepare('UPDATE users SET role = ? WHERE id = ?')->execute([$role, $uid]);
+        log_activity('update_user_role', 'user', $uid, "Role: $role");
         header('Location: ' . SITE_URL . '/admin/users.php?msg=updated');
         exit;
     }

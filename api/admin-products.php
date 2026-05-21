@@ -141,6 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'save_product') {
                  sku=?, stock=?, is_featured=?, is_active=?, has_variants=?, image=?, gallery=?, size_chart=? WHERE id=?'
             )->execute([$categoryId, $name, $slug, $description, $price, $salePrice,
                         $sku, $stock, $isFeatured, $isActive, $hasVariants, $imagePath, $galleryEncoded, $sizeChart, $id]);
+            log_activity('update_product', 'product', $id);
             echo json_encode(['success' => true, 'message' => 'Product updated!', 'product_id' => $id]);
         } else {
             db()->prepare(
@@ -149,6 +150,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'save_product') {
             )->execute([$categoryId, $name, $slug, $description, $price, $salePrice,
                         $sku, $stock, $isFeatured, $isActive, $hasVariants, $imagePath, $galleryEncoded, $sizeChart]);
             $newId = (int)db()->lastInsertId();
+            log_activity('create_product', 'product', $newId);
             echo json_encode(['success' => true, 'message' => 'Product added!', 'product_id' => $newId]);
         }
     } catch (PDOException $e) {
@@ -163,6 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'delete_product') {
     $id = (int)($_POST['id'] ?? 0);
     if (!$id) { echo json_encode(['success' => false]); exit; }
     db()->prepare('DELETE FROM products WHERE id = ?')->execute([$id]);
+    log_activity('delete_product', 'product', $id);
     echo json_encode(['success' => true]);
     exit;
 }
@@ -211,12 +214,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'save_variant') {
             db()->prepare(
                 'UPDATE product_variants SET size=?, color_name=?, color_hex=?, sku=?, price_override=?, stock=?, sort_order=?, is_active=?, image=? WHERE id=? AND product_id=?'
             )->execute([$size, $colorName, $colorHex, $sku, $priceOverV, $stock, $sortOrder, $isActive, $imagePath, $vid, $productId]);
+            log_activity('update_variant', 'variant', $vid);
             echo json_encode(['success' => true, 'message' => 'Variant updated.', 'variant_id' => $vid]);
         } else {
             db()->prepare(
                 'INSERT INTO product_variants (product_id, size, color_name, color_hex, sku, price_override, stock, sort_order, is_active, image) VALUES (?,?,?,?,?,?,?,?,?,?)'
             )->execute([$productId, $size, $colorName, $colorHex, $sku, $priceOverV, $stock, $sortOrder, $isActive, $imagePath]);
             $newVid = (int)db()->lastInsertId();
+            log_activity('create_variant', 'variant', $newVid);
             echo json_encode(['success' => true, 'message' => 'Variant added.', 'variant_id' => $newVid]);
         }
     } catch (PDOException $e) {
@@ -231,6 +236,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'delete_variant') {
     $id        = (int)($_POST['id'] ?? 0);
     $productId = (int)($_POST['product_id'] ?? 0);
     db()->prepare('DELETE FROM product_variants WHERE id = ? AND product_id = ?')->execute([$id, $productId]);
+    log_activity('delete_variant', 'variant', $id);
     echo json_encode(['success' => true]);
     exit;
 }

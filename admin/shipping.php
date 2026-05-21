@@ -22,6 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $maxSort = (int) db()->query('SELECT COALESCE(MAX(sort_order), 0) FROM shipping_zones')->fetchColumn();
                 db()->prepare('INSERT INTO shipping_zones (name, cost, sort_order) VALUES (?, ?, ?)')
                     ->execute([$name, $cost, $maxSort + 1]);
+                log_activity('create_shipping_zone', 'shipping_zone', (int)db()->lastInsertId());
                 $success = "Zone '$name' added.";
             } catch (Exception $e) {
                 $error = "Error adding zone (maybe duplicate name?): " . $e->getMessage();
@@ -35,12 +36,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($id && $name) {
             db()->prepare('UPDATE shipping_zones SET name=?, cost=?, is_active=? WHERE id=?')
                 ->execute([$name, $cost, $active, $id]);
+            log_activity('update_shipping_zone', 'shipping_zone', $id);
             $success = "Zone updated.";
         }
     } elseif ($action === 'delete') {
         $id = (int)($_POST['id'] ?? 0);
         if ($id) {
             db()->prepare('DELETE FROM shipping_zones WHERE id=?')->execute([$id]);
+            log_activity('delete_shipping_zone', 'shipping_zone', $id);
             $success = "Zone deleted.";
         }
     }

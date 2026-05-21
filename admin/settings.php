@@ -66,7 +66,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        if (!$error) $success = 'Settings saved successfully.';
+        if (!$error) {
+            $success = 'Settings saved successfully.';
+            log_activity('update_settings', 'system');
+        }
     } catch (Exception $e) {
         $error = 'Error saving settings: ' . $e->getMessage();
     }

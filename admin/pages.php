@@ -29,6 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([$key, $val]);
             }
         }
+        log_activity('update_page_content', 'system');
         $success = 'Page content saved successfully.';
     } catch (Exception $e) {
         $error = 'Error saving content: ' . $e->getMessage();

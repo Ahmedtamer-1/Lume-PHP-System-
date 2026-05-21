@@ -32,6 +32,7 @@ $error = '';
 if (($_GET['action'] ?? '') === 'delete' && isset($_GET['id'])) {
     $vid = (int)$_GET['id'];
     db()->prepare('DELETE FROM product_variants WHERE id = ? AND product_id = ?')->execute([$vid, $productId]);
+    log_activity('delete_variant', 'variant', $vid);
     header('Location: ' . SITE_URL . '/admin/variants.php?product_id=' . $productId . '&msg=deleted');
     exit;
 }
@@ -78,11 +79,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 db()->prepare(
                     'UPDATE product_variants SET size=?, color_name=?, color_hex=?, sku=?, price_override=?, stock=?, sort_order=?, is_active=?, image=? WHERE id=? AND product_id=?'
                 )->execute([$size, $colorName, $colorHex, $sku, $priceOverVal, $stock, $sortOrder, $isActive, $imagePath, $vid, $productId]);
+                log_activity('update_variant', 'variant', $vid);
                 $success = 'Variant updated.';
             } else {
                 db()->prepare(
                     'INSERT INTO product_variants (product_id, size, color_name, color_hex, sku, price_override, stock, sort_order, is_active, image) VALUES (?,?,?,?,?,?,?,?,?,?)'
                 )->execute([$productId, $size, $colorName, $colorHex, $sku, $priceOverVal, $stock, $sortOrder, $isActive, $imagePath]);
+                log_activity('create_variant', 'variant', (int)db()->lastInsertId());
                 $success = 'Variant added.';
             }
         } catch (PDOException $e) {

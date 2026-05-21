@@ -30,6 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 clear_login_attempts($email);
                 record_login_attempt($email, true);
                 login_user((int)$row['id']);
+                log_activity('admin_login', 'user', (int)$row['id']);
                 header('Location: ' . SITE_URL . '/admin/');
                 exit;
             }
