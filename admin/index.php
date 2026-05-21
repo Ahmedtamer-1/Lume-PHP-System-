@@ -81,6 +81,28 @@ try {
     )->fetchAll();
 } catch (Exception $e) {}
 
+// ── Advanced Financials ──
+$validOrdersCount = (int) db()->query('SELECT COUNT(*) FROM orders WHERE status NOT IN ("cancelled","refunded")')->fetchColumn();
+$aov = $validOrdersCount > 0 ? $totalRevenue / $validOrdersCount : 0;
+$totalDiscounts = (float) db()->query('SELECT COALESCE(SUM(discount),0) FROM orders WHERE status NOT IN ("cancelled","refunded")')->fetchColumn();
+$totalShipping = (float) db()->query('SELECT COALESCE(SUM(shipping_cost),0) FROM orders WHERE status NOT IN ("cancelled","refunded")')->fetchColumn();
+$netProductRevenue = $totalRevenue - $totalShipping; // total includes shipping and discount.
+
+// Category revenue
+$categoryRevenue = [];
+try {
+    $categoryRevenue = db()->query(
+        'SELECT c.name, SUM(oi.subtotal) AS cat_revenue, SUM(oi.quantity) as items_sold
+         FROM order_items oi
+         JOIN orders o ON o.id = oi.order_id
+         JOIN products p ON p.id = oi.product_id
+         JOIN categories c ON c.id = p.category_id
+         WHERE o.status NOT IN ("cancelled","refunded")
+         GROUP BY c.id
+         ORDER BY cat_revenue DESC LIMIT 5'
+    )->fetchAll();
+} catch (Exception $e) {}
+
 // Helper for trend calculation
 function trendPct($current, $previous) {
     if ($previous == 0) return $current > 0 ? 100 : 0;
@@ -164,6 +186,51 @@ require_once __DIR__ . '/includes/header.php';
         <p class="admin-stat-card__label">Newsletter Subs</p>
         <p class="admin-stat-card__value" style="font-size:1.4rem"><?= $totalSubs ?></p>
     </div>
+</div>
+
+<!-- FINANCIAL INSIGHTS -->
+<h2 style="font-size:1.1rem;font-weight:600;margin-bottom:16px;color:var(--a-text)">Financial Insights</h2>
+<div class="admin-stats" style="margin-bottom:32px">
+    <div class="admin-stat-card">
+        <p class="admin-stat-card__label">Average Order Value (AOV)</p>
+        <p class="admin-stat-card__value accent"><?= money($aov) ?></p>
+    </div>
+    <div class="admin-stat-card">
+        <p class="admin-stat-card__label">Net Product Revenue</p>
+        <p class="admin-stat-card__value green"><?= money($netProductRevenue) ?></p>
+    </div>
+    <div class="admin-stat-card">
+        <p class="admin-stat-card__label">Total Shipping Collected</p>
+        <p class="admin-stat-card__value"><?= money($totalShipping) ?></p>
+    </div>
+    <div class="admin-stat-card">
+        <p class="admin-stat-card__label">Total Discounts Given</p>
+        <p class="admin-stat-card__value" style="color:var(--a-red)">-<?= money($totalDiscounts) ?></p>
+    </div>
+</div>
+
+<div class="admin-dashboard-grid--equal" style="margin-bottom:32px">
+    <!-- REVENUE BY CATEGORY -->
+    <div class="admin-dashboard-panel">
+        <h3 class="admin-dashboard-panel__title">Revenue by Category</h3>
+        <?php if (empty($categoryRevenue)): ?>
+            <p style="color:var(--a-muted);font-size:.85rem">No category sales data yet</p>
+        <?php else: ?>
+            <?php foreach ($categoryRevenue as $idx => $cr): ?>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;<?= $idx < count($categoryRevenue)-1 ? 'border-bottom:1px solid var(--a-border)' : '' ?>">
+                <div>
+                    <span style="font-size:.85rem;font-weight:500"><?= h($cr['name']) ?></span>
+                    <br><span style="font-size:.72rem;color:var(--a-muted)"><?= (int)$cr['items_sold'] ?> items sold</span>
+                </div>
+                <div style="text-align:right">
+                    <span style="font-size:.85rem;color:var(--a-green)"><?= money((float)$cr['cat_revenue']) ?></span>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
+    </div>
+    <!-- EMPTY PANEL TO MAINTAIN GRID -->
+    <div class="admin-dashboard-panel" style="background:transparent;border:none;box-shadow:none"></div>
 </div>
 
 <div class="admin-dashboard-grid">
