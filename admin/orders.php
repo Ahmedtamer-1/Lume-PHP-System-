@@ -16,6 +16,34 @@ if (($_GET['action'] ?? '') === 'delete' && isset($_GET['id'])) {
     exit;
 }
 
+// ── BULK ACTIONS ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action']) && !empty($_POST['bulk_ids'])) {
+    $action = $_POST['bulk_action'];
+    $ids = $_POST['bulk_ids']; // array of IDs
+    
+    // Sanitize IDs
+    $cleanIds = array_map('intval', $ids);
+    $idPlaceholders = implode(',', array_fill(0, count($cleanIds), '?'));
+    
+    if ($action === 'delete') {
+        db()->prepare("DELETE FROM order_items WHERE order_id IN ($idPlaceholders)")->execute($cleanIds);
+        db()->prepare("DELETE FROM orders WHERE id IN ($idPlaceholders)")->execute($cleanIds);
+        log_activity('bulk_delete_orders', 'order', 0, count($cleanIds) . " orders deleted");
+        header('Location: ' . SITE_URL . '/admin/orders.php?msg=bulk_deleted');
+        exit;
+    } elseif (strpos($action, 'status_') === 0) {
+        $status = substr($action, 7);
+        $validStatuses = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'];
+        if (in_array($status, $validStatuses)) {
+            $params = array_merge([$status], $cleanIds);
+            db()->prepare("UPDATE orders SET status = ? WHERE id IN ($idPlaceholders)")->execute($params);
+            log_activity('bulk_status_update', 'order', 0, count($cleanIds) . " orders marked as $status");
+            header('Location: ' . SITE_URL . '/admin/orders.php?msg=bulk_updated');
+            exit;
+        }
+    }
+}
+
 // ── UPDATE STATUS ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'], $_POST['status'])) {
     $validStatuses = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'];
@@ -36,7 +64,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'], $_POST['s
 }
 
 $success = '';
-$msgs = ['updated' => 'Order status updated.', 'deleted' => 'Order deleted.'];
+$msgs = [
+    'updated' => 'Order status updated.', 
+    'deleted' => 'Order deleted.',
+    'bulk_deleted' => 'Selected orders were deleted.',
+    'bulk_updated' => 'Selected orders were updated.'
+];
 if (isset($_GET['msg'], $msgs[$_GET['msg']])) {
     $success = $msgs[$_GET['msg']];
 }
@@ -217,22 +250,26 @@ require_once __DIR__ . '/includes/header.php';
     <p class="admin-empty__text">No orders yet</p>
 </div>
 <?php else: ?>
-<div class="admin-table-wrap">
-    <table class="admin-table">
-        <thead>
-            <tr>
-                <th>Order</th>
-                <th>Customer</th>
-                <th>Status</th>
-                <th>Total</th>
-                <th>Payment</th>
-                <th>Date</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-        <?php foreach ($orders as $o): ?>
-            <tr>
+<form id="bulk-orders-form" method="POST" action="?">
+    <input type="hidden" name="bulk_action" id="bulk_action_input">
+    <div class="admin-table-wrap" style="position:relative; padding-bottom:60px;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th style="width:40px"><input type="checkbox" id="selectAll" onclick="toggleAllCheckboxes(this)"></th>
+                    <th>Order</th>
+                    <th>Customer</th>
+                    <th>Status</th>
+                    <th>Total</th>
+                    <th>Payment</th>
+                    <th>Date</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($orders as $o): ?>
+                <tr>
+                    <td><input type="checkbox" name="bulk_ids[]" value="<?= $o['id'] ?>" class="row-checkbox" onclick="updateBulkActionBar()"></td>
                 <td><a href="<?= SITE_URL ?>/admin/orders.php?id=<?= $o['id'] ?>" style="color:var(--a-accent)"><strong><?= h($o['order_number']) ?></strong></a></td>
                 <td><?= h($o['shipping_name'] ?? $o['guest_email'] ?? '—') ?></td>
                 <td>
@@ -254,12 +291,70 @@ require_once __DIR__ . '/includes/header.php';
                 </td>
             </tr>
         <?php endforeach; ?>
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+    </div>
+</form>
+
+<!-- Floating Bulk Action Bar -->
+<div id="bulk-action-bar" style="display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--a-surface); border:1px solid var(--a-border); padding:12px 24px; border-radius:30px; box-shadow:0 10px 30px rgba(0,0,0,0.5); z-index:100; align-items:center; gap:16px;">
+    <span id="bulk-count" style="font-weight:600; font-size:.9rem; color:var(--a-text)">0 selected</span>
+    <div style="width:1px; height:20px; background:var(--a-border)"></div>
+    <select id="bulk-action-select" style="padding:6px 12px; background:var(--a-bg); border:1px solid var(--a-border); border-radius:4px; color:var(--a-text)">
+        <option value="">Choose action...</option>
+        <option value="status_pending">Mark Pending</option>
+        <option value="status_paid">Mark Paid</option>
+        <option value="status_processing">Mark Processing</option>
+        <option value="status_shipped">Mark Shipped</option>
+        <option value="status_delivered">Mark Delivered</option>
+        <option value="status_cancelled">Mark Cancelled</option>
+        <option value="status_refunded">Mark Refunded</option>
+        <option value="delete">Delete</option>
+    </select>
+    <button type="button" class="admin-btn admin-btn--primary admin-btn--sm" onclick="applyBulkAction()">Apply</button>
 </div>
+
 <?php endif; ?>
 
 <script>
+function toggleAllCheckboxes(masterCheckbox) {
+    const checkboxes = document.querySelectorAll('.row-checkbox');
+    checkboxes.forEach(cb => cb.checked = masterCheckbox.checked);
+    updateBulkActionBar();
+}
+
+function updateBulkActionBar() {
+    const checkboxes = document.querySelectorAll('.row-checkbox:checked');
+    const bar = document.getElementById('bulk-action-bar');
+    const count = document.getElementById('bulk-count');
+    
+    if (checkboxes.length > 0) {
+        bar.style.display = 'flex';
+        count.innerText = checkboxes.length + ' selected';
+    } else {
+        bar.style.display = 'none';
+        document.getElementById('selectAll').checked = false;
+    }
+}
+
+function applyBulkAction() {
+    const select = document.getElementById('bulk-action-select');
+    const action = select.value;
+    if (!action) {
+        alert('Please select an action.');
+        return;
+    }
+    
+    if (action === 'delete') {
+        if (!confirm('Are you sure you want to delete the selected orders? This cannot be undone.')) {
+            return;
+        }
+    }
+    
+    document.getElementById('bulk_action_input').value = action;
+    document.getElementById('bulk-orders-form').submit();
+}
+
 function quickUpdateStatus(select, orderId) {
     select.style.opacity = '0.5';
     

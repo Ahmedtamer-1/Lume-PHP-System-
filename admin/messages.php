@@ -27,11 +27,36 @@ if (($_GET['action'] ?? '') === 'delete' && isset($_GET['id'])) {
     exit;
 }
 
+// ── BULK ACTIONS ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action']) && !empty($_POST['bulk_ids'])) {
+    $action = $_POST['bulk_action'];
+    $ids = $_POST['bulk_ids'];
+    $cleanIds = array_map('intval', $ids);
+    $placeholders = implode(',', array_fill(0, count($cleanIds), '?'));
+    
+    if ($action === 'delete') {
+        db()->prepare("DELETE FROM contact_messages WHERE id IN ($placeholders)")->execute($cleanIds);
+        header('Location: ' . SITE_URL . '/admin/messages.php?msg=bulk_deleted');
+        exit;
+    } elseif ($action === 'mark_read') {
+        db()->prepare("UPDATE contact_messages SET is_read = 1 WHERE id IN ($placeholders)")->execute($cleanIds);
+        header('Location: ' . SITE_URL . '/admin/messages.php?msg=bulk_marked_read');
+        exit;
+    } elseif ($action === 'mark_unread') {
+        db()->prepare("UPDATE contact_messages SET is_read = 0 WHERE id IN ($placeholders)")->execute($cleanIds);
+        header('Location: ' . SITE_URL . '/admin/messages.php?msg=bulk_marked_unread');
+        exit;
+    }
+}
+
 if (isset($_GET['msg'])) {
     $msgs = [
         'deleted'       => 'Message deleted.',
         'marked_read'   => 'Message marked as read.',
         'marked_unread' => 'Message marked as unread.',
+        'bulk_deleted'  => 'Selected messages deleted.',
+        'bulk_marked_read' => 'Selected messages marked as read.',
+        'bulk_marked_unread' => 'Selected messages marked as unread.'
     ];
     $success = $msgs[$_GET['msg']] ?? '';
 }
@@ -182,21 +207,25 @@ require_once __DIR__ . '/includes/header.php';
     <p class="admin-empty__text">No messages found.</p>
 </div>
 <?php else: ?>
-<div class="admin-table-wrap admin-responsive-table">
-    <table class="admin-table">
-        <thead>
-            <tr>
-                <th>Sender</th>
-                <th>Email</th>
-                <th>Subject</th>
-                <th>Date</th>
-                <th>Status</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-        <?php foreach ($messages as $m): ?>
-            <tr class="<?= !$m['is_read'] ? 'msg-row--unread' : '' ?>">
+<form id="bulk-messages-form" method="POST" action="?">
+    <input type="hidden" name="bulk_action" id="bulk_action_input">
+    <div class="admin-table-wrap admin-responsive-table" style="position:relative; padding-bottom:60px;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th style="width:40px"><input type="checkbox" id="selectAll" onclick="toggleAllCheckboxes(this)"></th>
+                    <th>Sender</th>
+                    <th>Email</th>
+                    <th>Subject</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($messages as $m): ?>
+                <tr class="<?= !$m['is_read'] ? 'msg-row--unread' : '' ?>">
+                    <td><input type="checkbox" name="bulk_ids[]" value="<?= $m['id'] ?>" class="row-checkbox" onclick="updateBulkActionBar()"></td>
                 <td><strong><?= h($m['name']) ?></strong></td>
                 <td style="color:var(--a-muted)"><?= h($m['email']) ?></td>
                 <td>
@@ -217,9 +246,64 @@ require_once __DIR__ . '/includes/header.php';
                 </td>
             </tr>
         <?php endforeach; ?>
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+    </div>
+</form>
+
+<!-- Floating Bulk Action Bar -->
+<div id="bulk-action-bar" style="display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--a-surface); border:1px solid var(--a-border); padding:12px 24px; border-radius:30px; box-shadow:0 10px 30px rgba(0,0,0,0.5); z-index:100; align-items:center; gap:16px;">
+    <span id="bulk-count" style="font-weight:600; font-size:.9rem; color:var(--a-text)">0 selected</span>
+    <div style="width:1px; height:20px; background:var(--a-border)"></div>
+    <select id="bulk-action-select" style="padding:6px 12px; background:var(--a-bg); border:1px solid var(--a-border); border-radius:4px; color:var(--a-text)">
+        <option value="">Choose action...</option>
+        <option value="mark_read">Mark as Read</option>
+        <option value="mark_unread">Mark as Unread</option>
+        <option value="delete">Delete</option>
+    </select>
+    <button type="button" class="admin-btn admin-btn--primary admin-btn--sm" onclick="applyBulkAction()">Apply</button>
 </div>
+
+<script>
+function toggleAllCheckboxes(masterCheckbox) {
+    const checkboxes = document.querySelectorAll('.row-checkbox');
+    checkboxes.forEach(cb => cb.checked = masterCheckbox.checked);
+    updateBulkActionBar();
+}
+
+function updateBulkActionBar() {
+    const checkboxes = document.querySelectorAll('.row-checkbox:checked');
+    const bar = document.getElementById('bulk-action-bar');
+    const count = document.getElementById('bulk-count');
+    
+    if (checkboxes.length > 0) {
+        bar.style.display = 'flex';
+        count.innerText = checkboxes.length + ' selected';
+    } else {
+        bar.style.display = 'none';
+        document.getElementById('selectAll').checked = false;
+    }
+}
+
+function applyBulkAction() {
+    const select = document.getElementById('bulk-action-select');
+    const action = select.value;
+    if (!action) {
+        alert('Please select an action.');
+        return;
+    }
+    
+    if (action === 'delete') {
+        if (!confirm('Are you sure you want to delete the selected messages? This cannot be undone.')) {
+            return;
+        }
+    }
+    
+    document.getElementById('bulk_action_input').value = action;
+    document.getElementById('bulk-messages-form').submit();
+}
+</script>
+
 <?php endif; ?>
 
 <style>
