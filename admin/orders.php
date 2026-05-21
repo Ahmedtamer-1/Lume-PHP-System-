@@ -24,6 +24,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'], $_POST['s
         db()->prepare('UPDATE orders SET status = ? WHERE id = ?')
             ->execute([$newStatus, (int) $_POST['order_id']]);
         log_activity('update_order_status', 'order', (int) $_POST['order_id'], "Status: $newStatus");
+        
+        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true]);
+            exit;
+        }
         header('Location: ' . SITE_URL . '/admin/orders.php?msg=updated');
         exit;
     }
@@ -124,8 +130,9 @@ if (isset($_GET['id'])) {
                 </form>
             </div>
 
-            <div style="margin-top:16px">
+            <div style="margin-top:16px;display:flex;gap:8px">
                 <a href="<?= SITE_URL ?>/admin/orders.php" class="admin-btn admin-btn--full">← Back to Orders</a>
+                <button type="button" class="admin-btn" onclick="window.print()" title="Print Invoice"><svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg></button>
             </div>
             <div style="margin-top:12px">
                 <a href="<?= SITE_URL ?>/admin/orders.php?action=delete&id=<?= $order['id'] ?>" class="admin-btn admin-btn--danger admin-btn--full"
@@ -140,7 +147,28 @@ if (isset($_GET['id'])) {
 }
 
 // ── LIST ──
-$orders = db()->query('SELECT * FROM orders ORDER BY created_at DESC')->fetchAll();
+$search = trim($_GET['search'] ?? '');
+$filterStatus = $_GET['status_filter'] ?? '';
+
+$query = 'SELECT * FROM orders WHERE 1=1';
+$params = [];
+
+if ($search) {
+    $query .= ' AND (order_number LIKE ? OR shipping_name LIKE ?)';
+    $term = '%' . $search . '%';
+    $params[] = $term;
+    $params[] = $term;
+}
+
+if ($filterStatus && in_array($filterStatus, ['pending','paid','processing','shipped','delivered','cancelled','refunded'])) {
+    $query .= ' AND status = ?';
+    $params[] = $filterStatus;
+}
+
+$query .= ' ORDER BY created_at DESC';
+$stmt = db()->prepare($query);
+$stmt->execute($params);
+$orders = $stmt->fetchAll();
 require_once __DIR__ . '/includes/header.php';
 ?>
 
@@ -149,6 +177,19 @@ require_once __DIR__ . '/includes/header.php';
 <div class="admin-toolbar">
     <div class="admin-toolbar__left">
         <span style="font-size:.85rem;color:var(--a-muted)"><?= count($orders) ?> orders</span>
+        <div class="admin-filter-tabs">
+            <a href="?status_filter=&search=<?= urlencode($search) ?>" class="admin-filter-tab <?= empty($filterStatus) ? 'active' : '' ?>">All</a>
+            <?php foreach(['pending','paid','processing','shipped','delivered','cancelled','refunded'] as $st): ?>
+            <a href="?status_filter=<?= $st ?>&search=<?= urlencode($search) ?>" class="admin-filter-tab <?= $filterStatus === $st ? 'active' : '' ?>"><?= ucfirst($st) ?></a>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <div class="admin-toolbar__right">
+        <form method="get" style="display:flex;gap:8px">
+            <input type="hidden" name="status_filter" value="<?= h($filterStatus) ?>">
+            <input type="text" name="search" value="<?= h($search) ?>" placeholder="Search orders…" class="admin-search-input">
+            <button type="submit" class="admin-btn admin-btn--sm">Search</button>
+        </form>
     </div>
 </div>
 
@@ -176,7 +217,15 @@ require_once __DIR__ . '/includes/header.php';
             <tr>
                 <td><a href="<?= SITE_URL ?>/admin/orders.php?id=<?= $o['id'] ?>" style="color:var(--a-accent)"><strong><?= h($o['order_number']) ?></strong></a></td>
                 <td><?= h($o['shipping_name'] ?? $o['guest_email'] ?? '—') ?></td>
-                <td><span class="admin-badge admin-badge--<?= h($o['status']) ?>"><?= h($o['status']) ?></span></td>
+                <td>
+                    <select class="admin-badge admin-badge--<?= h($o['status']) ?>" 
+                            style="border:none; cursor:pointer; outline:none; padding-right:20px; font-family:inherit; font-weight:600; text-transform:uppercase" 
+                            onchange="quickUpdateStatus(this, <?= $o['id'] ?>)">
+                        <?php foreach(['pending','paid','processing','shipped','delivered','cancelled','refunded'] as $s): ?>
+                            <option value="<?= $s ?>" <?= $o['status'] === $s ? 'selected' : '' ?> style="background:var(--a-bg); color:var(--a-text); text-transform:uppercase"><?= h($s) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </td>
                 <td><?= money((float)$o['total']) ?></td>
                 <td style="color:var(--a-muted);font-size:.8rem"><?= h($o['payment_method'] ?? '—') ?></td>
                 <td style="color:var(--a-muted)"><?= date('d M Y', strtotime($o['created_at'])) ?></td>
@@ -191,5 +240,35 @@ require_once __DIR__ . '/includes/header.php';
     </table>
 </div>
 <?php endif; ?>
+
+<script>
+function quickUpdateStatus(select, orderId) {
+    select.style.opacity = '0.5';
+    
+    const formData = new FormData();
+    formData.append('order_id', orderId);
+    formData.append('status', select.value);
+    
+    fetch('<?= SITE_URL ?>/admin/orders.php', {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        select.style.opacity = '1';
+        if (data.success) {
+            AdminUI.toast('Order status updated', 'success');
+            select.className = 'admin-badge admin-badge--' + select.value;
+        } else {
+            AdminUI.toast('Failed to update status', 'error');
+        }
+    })
+    .catch(() => {
+        select.style.opacity = '1';
+        AdminUI.toast('Error updating status', 'error');
+    });
+}
+</script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

@@ -97,8 +97,22 @@ require_once __DIR__ . '/includes/header.php';
 
 <form method="post" enctype="multipart/form-data" class="admin-form" style="max-width:900px">
 
+    <div class="admin-settings-tabs">
+        <button type="button" class="admin-settings-tab active" data-tab="general">General</button>
+        <button type="button" class="admin-settings-tab" data-tab="colors">Colors</button>
+        <button type="button" class="admin-settings-tab" data-tab="typography">Typography</button>
+        <button type="button" class="admin-settings-tab" data-tab="product">Product</button>
+        <button type="button" class="admin-settings-tab" data-tab="footer">Footer</button>
+        <button type="button" class="admin-settings-tab" data-tab="maintenance">Maintenance</button>
+        <button type="button" class="admin-settings-tab" data-tab="branding">Branding</button>
+        <button type="button" class="admin-settings-tab" data-tab="seo">SEO</button>
+        <button type="button" class="admin-settings-tab" data-tab="social">Social</button>
+        <button type="button" class="admin-settings-tab" data-tab="payment">Payment</button>
+        <button type="button" class="admin-settings-tab" data-tab="paymob">Paymob</button>
+    </div>
+
     <!-- ── General ── -->
-    <div class="admin-settings-section">
+    <div class="admin-settings-section" data-section="general">
         <h2 class="admin-settings-section__title">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
             General
@@ -127,7 +141,7 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 
     <!-- ── Theme Colors ── -->
-    <div class="admin-settings-section">
+    <div class="admin-settings-section" data-section="colors" hidden>
         <h2 class="admin-settings-section__title">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
             Color Scheme
@@ -175,7 +189,7 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 
     <!-- ── Typography ── -->
-    <div class="admin-settings-section">
+    <div class="admin-settings-section" data-section="typography" hidden>
         <h2 class="admin-settings-section__title">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
             Typography
@@ -206,7 +220,7 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 
     <!-- ── Product Display ── -->
-    <div class="admin-settings-section">
+    <div class="admin-settings-section" data-section="product" hidden>
         <h2 class="admin-settings-section__title">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
             Product Display
@@ -224,7 +238,7 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 
     <!-- ── Footer Sections ── -->
-    <div class="admin-settings-section">
+    <div class="admin-settings-section" data-section="footer" hidden>
         <h2 class="admin-settings-section__title">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>
             Footer Sections
@@ -267,7 +281,7 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 
     <!-- ── Maintenance Mode ── -->
-    <div class="admin-settings-section">
+    <div class="admin-settings-section" data-section="maintenance" hidden>
         <h2 class="admin-settings-section__title">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
             Maintenance Mode
@@ -284,7 +298,7 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 
     <!-- ── Branding & Logos ── -->
-    <div class="admin-settings-section">
+    <div class="admin-settings-section" data-section="branding" hidden>
         <h2 class="admin-settings-section__title">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             Branding & Logos
@@ -348,7 +362,7 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 
     <!-- ── SEO & Meta ── -->
-    <div class="admin-settings-section">
+    <div class="admin-settings-section" data-section="seo" hidden>
         <h2 class="admin-settings-section__title">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             SEO & Meta Data
@@ -379,7 +393,7 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 
     <!-- ── Social Links ── -->
-    <div class="admin-settings-section">
+    <div class="admin-settings-section" data-section="social" hidden>
         <h2 class="admin-settings-section__title">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
             Social Links
@@ -401,7 +415,7 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 
     <!-- ── Payment ── -->
-    <div class="admin-settings-section">
+    <div class="admin-settings-section" data-section="payment" hidden>
         <h2 class="admin-settings-section__title">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
             Payment & Currency
@@ -439,7 +453,7 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 
     <!-- ── Paymob Integration ── -->
-    <div class="admin-settings-section">
+    <div class="admin-settings-section" data-section="paymob" hidden>
         <h2 class="admin-settings-section__title">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2" ry="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
             Paymob Integration
@@ -498,6 +512,22 @@ require_once __DIR__ . '/includes/header.php';
 </style>
 
 <script>
+// Settings tabs
+document.querySelectorAll('.admin-settings-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+        document.querySelectorAll('.admin-settings-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        const target = this.dataset.tab;
+        document.querySelectorAll('.admin-settings-section[data-section]').forEach(s => {
+            if (s.dataset.section === target) {
+                s.removeAttribute('hidden');
+            } else {
+                s.setAttribute('hidden', '');
+            }
+        });
+    });
+});
+
 // Bidirectional color sync + live preview
 document.querySelectorAll('input[data-color-key]').forEach(picker => {
     const key = picker.dataset.colorKey;

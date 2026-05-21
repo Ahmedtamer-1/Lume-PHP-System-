@@ -130,21 +130,28 @@ if (isset($_GET['id']) && $action !== 'delete') {
 
 // ── LIST ──
 $search = trim($_GET['q'] ?? '');
+$filterRole = $_GET['role'] ?? '';
+
+$whereStr = '';
+$params = [];
+
 if ($search) {
-    $stmt = db()->prepare(
-        'SELECT u.*, (SELECT COUNT(*) FROM orders o WHERE o.user_id = u.id) AS order_count,
-         (SELECT COALESCE(SUM(o.total),0) FROM orders o WHERE o.user_id = u.id AND o.status NOT IN ("cancelled","refunded")) AS total_spent
-         FROM users u WHERE u.first_name LIKE ? OR u.last_name LIKE ? OR u.email LIKE ? ORDER BY u.created_at DESC'
-    );
+    $whereStr .= ' AND (u.first_name LIKE ? OR u.last_name LIKE ? OR u.email LIKE ?)';
     $term = '%' . $search . '%';
-    $stmt->execute([$term, $term, $term]);
-} else {
-    $stmt = db()->query(
-        'SELECT u.*, (SELECT COUNT(*) FROM orders o WHERE o.user_id = u.id) AS order_count,
-         (SELECT COALESCE(SUM(o.total),0) FROM orders o WHERE o.user_id = u.id AND o.status NOT IN ("cancelled","refunded")) AS total_spent
-         FROM users u ORDER BY u.created_at DESC'
-    );
+    $params = array_merge($params, [$term, $term, $term]);
 }
+
+if ($filterRole && in_array($filterRole, ['customer', 'admin'])) {
+    $whereStr .= ' AND u.role = ?';
+    $params[] = $filterRole;
+}
+
+$stmt = db()->prepare(
+    'SELECT u.*, (SELECT COUNT(*) FROM orders o WHERE o.user_id = u.id) AS order_count,
+     (SELECT COALESCE(SUM(o.total),0) FROM orders o WHERE o.user_id = u.id AND o.status NOT IN ("cancelled","refunded")) AS total_spent
+     FROM users u WHERE 1=1' . $whereStr . ' ORDER BY u.created_at DESC'
+);
+$stmt->execute($params);
 $users = $stmt->fetchAll();
 
 require_once __DIR__ . '/includes/header.php';
@@ -156,11 +163,16 @@ require_once __DIR__ . '/includes/header.php';
 <div class="admin-toolbar">
     <div class="admin-toolbar__left">
         <span style="font-size:.85rem;color:var(--a-muted)"><?= count($users) ?> users</span>
+        <div class="admin-filter-tabs">
+            <a href="?role=&q=<?= urlencode($search) ?>" class="admin-filter-tab <?= empty($filterRole) ? 'active' : '' ?>">All</a>
+            <a href="?role=customer&q=<?= urlencode($search) ?>" class="admin-filter-tab <?= $filterRole === 'customer' ? 'active' : '' ?>">Customers</a>
+            <a href="?role=admin&q=<?= urlencode($search) ?>" class="admin-filter-tab <?= $filterRole === 'admin' ? 'active' : '' ?>">Admins</a>
+        </div>
     </div>
     <div class="admin-toolbar__right">
         <form method="get" style="display:flex;gap:8px">
-            <input type="text" name="q" value="<?= h($search) ?>" placeholder="Search users…"
-                   style="padding:8px 14px;background:var(--a-bg);border:1px solid var(--a-border);border-radius:var(--a-radius);color:var(--a-text);font-size:.82rem;width:220px">
+            <input type="hidden" name="role" value="<?= h($filterRole) ?>">
+            <input type="text" name="q" value="<?= h($search) ?>" placeholder="Search users…" class="admin-search-input">
             <button type="submit" class="admin-btn admin-btn--sm">Search</button>
         </form>
     </div>

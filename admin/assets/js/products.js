@@ -12,6 +12,9 @@ let sizeChartPath = '';
 let colorGalleries = {};
 let productColors = [];
 
+let currentProductFilter = 'all';
+let currentProductSearch = '';
+
 // ── INIT ──
 document.addEventListener('DOMContentLoaded', () => {
     loadProducts();
@@ -20,6 +23,18 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('variant-form').addEventListener('submit', saveVariant);
     document.getElementById('media-search-input')?.addEventListener('input', function(){
         renderMediaGrid(this.value.trim().toLowerCase());
+    });
+    document.getElementById('product-search')?.addEventListener('input', function() {
+        currentProductSearch = this.value.trim().toLowerCase();
+        renderProductList();
+    });
+    document.querySelectorAll('.admin-filter-tab[data-filter]').forEach(tab => {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.admin-filter-tab[data-filter]').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            currentProductFilter = this.dataset.filter;
+            renderProductList();
+        });
     });
 });
 
@@ -38,11 +53,33 @@ function loadProducts(){
 
 function renderProductList(){
     const tb=document.getElementById('products-tbody');
-    if(!allProducts.length){
-        tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--a-muted)">No products yet. Click "Add Product" to create one.</td></tr>';
+    let filteredProducts = allProducts;
+    
+    // Apply filters
+    if (currentProductFilter === 'active') {
+        filteredProducts = filteredProducts.filter(p => p.is_active == 1);
+    } else if (currentProductFilter === 'inactive') {
+        filteredProducts = filteredProducts.filter(p => p.is_active == 0);
+    }
+    
+    // Apply search
+    if (currentProductSearch) {
+        filteredProducts = filteredProducts.filter(p => 
+            p.name.toLowerCase().includes(currentProductSearch) || 
+            (p.sku && p.sku.toLowerCase().includes(currentProductSearch)) ||
+            (p.category_name && p.category_name.toLowerCase().includes(currentProductSearch))
+        );
+    }
+
+    if(!filteredProducts.length){
+        tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--a-muted)">No products found.</td></tr>';
+        document.getElementById('product-count').textContent = '0 products';
         return;
     }
-    tb.innerHTML=allProducts.map(p=>{
+    
+    document.getElementById('product-count').textContent = filteredProducts.length + ' products';
+
+    tb.innerHTML=filteredProducts.map(p=>{
         const img=p.image_url?`<img src="${p.image_url}" alt="" class="admin-table__img">`:`<div class="admin-table__img" style="display:flex;align-items:center;justify-content:center;color:var(--a-muted)">—</div>`;
         const price=p.sale_price?`<span style="color:var(--a-accent)">${money(p.sale_price)}</span><br><span style="font-size:.72rem;color:var(--a-muted);text-decoration:line-through">${money(p.price)}</span>`:money(p.price);
         const star=p.is_featured==1?'<span style="color:var(--a-gold);font-size:.65rem;margin-left:4px">★</span>':'';
@@ -80,6 +117,7 @@ function showProductForm(product){
         f.querySelector('[name=description]').value=product.description||'';
         f.querySelector('[name=price]').value=product.price||'';
         f.querySelector('[name=sale_price]').value=product.sale_price||'';
+        f.querySelector('[name=cost_price]').value=product.cost_price||'';
         f.querySelector('[name=sku]').value=product.sku||'';
         f.querySelector('[name=stock]').value=product.stock||0;
         f.querySelector('[name=existing_image]').value=product.image||'';
@@ -286,6 +324,7 @@ function editVariant(id){
         const dot=document.getElementById('variant-color-dot');if(dot)dot.style.background=v.color_hex||'#888';
         f.querySelector('[name=sku]').value=v.sku||'';
         f.querySelector('[name=price_override]').value=v.price_override??'';
+        f.querySelector('[name=cost_price]').value=v.cost_price??'';
         f.querySelector('[name=stock]').value=v.stock||0;
         f.querySelector('[name=sort_order]').value=v.sort_order||0;
         f.querySelector('[name=is_active]').checked=v.is_active==1;

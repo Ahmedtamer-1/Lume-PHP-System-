@@ -80,6 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'save_product') {
     $description = trim($_POST['description'] ?? '');
     $price       = (float)($_POST['price'] ?? 0);
     $salePrice   = trim($_POST['sale_price'] ?? '') !== '' ? (float)$_POST['sale_price'] : null;
+    $costPrice   = trim($_POST['cost_price'] ?? '') !== '' ? (float)$_POST['cost_price'] : null;
     $sku         = trim($_POST['sku'] ?? '');
     $stock       = (int)($_POST['stock'] ?? 0);
     $isFeatured  = isset($_POST['is_featured']) ? 1 : 0;
@@ -137,17 +138,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'save_product') {
     try {
         if ($id > 0) {
             db()->prepare(
-                'UPDATE products SET category_id=?, name=?, slug=?, description=?, price=?, sale_price=?,
+                'UPDATE products SET category_id=?, name=?, slug=?, description=?, price=?, sale_price=?, cost_price=?,
                  sku=?, stock=?, is_featured=?, is_active=?, has_variants=?, image=?, gallery=?, size_chart=? WHERE id=?'
-            )->execute([$categoryId, $name, $slug, $description, $price, $salePrice,
+            )->execute([$categoryId, $name, $slug, $description, $price, $salePrice, $costPrice,
                         $sku, $stock, $isFeatured, $isActive, $hasVariants, $imagePath, $galleryEncoded, $sizeChart, $id]);
             log_activity('update_product', 'product', $id);
             echo json_encode(['success' => true, 'message' => 'Product updated!', 'product_id' => $id]);
         } else {
             db()->prepare(
-                'INSERT INTO products (category_id, name, slug, description, price, sale_price, sku, stock, is_featured, is_active, has_variants, image, gallery, size_chart)
-                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
-            )->execute([$categoryId, $name, $slug, $description, $price, $salePrice,
+                'INSERT INTO products (category_id, name, slug, description, price, sale_price, cost_price, sku, stock, is_featured, is_active, has_variants, image, gallery, size_chart)
+                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
+            )->execute([$categoryId, $name, $slug, $description, $price, $salePrice, $costPrice,
                         $sku, $stock, $isFeatured, $isActive, $hasVariants, $imagePath, $galleryEncoded, $sizeChart]);
             $newId = (int)db()->lastInsertId();
             log_activity('create_product', 'product', $newId);
@@ -180,6 +181,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'save_variant') {
     $sku        = trim($_POST['sku'] ?? '') ?: null;
     $priceOver  = trim($_POST['price_override'] ?? '');
     $priceOverV = $priceOver !== '' ? (float)$priceOver : null;
+    $costPrice  = trim($_POST['cost_price'] ?? '');
+    $costPriceV = $costPrice !== '' ? (float)$costPrice : null;
     $stock      = (int)($_POST['stock'] ?? 0);
     $sortOrder  = (int)($_POST['sort_order'] ?? 0);
     $isActive   = isset($_POST['is_active']) ? 1 : 0;
@@ -212,14 +215,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'save_variant') {
     try {
         if ($vid > 0) {
             db()->prepare(
-                'UPDATE product_variants SET size=?, color_name=?, color_hex=?, sku=?, price_override=?, stock=?, sort_order=?, is_active=?, image=? WHERE id=? AND product_id=?'
-            )->execute([$size, $colorName, $colorHex, $sku, $priceOverV, $stock, $sortOrder, $isActive, $imagePath, $vid, $productId]);
+                'UPDATE product_variants SET size=?, color_name=?, color_hex=?, sku=?, price_override=?, cost_price=?, stock=?, sort_order=?, is_active=?, image=? WHERE id=? AND product_id=?'
+            )->execute([$size, $colorName, $colorHex, $sku, $priceOverV, $costPriceV, $stock, $sortOrder, $isActive, $imagePath, $vid, $productId]);
             log_activity('update_variant', 'variant', $vid);
             echo json_encode(['success' => true, 'message' => 'Variant updated.', 'variant_id' => $vid]);
         } else {
             db()->prepare(
-                'INSERT INTO product_variants (product_id, size, color_name, color_hex, sku, price_override, stock, sort_order, is_active, image) VALUES (?,?,?,?,?,?,?,?,?,?)'
-            )->execute([$productId, $size, $colorName, $colorHex, $sku, $priceOverV, $stock, $sortOrder, $isActive, $imagePath]);
+                'INSERT INTO product_variants (product_id, size, color_name, color_hex, sku, price_override, cost_price, stock, sort_order, is_active, image) VALUES (?,?,?,?,?,?,?,?,?,?,?)'
+            )->execute([$productId, $size, $colorName, $colorHex, $sku, $priceOverV, $costPriceV, $stock, $sortOrder, $isActive, $imagePath]);
             $newVid = (int)db()->lastInsertId();
             log_activity('create_variant', 'variant', $newVid);
             echo json_encode(['success' => true, 'message' => 'Variant added.', 'variant_id' => $newVid]);

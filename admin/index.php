@@ -9,17 +9,21 @@ $adminPage = 'dashboard';
 // ── Stats ──
 $totalProducts  = (int) db()->query('SELECT COUNT(*) FROM products WHERE is_active = 1')->fetchColumn();
 $totalOrders    = (int) db()->query('SELECT COUNT(*) FROM orders')->fetchColumn();
-$totalRevenue   = (float) db()->query('SELECT COALESCE(SUM(total),0) FROM orders WHERE status NOT IN ("cancelled","refunded")')->fetchColumn();
+$totalRevenue   = (float) db()->query('SELECT COALESCE(SUM(total),0) FROM orders WHERE status = "delivered"')->fetchColumn();
 $totalCustomers = (int) db()->query('SELECT COUNT(*) FROM users WHERE role = "customer"')->fetchColumn();
 
 // ── This month stats ──
 $monthOrders  = (int) db()->query('SELECT COUNT(*) FROM orders WHERE MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW())')->fetchColumn();
-$monthRevenue = (float) db()->query('SELECT COALESCE(SUM(total),0) FROM orders WHERE status NOT IN ("cancelled","refunded") AND MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW())')->fetchColumn();
+$monthRevenue = (float) db()->query('SELECT COALESCE(SUM(total),0) FROM orders WHERE status = "delivered" AND MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW())')->fetchColumn();
+
+// ── Last month for comparison ──
+$lastMonthRevenue = (float) db()->query('SELECT COALESCE(SUM(total),0) FROM orders WHERE status = "delivered" AND MONTH(created_at) = MONTH(DATE_SUB(NOW(), INTERVAL 1 MONTH)) AND YEAR(created_at) = YEAR(DATE_SUB(NOW(), INTERVAL 1 MONTH))')->fetchColumn();
+$lastMonthOrders  = (int) db()->query('SELECT COUNT(*) FROM orders WHERE MONTH(created_at) = MONTH(DATE_SUB(NOW(), INTERVAL 1 MONTH)) AND YEAR(created_at) = YEAR(DATE_SUB(NOW(), INTERVAL 1 MONTH))')->fetchColumn();
 
 // ── Revenue last 7 days ──
 $revenueDays = db()->query(
     'SELECT DATE(created_at) AS day, SUM(total) AS revenue, COUNT(*) AS orders
-     FROM orders WHERE status NOT IN ("cancelled","refunded")
+     FROM orders WHERE status = "delivered"
      AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
      GROUP BY DATE(created_at) ORDER BY day ASC'
 )->fetchAll();
@@ -47,7 +51,7 @@ $topProducts = db()->query(
     'SELECT oi.name, SUM(oi.quantity) AS total_qty, SUM(oi.subtotal) AS total_revenue
      FROM order_items oi
      JOIN orders o ON o.id = oi.order_id
-     WHERE o.status NOT IN ("cancelled","refunded")
+     WHERE o.status = "delivered"
      GROUP BY oi.name ORDER BY total_qty DESC LIMIT 5'
 )->fetchAll();
 
@@ -60,8 +64,85 @@ $newCustomers = (int) db()->query('SELECT COUNT(*) FROM users WHERE created_at >
 // ── Newsletter subs ──
 $totalSubs = (int) db()->query('SELECT COUNT(*) FROM newsletter_subscribers WHERE status = "active"')->fetchColumn();
 
+// ── Unread messages ──
+$unreadMsgs = 0;
+try {
+    $unreadMsgs = (int) db()->query('SELECT COUNT(*) FROM contact_messages WHERE is_read = 0')->fetchColumn();
+} catch (Exception $e) {}
+
+// ── Recent activity ──
+$recentActivity = [];
+try {
+    $recentActivity = db()->query(
+        'SELECT al.*, u.first_name, u.last_name 
+         FROM activity_log al 
+         LEFT JOIN users u ON u.id = al.user_id 
+         ORDER BY al.created_at DESC LIMIT 5'
+    )->fetchAll();
+} catch (Exception $e) {}
+
+// ── Advanced Financials ──
+$validOrdersCount = (int) db()->query('SELECT COUNT(*) FROM orders WHERE status = "delivered"')->fetchColumn();
+$aov = $validOrdersCount > 0 ? $totalRevenue / $validOrdersCount : 0;
+$totalDiscounts = (float) db()->query('SELECT COALESCE(SUM(discount),0) FROM orders WHERE status = "delivered"')->fetchColumn();
+$totalShipping = (float) db()->query('SELECT COALESCE(SUM(shipping_cost),0) FROM orders WHERE status = "delivered"')->fetchColumn();
+$netProductRevenue = $totalRevenue - $totalShipping; // total includes shipping and discount.
+
+$totalCogs = (float) db()->query('
+    SELECT COALESCE(SUM(oi.cost_price * oi.quantity), 0)
+    FROM order_items oi
+    JOIN orders o ON o.id = oi.order_id
+    WHERE o.status = "delivered"
+')->fetchColumn();
+$grossProfit = $netProductRevenue - $totalCogs;
+
+// Category revenue
+$categoryRevenue = [];
+try {
+    $categoryRevenue = db()->query(
+        'SELECT c.name, SUM(oi.subtotal) AS cat_revenue, SUM(oi.quantity) as items_sold
+         FROM order_items oi
+         JOIN orders o ON o.id = oi.order_id
+         JOIN products p ON p.id = oi.product_id
+         JOIN categories c ON c.id = p.category_id
+         WHERE o.status = "delivered"
+         GROUP BY c.id
+         ORDER BY cat_revenue DESC LIMIT 5'
+    )->fetchAll();
+} catch (Exception $e) {}
+
+// Helper for trend calculation
+function trendPct($current, $previous) {
+    if ($previous == 0) return $current > 0 ? 100 : 0;
+    return round((($current - $previous) / $previous) * 100);
+}
+$revenueTrend = trendPct($monthRevenue, $lastMonthRevenue);
+$ordersTrend  = trendPct($monthOrders, $lastMonthOrders);
+
 require_once __DIR__ . '/includes/header.php';
 ?>
+
+<!-- QUICK ACTIONS -->
+<div class="admin-quick-actions">
+    <a href="<?= SITE_URL ?>/admin/products.php" class="admin-quick-action">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Product
+    </a>
+    <a href="<?= SITE_URL ?>/admin/orders.php" class="admin-quick-action">
+        <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
+        View Orders
+    </a>
+    <?php if ($unreadMsgs > 0): ?>
+    <a href="<?= SITE_URL ?>/admin/messages.php?filter=unread" class="admin-quick-action" style="border-color:var(--a-accent);color:var(--a-accent)">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <?= $unreadMsgs ?> Unread Messages
+    </a>
+    <?php endif; ?>
+    <a href="<?= SITE_URL ?>/admin/subscribers.php" class="admin-quick-action">
+        <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg>
+        Subscribers
+    </a>
+</div>
 
 <!-- STAT CARDS -->
 <div class="admin-stats">
@@ -83,15 +164,27 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </div>
 
-<!-- MONTH STATS -->
+<!-- MONTH STATS WITH TRENDS -->
 <div class="admin-stats" style="margin-bottom:32px">
     <div class="admin-stat-card" style="border-left:3px solid var(--a-accent)">
         <p class="admin-stat-card__label">This Month Revenue</p>
         <p class="admin-stat-card__value" style="font-size:1.4rem"><?= money($monthRevenue) ?></p>
+        <?php if ($revenueTrend != 0): ?>
+        <span class="admin-stat-card__trend admin-stat-card__trend--<?= $revenueTrend >= 0 ? 'up' : 'down' ?>">
+            <svg viewBox="0 0 24 24"><polyline points="<?= $revenueTrend >= 0 ? '18 15 12 9 6 15' : '6 9 12 15 18 9' ?>"/></svg>
+            <?= abs($revenueTrend) ?>% vs last month
+        </span>
+        <?php endif; ?>
     </div>
     <div class="admin-stat-card" style="border-left:3px solid var(--a-accent)">
         <p class="admin-stat-card__label">This Month Orders</p>
         <p class="admin-stat-card__value" style="font-size:1.4rem"><?= $monthOrders ?></p>
+        <?php if ($ordersTrend != 0): ?>
+        <span class="admin-stat-card__trend admin-stat-card__trend--<?= $ordersTrend >= 0 ? 'up' : 'down' ?>">
+            <svg viewBox="0 0 24 24"><polyline points="<?= $ordersTrend >= 0 ? '18 15 12 9 6 15' : '6 9 12 15 18 9' ?>"/></svg>
+            <?= abs($ordersTrend) ?>% vs last month
+        </span>
+        <?php endif; ?>
     </div>
     <div class="admin-stat-card" style="border-left:3px solid var(--a-green)">
         <p class="admin-stat-card__label">New Customers (7d)</p>
@@ -103,10 +196,59 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </div>
 
-<div style="display:grid;grid-template-columns:2fr 1fr;gap:24px;margin-bottom:32px">
+<!-- FINANCIAL INSIGHTS -->
+<h2 style="font-size:1.1rem;font-weight:600;margin-bottom:16px;color:var(--a-text)">Financial Insights</h2>
+<div class="admin-stats" style="margin-bottom:32px">
+    <div class="admin-stat-card">
+        <p class="admin-stat-card__label">Average Order Value (AOV)</p>
+        <p class="admin-stat-card__value accent"><?= money($aov) ?></p>
+    </div>
+    <div class="admin-stat-card">
+        <p class="admin-stat-card__label">Net Product Revenue</p>
+        <p class="admin-stat-card__value green"><?= money($netProductRevenue) ?></p>
+    </div>
+    <div class="admin-stat-card" style="border-left:3px solid var(--a-gold)">
+        <p class="admin-stat-card__label">Gross Profit (Est.)</p>
+        <p class="admin-stat-card__value" style="color:var(--a-gold)"><?= money($grossProfit) ?></p>
+    </div>
+    <div class="admin-stat-card">
+        <p class="admin-stat-card__label">Total Shipping Collected</p>
+        <p class="admin-stat-card__value"><?= money($totalShipping) ?></p>
+    </div>
+    <div class="admin-stat-card">
+        <p class="admin-stat-card__label">Total Discounts Given</p>
+        <p class="admin-stat-card__value" style="color:var(--a-red)">-<?= money($totalDiscounts) ?></p>
+    </div>
+</div>
+
+<div class="admin-dashboard-grid--equal" style="margin-bottom:32px">
+    <!-- REVENUE BY CATEGORY -->
+    <div class="admin-dashboard-panel">
+        <h3 class="admin-dashboard-panel__title">Revenue by Category</h3>
+        <?php if (empty($categoryRevenue)): ?>
+            <p style="color:var(--a-muted);font-size:.85rem">No category sales data yet</p>
+        <?php else: ?>
+            <?php foreach ($categoryRevenue as $idx => $cr): ?>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;<?= $idx < count($categoryRevenue)-1 ? 'border-bottom:1px solid var(--a-border)' : '' ?>">
+                <div>
+                    <span style="font-size:.85rem;font-weight:500"><?= h($cr['name']) ?></span>
+                    <br><span style="font-size:.72rem;color:var(--a-muted)"><?= (int)$cr['items_sold'] ?> items sold</span>
+                </div>
+                <div style="text-align:right">
+                    <span style="font-size:.85rem;color:var(--a-green)"><?= money((float)$cr['cat_revenue']) ?></span>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
+    </div>
+    <!-- EMPTY PANEL TO MAINTAIN GRID -->
+    <div class="admin-dashboard-panel" style="background:transparent;border:none;box-shadow:none"></div>
+</div>
+
+<div class="admin-dashboard-grid">
     <!-- REVENUE CHART -->
-    <div style="background:var(--a-surface);border:1px solid var(--a-border);border-radius:var(--a-radius);padding:24px">
-        <h3 style="font-size:.85rem;text-transform:uppercase;letter-spacing:.08em;margin-bottom:20px;color:var(--a-gold)">Revenue — Last 7 Days</h3>
+    <div class="admin-dashboard-panel">
+        <h3 class="admin-dashboard-panel__title">Revenue — Last 7 Days</h3>
         <div id="chart" style="display:flex;align-items:flex-end;gap:8px;height:180px;padding-top:8px">
             <?php
             $maxVal = max(1, max($chartData));
@@ -126,8 +268,8 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 
     <!-- ORDER STATUS BREAKDOWN -->
-    <div style="background:var(--a-surface);border:1px solid var(--a-border);border-radius:var(--a-radius);padding:24px">
-        <h3 style="font-size:.85rem;text-transform:uppercase;letter-spacing:.08em;margin-bottom:20px;color:var(--a-gold)">Order Status</h3>
+    <div class="admin-dashboard-panel">
+        <h3 class="admin-dashboard-panel__title">Order Status</h3>
         <?php if (empty($statusBreakdown)): ?>
             <p style="color:var(--a-muted);font-size:.85rem">No orders yet</p>
         <?php else: ?>
@@ -142,7 +284,7 @@ require_once __DIR__ . '/includes/header.php';
                     <span style="color:var(--a-muted)"><?= $sb['cnt'] ?> (<?= $pct ?>%)</span>
                 </div>
                 <div style="height:6px;background:var(--a-bg);border-radius:3px;overflow:hidden">
-                    <div style="height:100%;width:<?= $pct ?>%;background:var(--a-accent);border-radius:3px"></div>
+                    <div style="height:100%;width:<?= $pct ?>%;background:var(--a-accent);border-radius:3px;transition:width .6s ease"></div>
                 </div>
             </div>
             <?php endforeach; ?>
@@ -150,10 +292,10 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </div>
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+<div class="admin-dashboard-grid--equal">
     <!-- TOP PRODUCTS -->
-    <div style="background:var(--a-surface);border:1px solid var(--a-border);border-radius:var(--a-radius);padding:24px">
-        <h3 style="font-size:.85rem;text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px;color:var(--a-gold)">Top Products</h3>
+    <div class="admin-dashboard-panel">
+        <h3 class="admin-dashboard-panel__title">Top Products</h3>
         <?php if (empty($topProducts)): ?>
             <p style="color:var(--a-muted);font-size:.85rem">No sales data yet</p>
         <?php else: ?>
@@ -173,11 +315,11 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 
     <!-- RECENT ORDERS -->
-    <div style="background:var(--a-surface);border:1px solid var(--a-border);border-radius:var(--a-radius);padding:24px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-            <h3 style="font-size:.85rem;text-transform:uppercase;letter-spacing:.08em;color:var(--a-gold)">Recent Orders</h3>
-            <a href="<?= SITE_URL ?>/admin/orders.php" style="font-size:.72rem;color:var(--a-accent);text-transform:uppercase;letter-spacing:.06em">View All →</a>
-        </div>
+    <div class="admin-dashboard-panel">
+        <h3 class="admin-dashboard-panel__title">
+            Recent Orders
+            <a href="<?= SITE_URL ?>/admin/orders.php">View All →</a>
+        </h3>
         <?php if (empty($recentOrders)): ?>
             <p style="color:var(--a-muted);font-size:.85rem">No orders yet</p>
         <?php else: ?>
@@ -196,5 +338,46 @@ require_once __DIR__ . '/includes/header.php';
         <?php endif; ?>
     </div>
 </div>
+
+<?php if (!empty($recentActivity)): ?>
+<!-- RECENT ACTIVITY -->
+<div class="admin-dashboard-panel" style="margin-top:24px">
+    <h3 class="admin-dashboard-panel__title">
+        Recent Activity
+        <a href="<?= SITE_URL ?>/admin/activity.php">View All →</a>
+    </h3>
+    <div class="admin-timeline">
+        <?php foreach ($recentActivity as $act): 
+            $icons = ['create' => '➕', 'update' => '✏️', 'delete' => '🗑️', 'login' => '🔑', 'export' => '📤'];
+            $icon = '📋';
+            foreach ($icons as $key => $emoji) {
+                if (stripos($act['action'], $key) !== false) { $icon = $emoji; break; }
+            }
+            $who = trim(($act['first_name'] ?? '') . ' ' . ($act['last_name'] ?? ''));
+            if (!$who) $who = 'System';
+            $timeAgo = '';
+            $diff = time() - strtotime($act['created_at']);
+            if ($diff < 60) $timeAgo = 'just now';
+            elseif ($diff < 3600) $timeAgo = floor($diff/60) . 'm ago';
+            elseif ($diff < 86400) $timeAgo = floor($diff/3600) . 'h ago';
+            else $timeAgo = floor($diff/86400) . 'd ago';
+        ?>
+        <div class="admin-timeline__item">
+            <div class="admin-timeline__dot"></div>
+            <div class="admin-timeline__content">
+                <span style="margin-right:4px"><?= $icon ?></span>
+                <strong><?= h($who) ?></strong> <?= h($act['action']) ?>
+                <?php if ($act['entity_type']): ?>
+                    <span style="color:var(--a-muted)"><?= h($act['entity_type']) ?></span>
+                <?php endif; ?>
+            </div>
+            <div class="admin-timeline__meta">
+                <span><?= $timeAgo ?></span>
+            </div>
+        </div>
+        <?php endforeach; ?>
+    </div>
+</div>
+<?php endif; ?>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

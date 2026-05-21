@@ -109,6 +109,7 @@ if (!$showSuccess && $_SERVER['REQUEST_METHOD'] === 'POST') {
                             'name'          => $i['name'],
                             'sku'           => $i['variant_sku'] ?? $i['sku'] ?? null,
                             'price'         => item_effective_price($i),
+                            'cost_price'    => $i['variant_cost_price'] ?? $i['cost_price'] ?? null,
                             'quantity'      => (int)$i['quantity'],
                         ];
                     }
