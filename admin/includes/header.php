@@ -113,10 +113,7 @@ $totalNotifs = $unreadMessages + $pendingOrders;
                 <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                 <span>Activity Log</span>
             </a>
-            <a href="<?= SITE_URL ?>/admin/activity.php" class="admin-nav-link <?= $adminPage === 'activity' ? 'active' : '' ?>">
-                <svg viewBox="0 0 24 24"><path d="M2 12h4l3-9 5 18 3-9h5"/></svg>
-                <span>Activity Log</span>
-            </a>
+
         </nav>
         <div class="admin-sidebar__bottom">
             <a href="<?= SITE_URL ?>/" class="admin-nav-link" target="_blank">
