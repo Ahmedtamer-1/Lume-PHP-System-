@@ -11,7 +11,7 @@ if (!$product) {
     exit;
 }
 
-$pageTitle       = h($product['name']) . ' — ' . SITE_NAME;
+$pageTitle       = h($product['name']) . ' — ' . setting('site_name', SITE_NAME);
 $pageDescription = mb_substr(strip_tags($product['description'] ?? ''), 0, 160);
 require_once __DIR__ . '/includes/header.php';
 

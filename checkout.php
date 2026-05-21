@@ -173,7 +173,7 @@ if (!$showSuccess && $_SERVER['REQUEST_METHOD'] === 'POST') {
 // PHASE 2: Render HTML (no more redirects below)
 // ══════════════════════════════════════════════
 
-$pageTitle = $showSuccess ? 'Order Confirmed — LUMEEGY' : 'Checkout — LUMEEGY';
+$pageTitle = $showSuccess ? 'Order Confirmed — ' . setting('site_name', SITE_NAME) : 'Checkout — ' . setting('site_name', SITE_NAME);
 require_once __DIR__ . '/includes/header.php';
 
 // ── Success Page ──

@@ -1,8 +1,9 @@
 <?php
-$pageTitle = 'Privacy Policy — ' . (defined('SITE_NAME') ? SITE_NAME : 'LUMEEGY');
+require_once __DIR__ . '/includes/functions.php';
+$pageTitle = 'Privacy Policy — ' . setting('site_name', SITE_NAME);
 $pageDescription = 'Read our privacy policy to understand how we collect, use, and protect your personal information.';
 require_once __DIR__ . '/includes/header.php';
-$brandName = defined('SITE_NAME') ? SITE_NAME : 'LUMEEGY';
+$brandName = setting('site_name', SITE_NAME);
 $contactEmail = setting('contact_email', 'hello@lumeegy.com');
 ?>
 

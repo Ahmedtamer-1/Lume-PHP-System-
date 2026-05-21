@@ -69,7 +69,7 @@ if (!hash_equals(strtolower($calculatedHmac), strtolower($receivedHmac))) {
 }
 
 // Display error if we reached here
-$pageTitle = 'Payment Failed — LUMEEGY';
+$pageTitle = 'Payment Failed — ' . setting('site_name', SITE_NAME);
 require_once __DIR__ . '/includes/header.php';
 ?>
 <section class="lume-section container" style="text-align:center;padding:160px 0">

@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login — <?= SITE_NAME ?></title>
+    <title>Admin Login — <?= h(setting('site_name', SITE_NAME)) ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body class="admin-login-page">
     <div class="admin-login-box">
-        <h1 class="admin-login-logo"><?= SITE_NAME ?></h1>
+        <h1 class="admin-login-logo"><?= h(setting('site_name', SITE_NAME)) ?></h1>
         <p class="admin-login-sub">Admin Panel</p>
         <?php if ($error): ?>
             <div class="admin-alert admin-alert--error"><?= h($error) ?></div>

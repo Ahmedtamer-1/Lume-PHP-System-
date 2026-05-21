@@ -5,7 +5,7 @@
 require_once __DIR__ . '/includes/functions.php';
 lume_session_start();
 
-$pageTitle = 'Track Order — LUMEEGY';
+$pageTitle = 'Track Order — ' . setting('site_name', SITE_NAME);
 $error = '';
 $order = null;
 

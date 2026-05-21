@@ -166,11 +166,11 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
     <!-- Centered Logo -->
     <div class="lume-header__logo">
-        <a href="<?= SITE_URL ?>/" aria-label="<?= SITE_NAME ?> — Home">
+        <a href="<?= SITE_URL ?>/" aria-label="<?= h(setting('site_name', SITE_NAME)) ?> — Home">
             <?php if ($siteLogo): ?>
-                <img src="<?= SITE_URL . '/' . h($siteLogo) ?>" alt="<?= SITE_NAME ?>" style="max-height:40px;width:auto">
+                <img src="<?= SITE_URL . '/' . h($siteLogo) ?>" alt="<?= h(setting('site_name', SITE_NAME)) ?>" style="max-height:40px;width:auto">
             <?php else: ?>
-                <span class="lume-logo-text"><?= SITE_NAME ?></span>
+                <span class="lume-logo-text"><?= h(setting('site_name', SITE_NAME)) ?></span>
             <?php endif; ?>
         </a>
     </div>
@@ -230,7 +230,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <div class="lume-mobile-menu__overlay" id="mobile-menu-overlay"></div>
     <nav class="lume-mobile-menu__panel">
         <div class="lume-mobile-menu__head">
-            <span class="lume-logo-text"><?= SITE_NAME ?></span>
+            <span class="lume-logo-text"><?= h(setting('site_name', SITE_NAME)) ?></span>
             <button class="lume-mobile-menu__close" id="mobile-menu-close" aria-label="Close menu">✕</button>
         </div>
         <a href="<?= SITE_URL ?>/" class="lume-mobile-menu__link">Home</a>

@@ -1,8 +1,9 @@
 <?php
-$pageTitle = 'Shipping & Returns — ' . (defined('SITE_NAME') ? SITE_NAME : 'LUMEEGY');
-$pageDescription = 'Learn about our shipping options, delivery times, and return policy.';
+require_once __DIR__ . '/includes/functions.php';
+$pageTitle = 'Shipping & Returns — ' . setting('site_name', SITE_NAME);
+$pageDescription = 'Find information about our shipping methods, delivery times, and return policies.';
 require_once __DIR__ . '/includes/header.php';
-$brandName = defined('SITE_NAME') ? SITE_NAME : 'LUMEEGY';
+$brandName = setting('site_name', SITE_NAME);
 $contactEmail = setting('contact_email', 'hello@lumeegy.com');
 $freeShipOver = setting('free_shipping_over', '2000');
 ?>

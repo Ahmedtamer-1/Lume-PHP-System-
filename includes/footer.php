@@ -47,9 +47,9 @@ $marqueeText    = setting('marquee_text', '');
     <div class="lume-footer__grid">
         <div class="lume-footer__col">
             <?php $siteLogo = setting('site_logo'); if ($siteLogo): ?>
-                <img src="<?= SITE_URL . '/' . h($siteLogo) ?>" alt="<?= SITE_NAME ?>" style="max-height:40px;width:auto;margin-bottom:12px;display:block">
+                <img src="<?= SITE_URL . '/' . h($siteLogo) ?>" alt="<?= h(setting('site_name', SITE_NAME)) ?>" style="max-height:40px;width:auto;margin-bottom:12px;display:block">
             <?php else: ?>
-                <p class="lume-logo-text lume-footer__brand-logo"><?= SITE_NAME ?></p>
+                <p class="lume-logo-text lume-footer__brand-logo"><?= h(setting('site_name', SITE_NAME)) ?></p>
             <?php endif; ?>
             <p class="lume-footer__brand-text">
                 A luxury fashion brand born in Egypt. Each piece is a ritual — a moment of light in your everyday.
@@ -89,14 +89,14 @@ $marqueeText    = setting('marquee_text', '');
 
         <div class="lume-footer__col">
             <h3 class="lume-footer__col-title">Company</h3>
-            <a href="<?= SITE_URL ?>/about.php" class="lume-footer__link">About <?= SITE_NAME ?></a>
+            <a href="<?= SITE_URL ?>/about.php" class="lume-footer__link">About <?= h(setting('site_name', SITE_NAME)) ?></a>
             <a href="<?= SITE_URL ?>/privacy.php" class="lume-footer__link">Privacy Policy</a>
             <a href="<?= SITE_URL ?>/terms.php" class="lume-footer__link">Terms of Service</a>
         </div>
     </div>
 
     <div class="lume-footer__bottom">
-        <p>&copy; <?= date('Y') ?> <?= SITE_NAME ?>. All rights reserved. &nbsp;|&nbsp;
+        <p>&copy; <?= date('Y') ?> <?= h(setting('site_name', SITE_NAME)) ?>. All rights reserved. &nbsp;|&nbsp;
            <a href="<?= SITE_URL ?>/privacy.php" class="lume-footer__legal-link">Privacy Policy</a> &nbsp;|&nbsp;
            <a href="<?= SITE_URL ?>/terms.php" class="lume-footer__legal-link">Terms of Service</a>
         </p>

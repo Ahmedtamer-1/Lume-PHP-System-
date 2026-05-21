@@ -1,7 +1,7 @@
 <?php
 $categorySlug = $_GET['category'] ?? null;
 $search = $_GET['q'] ?? null;
-$pageTitle = 'Shop — LUMEEGY';
+$pageTitle = 'Shop — ' . setting('site_name', SITE_NAME);
 $pageDescription = 'Browse our full collection of luxury clothing, accessories, and fashion essentials.';
 require_once __DIR__ . '/includes/header.php';
 

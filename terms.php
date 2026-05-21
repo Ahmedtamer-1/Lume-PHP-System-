@@ -1,8 +1,9 @@
 <?php
-$pageTitle = 'Terms of Service — ' . (defined('SITE_NAME') ? SITE_NAME : 'LUMEEGY');
-$pageDescription = 'Read our terms of service governing the use of our website and purchases.';
+require_once __DIR__ . '/includes/functions.php';
+$pageTitle = 'Terms of Service — ' . setting('site_name', SITE_NAME);
+$pageDescription = 'Please read our terms of service carefully before using our website or placing an order.';
 require_once __DIR__ . '/includes/header.php';
-$brandName = defined('SITE_NAME') ? SITE_NAME : 'LUMEEGY';
+$brandName = setting('site_name', SITE_NAME);
 $contactEmail = setting('contact_email', 'hello@lumeegy.com');
 ?>
 

@@ -1,6 +1,7 @@
 <?php
-$pageTitle = 'About — LUMEEGY';
-$pageDescription = 'The story of LUMEEGY — a luxury fashion brand born in Egypt, crafted to illuminate your everyday style.';
+require_once __DIR__ . '/includes/functions.php';
+$pageTitle = 'About — ' . setting('site_name', SITE_NAME);
+$pageDescription = 'The story of ' . setting('site_name', SITE_NAME) . ' — a luxury fashion brand born in Egypt, crafted to illuminate your everyday style.';
 require_once __DIR__ . '/includes/header.php';
 ?>
 

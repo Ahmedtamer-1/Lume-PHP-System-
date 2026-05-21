@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'register') {
     }
 }
 
-$pageTitle = $action === 'dashboard' ? 'My Account — LUMEEGY' : ($action === 'register' ? 'Register — LUMEEGY' : 'Login — LUMEEGY');
+$pageTitle = $action === 'dashboard' ? 'My Account — ' . setting('site_name', SITE_NAME) : ($action === 'register' ? 'Register — ' . setting('site_name', SITE_NAME) : 'Login — ' . setting('site_name', SITE_NAME));
 require_once __DIR__ . '/includes/header.php';
 
 if ($action === 'dashboard'):
@@ -106,7 +106,7 @@ if ($action === 'dashboard'):
 <?php elseif ($action === 'register'): ?>
 <section class="lume-auth">
     <h1 class="lume-auth__title">Create Account</h1>
-    <p class="lume-auth__sub">Join the LUMEEGY ritual</p>
+    <p class="lume-auth__sub">Join the <?= h(setting('site_name', SITE_NAME)) ?> ritual</p>
     <?php if ($error): ?><div class="lume-alert lume-alert--error"><?= h($error) ?></div><?php endif; ?>
     <form method="post" class="lume-form">
         <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">

@@ -1,5 +1,6 @@
 <?php
-$pageTitle = 'Your Bag — LUMEEGY';
+require_once __DIR__ . '/includes/functions.php';
+$pageTitle = 'Your Bag — ' . setting('site_name', SITE_NAME);
 require_once __DIR__ . '/includes/header.php';
 $items = cart_items();
 $subtotal = cart_total();

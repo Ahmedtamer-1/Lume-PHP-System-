@@ -11,7 +11,7 @@ if ($u && ($u['role'] ?? '') === 'admin') {
     redirect('/');
 }
 
-$pageTitle = 'Site Maintenance — ' . SITE_NAME;
+$pageTitle = 'Site Maintenance — ' . setting('site_name', SITE_NAME);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -53,9 +53,9 @@ $pageTitle = 'Site Maintenance — ' . SITE_NAME;
 <body>
     <div class="maintenance-box">
         <?php $siteLogo = setting('site_logo'); if ($siteLogo): ?>
-            <img src="<?= SITE_URL . '/' . h($siteLogo) ?>" alt="<?= SITE_NAME ?>" style="max-height:60px;width:auto;margin:0 auto 32px;display:block">
+            <img src="<?= SITE_URL . '/' . h($siteLogo) ?>" alt="<?= h(setting('site_name', SITE_NAME)) ?>" style="max-height:60px;width:auto;margin:0 auto 32px;display:block">
         <?php else: ?>
-            <p class="lume-logo-text" style="font-size:2rem;margin-bottom:32px"><?= SITE_NAME ?></p>
+            <p class="lume-logo-text" style="font-size:2rem;margin-bottom:32px"><?= h(setting('site_name', SITE_NAME)) ?></p>
         <?php endif; ?>
         
         <h1>We'll be back soon!</h1>

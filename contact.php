@@ -1,6 +1,7 @@
 <?php
-$pageTitle = 'Contact — LUMEEGY';
-$pageDescription = 'Get in touch with the LUMEEGY team. We\'d love to hear from you.';
+require_once __DIR__ . '/includes/functions.php';
+$pageTitle = 'Contact — ' . setting('site_name', SITE_NAME);
+$pageDescription = 'Get in touch with the ' . setting('site_name', SITE_NAME) . ' team. We\'d love to hear from you.';
 require_once __DIR__ . '/includes/header.php';
 ?>
 
