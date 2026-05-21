@@ -699,12 +699,4 @@ function hexToRgb(string $hex): string
     return "$r, $g, $b";
 }
 
-/**
- * Get the configured currency symbol.
- */
-if (!function_exists('currency_symbol')) {
-    function currency_symbol(): ?string
-    {
-        return setting('currency_symbol', 'EGP');
-    }
-}
+// Note: currency_symbol() is defined above (line ~393).
