@@ -9,21 +9,21 @@ $adminPage = 'dashboard';
 // ── Stats ──
 $totalProducts  = (int) db()->query('SELECT COUNT(*) FROM products WHERE is_active = 1')->fetchColumn();
 $totalOrders    = (int) db()->query('SELECT COUNT(*) FROM orders')->fetchColumn();
-$totalRevenue   = (float) db()->query('SELECT COALESCE(SUM(total),0) FROM orders WHERE status NOT IN ("cancelled","refunded")')->fetchColumn();
+$totalRevenue   = (float) db()->query('SELECT COALESCE(SUM(total),0) FROM orders WHERE status = "delivered"')->fetchColumn();
 $totalCustomers = (int) db()->query('SELECT COUNT(*) FROM users WHERE role = "customer"')->fetchColumn();
 
 // ── This month stats ──
 $monthOrders  = (int) db()->query('SELECT COUNT(*) FROM orders WHERE MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW())')->fetchColumn();
-$monthRevenue = (float) db()->query('SELECT COALESCE(SUM(total),0) FROM orders WHERE status NOT IN ("cancelled","refunded") AND MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW())')->fetchColumn();
+$monthRevenue = (float) db()->query('SELECT COALESCE(SUM(total),0) FROM orders WHERE status = "delivered" AND MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW())')->fetchColumn();
 
 // ── Last month for comparison ──
-$lastMonthRevenue = (float) db()->query('SELECT COALESCE(SUM(total),0) FROM orders WHERE status NOT IN ("cancelled","refunded") AND MONTH(created_at) = MONTH(DATE_SUB(NOW(), INTERVAL 1 MONTH)) AND YEAR(created_at) = YEAR(DATE_SUB(NOW(), INTERVAL 1 MONTH))')->fetchColumn();
+$lastMonthRevenue = (float) db()->query('SELECT COALESCE(SUM(total),0) FROM orders WHERE status = "delivered" AND MONTH(created_at) = MONTH(DATE_SUB(NOW(), INTERVAL 1 MONTH)) AND YEAR(created_at) = YEAR(DATE_SUB(NOW(), INTERVAL 1 MONTH))')->fetchColumn();
 $lastMonthOrders  = (int) db()->query('SELECT COUNT(*) FROM orders WHERE MONTH(created_at) = MONTH(DATE_SUB(NOW(), INTERVAL 1 MONTH)) AND YEAR(created_at) = YEAR(DATE_SUB(NOW(), INTERVAL 1 MONTH))')->fetchColumn();
 
 // ── Revenue last 7 days ──
 $revenueDays = db()->query(
     'SELECT DATE(created_at) AS day, SUM(total) AS revenue, COUNT(*) AS orders
-     FROM orders WHERE status NOT IN ("cancelled","refunded")
+     FROM orders WHERE status = "delivered"
      AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
      GROUP BY DATE(created_at) ORDER BY day ASC'
 )->fetchAll();
@@ -51,7 +51,7 @@ $topProducts = db()->query(
     'SELECT oi.name, SUM(oi.quantity) AS total_qty, SUM(oi.subtotal) AS total_revenue
      FROM order_items oi
      JOIN orders o ON o.id = oi.order_id
-     WHERE o.status NOT IN ("cancelled","refunded")
+     WHERE o.status = "delivered"
      GROUP BY oi.name ORDER BY total_qty DESC LIMIT 5'
 )->fetchAll();
 
@@ -82,17 +82,17 @@ try {
 } catch (Exception $e) {}
 
 // ── Advanced Financials ──
-$validOrdersCount = (int) db()->query('SELECT COUNT(*) FROM orders WHERE status NOT IN ("cancelled","refunded")')->fetchColumn();
+$validOrdersCount = (int) db()->query('SELECT COUNT(*) FROM orders WHERE status = "delivered"')->fetchColumn();
 $aov = $validOrdersCount > 0 ? $totalRevenue / $validOrdersCount : 0;
-$totalDiscounts = (float) db()->query('SELECT COALESCE(SUM(discount),0) FROM orders WHERE status NOT IN ("cancelled","refunded")')->fetchColumn();
-$totalShipping = (float) db()->query('SELECT COALESCE(SUM(shipping_cost),0) FROM orders WHERE status NOT IN ("cancelled","refunded")')->fetchColumn();
+$totalDiscounts = (float) db()->query('SELECT COALESCE(SUM(discount),0) FROM orders WHERE status = "delivered"')->fetchColumn();
+$totalShipping = (float) db()->query('SELECT COALESCE(SUM(shipping_cost),0) FROM orders WHERE status = "delivered"')->fetchColumn();
 $netProductRevenue = $totalRevenue - $totalShipping; // total includes shipping and discount.
 
 $totalCogs = (float) db()->query('
     SELECT COALESCE(SUM(oi.cost_price * oi.quantity), 0)
     FROM order_items oi
     JOIN orders o ON o.id = oi.order_id
-    WHERE o.status NOT IN ("cancelled","refunded")
+    WHERE o.status = "delivered"
 ')->fetchColumn();
 $grossProfit = $netProductRevenue - $totalCogs;
 
@@ -105,7 +105,7 @@ try {
          JOIN orders o ON o.id = oi.order_id
          JOIN products p ON p.id = oi.product_id
          JOIN categories c ON c.id = p.category_id
-         WHERE o.status NOT IN ("cancelled","refunded")
+         WHERE o.status = "delivered"
          GROUP BY c.id
          ORDER BY cat_revenue DESC LIMIT 5'
     )->fetchAll();
