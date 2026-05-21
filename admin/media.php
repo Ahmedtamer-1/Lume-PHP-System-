@@ -269,33 +269,32 @@ function uploadFiles(files) {
         const file = files[0];
         pendingFileToUpload = file;
         
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const dataUrl = e.target.result;
-            
-            const container = document.getElementById('cropper-container');
-            container.innerHTML = ''; // Clear out the old image
-            
-            const img = document.createElement('img');
-            img.id = 'cropper-image';
-            img.style.maxWidth = '100%';
-            img.style.display = 'block';
-            img.alt = 'Picture';
-            
-            // MUST append to DOM before setting src, so if onload fires instantly,
-            // the image is already in the document for Cropper to calculate sizes.
-            container.appendChild(img);
-            
-            document.getElementById('cropper-modal').style.display = 'flex';
-            
-            if (cropperInstance) {
-                cropperInstance.destroy();
-                cropperInstance = null;
-            }
-            
-            img.onload = () => {
-                // Ensure the browser has painted the modal and image before initializing
-                requestAnimationFrame(() => {
+        const url = URL.createObjectURL(file);
+        const container = document.getElementById('cropper-container');
+        
+        // Ensure container is a proper block for Cropper
+        container.style.display = 'block';
+        container.style.width = '100%';
+        container.innerHTML = ''; // Clear old image
+        
+        const img = document.createElement('img');
+        img.id = 'cropper-image';
+        img.style.maxWidth = '100%';
+        img.style.display = 'block';
+        img.src = url;
+        container.appendChild(img);
+        
+        document.getElementById('cropper-modal').style.display = 'flex';
+        
+        if (cropperInstance) {
+            cropperInstance.destroy();
+            cropperInstance = null;
+        }
+        
+        // Wait for both image decode AND modal layout settling
+        img.onload = () => {
+            setTimeout(() => {
+                try {
                     cropperInstance = new Cropper(img, {
                         viewMode: 1,
                         dragMode: 'crop',
@@ -308,12 +307,12 @@ function uploadFiles(files) {
                         cropBoxResizable: true,
                         toggleDragModeOnDblclick: false,
                     });
-                });
-            };
-            
-            img.src = dataUrl;
+                } catch(e) {
+                    console.error("Cropper error:", e);
+                    alert("Error starting image editor: " + e.message);
+                }
+            }, 150);
         };
-        reader.readAsDataURL(file);
         return;
     }
     
