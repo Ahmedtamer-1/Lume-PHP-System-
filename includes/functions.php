@@ -228,10 +228,10 @@ function cart_items(): array
     $key = cart_session_key();
     $userId = is_logged_in() ? $_SESSION['user_id'] : null;
 
-    $cols = 'cs.*, p.name, p.price, p.sale_price, p.image, p.slug, p.stock, p.sku, p.has_variants,
+    $cols = 'cs.*, p.name, p.price, p.sale_price, p.cost_price, p.image, p.slug, p.stock, p.sku, p.has_variants,
              pv.id AS pv_id, pv.size AS variant_size, pv.color_name AS variant_color,
              pv.color_hex AS variant_color_hex, pv.sku AS variant_sku,
-             pv.price_override AS variant_price, pv.stock AS variant_stock,
+             pv.price_override AS variant_price, pv.cost_price AS variant_cost_price, pv.stock AS variant_stock,
              pv.image AS variant_image';
 
     if ($userId) {
@@ -473,8 +473,8 @@ function create_order(array $data): int
 
         foreach ($data['items'] as $item) {
             $pdo->prepare(
-                'INSERT INTO order_items (order_id, product_id, variant_id, variant_size, variant_color, name, sku, price, quantity, subtotal)
-                 VALUES (?,?,?,?,?,?,?,?,?,?)'
+                'INSERT INTO order_items (order_id, product_id, variant_id, variant_size, variant_color, name, sku, price, cost_price, quantity, subtotal)
+                 VALUES (?,?,?,?,?,?,?,?,?,?,?)'
             )->execute([
                         $orderId,
                         $item['product_id'] ?? null,
@@ -484,6 +484,7 @@ function create_order(array $data): int
                         $item['name'],
                         $item['sku'] ?? null,
                         $item['price'],
+                        $item['cost_price'] ?? null,
                         $item['quantity'],
                         $item['price'] * $item['quantity'],
                     ]);

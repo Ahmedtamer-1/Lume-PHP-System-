@@ -88,6 +88,14 @@ $totalDiscounts = (float) db()->query('SELECT COALESCE(SUM(discount),0) FROM ord
 $totalShipping = (float) db()->query('SELECT COALESCE(SUM(shipping_cost),0) FROM orders WHERE status NOT IN ("cancelled","refunded")')->fetchColumn();
 $netProductRevenue = $totalRevenue - $totalShipping; // total includes shipping and discount.
 
+$totalCogs = (float) db()->query('
+    SELECT COALESCE(SUM(oi.cost_price * oi.quantity), 0)
+    FROM order_items oi
+    JOIN orders o ON o.id = oi.order_id
+    WHERE o.status NOT IN ("cancelled","refunded")
+')->fetchColumn();
+$grossProfit = $netProductRevenue - $totalCogs;
+
 // Category revenue
 $categoryRevenue = [];
 try {
@@ -198,6 +206,10 @@ require_once __DIR__ . '/includes/header.php';
     <div class="admin-stat-card">
         <p class="admin-stat-card__label">Net Product Revenue</p>
         <p class="admin-stat-card__value green"><?= money($netProductRevenue) ?></p>
+    </div>
+    <div class="admin-stat-card" style="border-left:3px solid var(--a-gold)">
+        <p class="admin-stat-card__label">Gross Profit (Est.)</p>
+        <p class="admin-stat-card__value" style="color:var(--a-gold)"><?= money($grossProfit) ?></p>
     </div>
     <div class="admin-stat-card">
         <p class="admin-stat-card__label">Total Shipping Collected</p>

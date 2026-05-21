@@ -117,6 +117,7 @@ function showProductForm(product){
         f.querySelector('[name=description]').value=product.description||'';
         f.querySelector('[name=price]').value=product.price||'';
         f.querySelector('[name=sale_price]').value=product.sale_price||'';
+        f.querySelector('[name=cost_price]').value=product.cost_price||'';
         f.querySelector('[name=sku]').value=product.sku||'';
         f.querySelector('[name=stock]').value=product.stock||0;
         f.querySelector('[name=existing_image]').value=product.image||'';
@@ -323,6 +324,7 @@ function editVariant(id){
         const dot=document.getElementById('variant-color-dot');if(dot)dot.style.background=v.color_hex||'#888';
         f.querySelector('[name=sku]').value=v.sku||'';
         f.querySelector('[name=price_override]').value=v.price_override??'';
+        f.querySelector('[name=cost_price]').value=v.cost_price??'';
         f.querySelector('[name=stock]').value=v.stock||0;
         f.querySelector('[name=sort_order]').value=v.sort_order||0;
         f.querySelector('[name=is_active]').checked=v.is_active==1;

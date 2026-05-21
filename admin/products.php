@@ -88,6 +88,10 @@ require_once __DIR__ . '/includes/header.php';
                     <input type="number" name="sale_price" step="0.01" min="0">
                 </div>
                 <div class="admin-form__group">
+                    <label>Cost Price (COGS)</label>
+                    <input type="number" name="cost_price" step="0.01" min="0" placeholder="For profit tracking">
+                </div>
+                <div class="admin-form__group">
                     <label>Stock</label>
                     <input type="number" name="stock" min="0" value="0">
                 </div>
@@ -207,6 +211,10 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="admin-variant-form__group">
                     <label>Price Override (EGP)</label>
                     <input type="number" name="price_override" step="0.01" min="0" placeholder="Blank = base price">
+                </div>
+                <div class="admin-variant-form__group">
+                    <label>Cost Price (COGS)</label>
+                    <input type="number" name="cost_price" step="0.01" min="0" placeholder="Blank = base cost">
                 </div>
                 <div class="admin-variant-form__group">
                     <label>Stock</label>
