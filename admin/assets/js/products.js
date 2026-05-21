@@ -11,6 +11,7 @@ let allMedia = [];
 let sizeChartPath = '';
 let colorGalleries = {};
 let productColors = [];
+let selectedProductIds = [];
 
 let currentProductFilter = 'all';
 let currentProductSearch = '';
@@ -72,7 +73,7 @@ function renderProductList(){
     }
 
     if(!filteredProducts.length){
-        tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--a-muted)">No products found.</td></tr>';
+        tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--a-muted)">No products found.</td></tr>';
         document.getElementById('product-count').textContent = '0 products';
         return;
     }
@@ -86,6 +87,7 @@ function renderProductList(){
         const badge=p.is_active==1?'<span class="admin-badge admin-badge--active">Active</span>':'<span class="admin-badge admin-badge--inactive">Inactive</span>';
         const vBtn=p.has_variants==1?`<button class="admin-btn admin-btn--sm" style="color:var(--a-accent)" onclick="openVariants(${p.id})">Variants</button>`:'';
         return `<tr>
+            <td><input type="checkbox" class="product-row-checkbox" value="${p.id}" ${selectedProductIds.includes(p.id) ? 'checked' : ''} onchange="toggleProductSelect(this, ${p.id})"></td>
             <td><div class="admin-table__product">${img}<div><strong>${esc(p.name)}</strong>${star}<br><span style="font-size:.72rem;color:var(--a-muted)">${esc(p.sku||'')}</span></div></div></td>
             <td style="color:var(--a-muted)">${esc(p.category_name||'—')}</td>
             <td>${price}</td>
@@ -98,6 +100,67 @@ function renderProductList(){
             </div></td>
         </tr>`;
     }).join('');
+    updateProductBulkActionBar();
+}
+
+function toggleAllProducts(masterCheckbox) {
+    const checkboxes = document.querySelectorAll('.product-row-checkbox');
+    selectedProductIds = [];
+    checkboxes.forEach(cb => {
+        cb.checked = masterCheckbox.checked;
+        if (masterCheckbox.checked) selectedProductIds.push(parseInt(cb.value));
+    });
+    updateProductBulkActionBar();
+}
+
+function toggleProductSelect(cb, id) {
+    if (cb.checked) {
+        if (!selectedProductIds.includes(id)) selectedProductIds.push(id);
+    } else {
+        selectedProductIds = selectedProductIds.filter(x => x !== id);
+    }
+    updateProductBulkActionBar();
+}
+
+function updateProductBulkActionBar() {
+    const bar = document.getElementById('product-bulk-action-bar');
+    const count = document.getElementById('product-bulk-count');
+    if (selectedProductIds.length > 0) {
+        bar.style.display = 'flex';
+        count.innerText = selectedProductIds.length + ' selected';
+    } else {
+        bar.style.display = 'none';
+        const selectAll = document.getElementById('selectAllProducts');
+        if (selectAll) selectAll.checked = false;
+    }
+}
+
+function applyProductBulkAction() {
+    if (selectedProductIds.length === 0) return;
+    const action = document.getElementById('product-bulk-action-select').value;
+    if (!action) {
+        alert('Please choose an action.');
+        return;
+    }
+    if (action === 'delete') {
+        if (!confirm('Delete selected products and all their variants?')) return;
+    }
+    
+    const fd = new FormData();
+    fd.append('action', 'bulk_action');
+    fd.append('bulk_action_type', action);
+    fd.append('bulk_ids', JSON.stringify(selectedProductIds));
+    
+    fetch(API, {method:'POST', body:fd, headers:{'X-Requested-With':'XMLHttpRequest'}})
+    .then(r => r.json()).then(d => {
+        if (d.success) {
+            selectedProductIds = [];
+            loadProducts();
+            document.getElementById('product-bulk-action-select').value = '';
+        } else {
+            alert(d.message || 'Bulk action failed');
+        }
+    });
 }
 
 function showProductForm(product){

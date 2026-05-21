@@ -79,6 +79,13 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </div>
 
+<!-- Floating Bulk Action Bar -->
+<div id="bulk-action-bar" style="display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--a-surface); border:1px solid var(--a-border); padding:12px 24px; border-radius:30px; box-shadow:0 10px 30px rgba(0,0,0,0.5); z-index:300; align-items:center; gap:16px;">
+    <span id="bulk-count" style="font-weight:600; font-size:.9rem; color:var(--a-text)">0 selected</span>
+    <div style="width:1px; height:20px; background:var(--a-border)"></div>
+    <button type="button" class="admin-btn admin-btn--danger admin-btn--sm" onclick="deleteSelectedMedia()">Delete Selected</button>
+</div>
+
 <style>
 .media-dropzone{border:2px dashed var(--a-border);border-radius:var(--a-radius);padding:40px;text-align:center;margin-bottom:24px;transition:all .3s;cursor:pointer}
 .media-dropzone:hover,.media-dropzone.drag-over{border-color:var(--a-accent);background:rgba(196,113,74,.05)}
@@ -90,9 +97,11 @@ require_once __DIR__ . '/includes/header.php';
 .media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
 .media-grid__item{position:relative;aspect-ratio:1/1;overflow:hidden;border-radius:var(--a-radius);border:2px solid transparent;cursor:pointer;transition:all .2s;background:var(--a-surface)}
 .media-grid__item:hover{border-color:var(--a-accent);transform:translateY(-2px)}
-.media-grid__item.selected{border-color:var(--a-gold);box-shadow:0 0 0 2px rgba(200,184,154,.3)}
+.media-grid__item.selected{border-color:var(--a-accent);box-shadow:0 0 12px rgba(200,149,108,.3)}
 .media-grid__item img{width:100%;height:100%;object-fit:cover;display:block}
 .media-grid__item__name{position:absolute;bottom:0;left:0;right:0;padding:6px 8px;background:linear-gradient(transparent,rgba(0,0,0,.8));font-size:.6rem;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.media-picker__check{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.5);border:2px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:.6rem;color:transparent;transition:all .2s;z-index:2}
+.media-picker__check.checked{background:var(--a-accent,#c8956c);border-color:var(--a-accent,#c8956c);color:#fff}
 .media-detail-overlay{position:fixed;top:0;left:0;width:100%;height:100%;z-index:200;background:rgba(0,0,0,.5);display:flex;justify-content:flex-end}
 .media-detail-panel{width:400px;max-width:90vw;height:100%;background:var(--a-surface);border-left:1px solid var(--a-border);padding:24px;overflow-y:auto;animation:slideInRight .3s ease}
 @keyframes slideInRight{from{transform:translateX(100%)}to{transform:translateX(0)}}
@@ -106,6 +115,7 @@ require_once __DIR__ . '/includes/header.php';
 <script>
 const BASE = '<?= SITE_URL ?>';
 let allMedia = [];
+let selectedMediaIds = [];
 let currentMediaId = null;
 let searchTimer;
 
@@ -128,11 +138,54 @@ function renderGrid() {
         return;
     }
     grid.innerHTML = allMedia.map(m => `
-        <div class="media-grid__item" data-id="${m.id}" onclick="openMediaDetail(${m.id})">
+        <div class="media-grid__item ${selectedMediaIds.includes(m.id) ? 'selected' : ''}" data-id="${m.id}" onclick="openMediaDetail(${m.id})">
+            <div class="media-picker__check ${selectedMediaIds.includes(m.id) ? 'checked' : ''}" onclick="toggleSelectMedia(event, ${m.id})">✓</div>
             <img src="${m.url}" alt="${m.alt_text || m.filename}" loading="lazy">
             <div class="media-grid__item__name">${m.filename}</div>
         </div>
     `).join('');
+    updateBulkActionBar();
+}
+
+function toggleSelectMedia(e, id) {
+    e.stopPropagation();
+    const idx = selectedMediaIds.indexOf(id);
+    if (idx > -1) {
+        selectedMediaIds.splice(idx, 1);
+    } else {
+        selectedMediaIds.push(id);
+    }
+    renderGrid();
+}
+
+function updateBulkActionBar() {
+    const bar = document.getElementById('bulk-action-bar');
+    const count = document.getElementById('bulk-count');
+    if (selectedMediaIds.length > 0) {
+        bar.style.display = 'flex';
+        count.innerText = selectedMediaIds.length + ' selected';
+    } else {
+        bar.style.display = 'none';
+    }
+}
+
+function deleteSelectedMedia() {
+    if (selectedMediaIds.length === 0) return;
+    if (!confirm('Are you sure you want to delete the selected ' + selectedMediaIds.length + ' files permanently?')) return;
+    
+    const fd = new FormData();
+    fd.append('action', 'bulk_delete');
+    fd.append('media_ids', JSON.stringify(selectedMediaIds));
+    
+    fetch(BASE + '/api/media.php', {method:'POST', body:fd, headers:{'X-Requested-With':'XMLHttpRequest'}})
+    .then(r => r.json()).then(d => {
+        if (d.success) {
+            selectedMediaIds = [];
+            loadMedia();
+        } else {
+            alert(d.message || 'Error deleting files');
+        }
+    });
 }
 
 // ── Detail panel ──

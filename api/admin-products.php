@@ -347,5 +347,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'get_product') {
     exit;
 }
 
+// ── POST: bulk action ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'bulk_action') {
+    $bulkAction = $_POST['bulk_action_type'] ?? '';
+    $ids = json_decode($_POST['bulk_ids'] ?? '[]', true);
+    if (!is_array($ids) || empty($ids)) {
+        echo json_encode(['success' => false, 'message' => 'No products selected']);
+        exit;
+    }
+    $cleanIds = array_map('intval', $ids);
+    $placeholders = implode(',', array_fill(0, count($cleanIds), '?'));
+    
+    if ($bulkAction === 'delete') {
+        db()->prepare("DELETE FROM product_variants WHERE product_id IN ($placeholders)")->execute($cleanIds);
+        db()->prepare("DELETE FROM products WHERE id IN ($placeholders)")->execute($cleanIds);
+        echo json_encode(['success' => true]);
+        exit;
+    } elseif ($bulkAction === 'mark_active') {
+        db()->prepare("UPDATE products SET is_active = 1 WHERE id IN ($placeholders)")->execute($cleanIds);
+        echo json_encode(['success' => true]);
+        exit;
+    } elseif ($bulkAction === 'mark_inactive') {
+        db()->prepare("UPDATE products SET is_active = 0 WHERE id IN ($placeholders)")->execute($cleanIds);
+        echo json_encode(['success' => true]);
+        exit;
+    }
+}
+
 echo json_encode(['success' => false, 'message' => 'Unknown action']);
 exit;

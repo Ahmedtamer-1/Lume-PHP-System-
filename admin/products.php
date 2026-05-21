@@ -31,12 +31,25 @@ require_once __DIR__ . '/includes/header.php';
             </button>
         </div>
     </div>
-    <div class="admin-table-wrap">
+    <div class="admin-table-wrap" style="position:relative; padding-bottom:60px;">
         <table class="admin-table">
-            <thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th>Actions</th></tr></thead>
-            <tbody id="products-tbody"><tr><td colspan="6" style="text-align:center;padding:40px;color:var(--a-muted)">Loading…</td></tr></tbody>
+            <thead><tr><th style="width:40px"><input type="checkbox" id="selectAllProducts" onclick="toggleAllProducts(this)"></th><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="products-tbody"><tr><td colspan="7" style="text-align:center;padding:40px;color:var(--a-muted)">Loading…</td></tr></tbody>
         </table>
     </div>
+</div>
+
+<!-- Floating Bulk Action Bar -->
+<div id="product-bulk-action-bar" style="display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--a-surface); border:1px solid var(--a-border); padding:12px 24px; border-radius:30px; box-shadow:0 10px 30px rgba(0,0,0,0.5); z-index:300; align-items:center; gap:16px;">
+    <span id="product-bulk-count" style="font-weight:600; font-size:.9rem; color:var(--a-text)">0 selected</span>
+    <div style="width:1px; height:20px; background:var(--a-border)"></div>
+    <select id="product-bulk-action-select" style="padding:6px 12px; background:var(--a-bg); border:1px solid var(--a-border); border-radius:4px; color:var(--a-text)">
+        <option value="">Choose action...</option>
+        <option value="mark_active">Mark Active</option>
+        <option value="mark_inactive">Mark Inactive</option>
+        <option value="delete">Delete</option>
+    </select>
+    <button type="button" class="admin-btn admin-btn--primary admin-btn--sm" onclick="applyProductBulkAction()">Apply</button>
 </div>
 
 <!-- ═══ PRODUCT FORM VIEW ═══ -->

@@ -23,6 +23,29 @@ if ($action === 'delete' && isset($_GET['id'])) {
     }
 }
 
+// ── BULK ACTIONS ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action']) && !empty($_POST['bulk_ids'])) {
+    $bulk_action = $_POST['bulk_action'];
+    $ids = $_POST['bulk_ids'];
+    $cleanIds = array_map('intval', $ids);
+    
+    if ($bulk_action === 'delete') {
+        // Prevent deleting own account
+        $myId = (int)$adminUser['id'];
+        $cleanIds = array_filter($cleanIds, fn($id) => $id !== $myId);
+        
+        if (!empty($cleanIds)) {
+            $placeholders = implode(',', array_fill(0, count($cleanIds), '?'));
+            db()->prepare("DELETE FROM users WHERE id IN ($placeholders)")->execute(array_values($cleanIds));
+            log_activity('bulk_delete_users', 'user', 0, count($cleanIds) . " users deleted");
+            header('Location: ' . SITE_URL . '/admin/users.php?msg=bulk_deleted');
+            exit;
+        } else {
+            $error = 'Could not delete (you cannot delete your own account).';
+        }
+    }
+}
+
 // ── UPDATE ROLE ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'], $_POST['role'])) {
     $uid  = (int) $_POST['user_id'];
@@ -40,7 +63,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'], $_POST['ro
 }
 
 if (isset($_GET['msg'])) {
-    $msgs = ['updated' => 'User updated!', 'deleted' => 'User deleted.'];
+    $msgs = [
+        'updated' => 'User updated!', 
+        'deleted' => 'User deleted.',
+        'bulk_deleted' => 'Selected users were deleted.'
+    ];
     $success = $msgs[$_GET['msg']] ?? '';
 }
 
@@ -184,34 +211,95 @@ require_once __DIR__ . '/includes/header.php';
     <p class="admin-empty__text">No users found.</p>
 </div>
 <?php else: ?>
-<div class="admin-table-wrap">
-    <table class="admin-table">
-        <thead>
-            <tr>
-                <th>User</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Orders</th>
-                <th>Total Spent</th>
-                <th>Joined</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-        <?php foreach ($users as $u): ?>
-            <tr>
-                <td><strong><?= h($u['first_name'] . ' ' . $u['last_name']) ?></strong></td>
-                <td style="color:var(--a-muted)"><?= h($u['email']) ?></td>
-                <td><span class="admin-badge admin-badge--<?= $u['role'] === 'admin' ? 'shipped' : 'active' ?>"><?= h($u['role']) ?></span></td>
-                <td><?= (int)$u['order_count'] ?></td>
-                <td><?= money((float)$u['total_spent']) ?></td>
-                <td style="color:var(--a-muted)"><?= date('d M Y', strtotime($u['created_at'])) ?></td>
-                <td><a href="<?= SITE_URL ?>/admin/users.php?id=<?= $u['id'] ?>" class="admin-btn admin-btn--sm">View</a></td>
-            </tr>
-        <?php endforeach; ?>
-        </tbody>
-    </table>
+<form id="bulk-users-form" method="POST" action="?">
+    <input type="hidden" name="bulk_action" id="bulk_action_input">
+    <div class="admin-table-wrap" style="position:relative; padding-bottom:60px;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th style="width:40px"><input type="checkbox" id="selectAll" onclick="toggleAllCheckboxes(this)"></th>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Orders</th>
+                    <th>Total Spent</th>
+                    <th>Joined</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($users as $u): ?>
+                <tr>
+                    <td>
+                        <?php if ($u['id'] != $adminUser['id']): ?>
+                            <input type="checkbox" name="bulk_ids[]" value="<?= $u['id'] ?>" class="row-checkbox" onclick="updateBulkActionBar()">
+                        <?php endif; ?>
+                    </td>
+                    <td><strong><?= h($u['first_name'] . ' ' . $u['last_name']) ?></strong></td>
+                    <td style="color:var(--a-muted)"><?= h($u['email']) ?></td>
+                    <td><span class="admin-badge admin-badge--<?= $u['role'] === 'admin' ? 'shipped' : 'active' ?>"><?= h($u['role']) ?></span></td>
+                    <td><?= (int)$u['order_count'] ?></td>
+                    <td><?= money((float)$u['total_spent']) ?></td>
+                    <td style="color:var(--a-muted)"><?= date('d M Y', strtotime($u['created_at'])) ?></td>
+                    <td><a href="<?= SITE_URL ?>/admin/users.php?id=<?= $u['id'] ?>" class="admin-btn admin-btn--sm">View</a></td>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</form>
+
+<!-- Floating Bulk Action Bar -->
+<div id="bulk-action-bar" style="display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--a-surface); border:1px solid var(--a-border); padding:12px 24px; border-radius:30px; box-shadow:0 10px 30px rgba(0,0,0,0.5); z-index:100; align-items:center; gap:16px;">
+    <span id="bulk-count" style="font-weight:600; font-size:.9rem; color:var(--a-text)">0 selected</span>
+    <div style="width:1px; height:20px; background:var(--a-border)"></div>
+    <select id="bulk-action-select" style="padding:6px 12px; background:var(--a-bg); border:1px solid var(--a-border); border-radius:4px; color:var(--a-text)">
+        <option value="">Choose action...</option>
+        <option value="delete">Delete</option>
+    </select>
+    <button type="button" class="admin-btn admin-btn--primary admin-btn--sm" onclick="applyBulkAction()">Apply</button>
 </div>
+
+<script>
+function toggleAllCheckboxes(masterCheckbox) {
+    const checkboxes = document.querySelectorAll('.row-checkbox');
+    checkboxes.forEach(cb => cb.checked = masterCheckbox.checked);
+    updateBulkActionBar();
+}
+
+function updateBulkActionBar() {
+    const checkboxes = document.querySelectorAll('.row-checkbox:checked');
+    const bar = document.getElementById('bulk-action-bar');
+    const count = document.getElementById('bulk-count');
+    
+    if (checkboxes.length > 0) {
+        bar.style.display = 'flex';
+        count.innerText = checkboxes.length + ' selected';
+    } else {
+        bar.style.display = 'none';
+        document.getElementById('selectAll').checked = false;
+    }
+}
+
+function applyBulkAction() {
+    const select = document.getElementById('bulk-action-select');
+    const action = select.value;
+    if (!action) {
+        alert('Please select an action.');
+        return;
+    }
+    
+    if (action === 'delete') {
+        if (!confirm('Are you sure you want to delete the selected users? This cannot be undone.')) {
+            return;
+        }
+    }
+    
+    document.getElementById('bulk_action_input').value = action;
+    document.getElementById('bulk-users-form').submit();
+}
+</script>
+
 <?php endif; ?>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

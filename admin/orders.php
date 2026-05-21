@@ -235,12 +235,16 @@ require_once __DIR__ . '/includes/header.php';
             <?php endforeach; ?>
         </div>
     </div>
-    <div class="admin-toolbar__right">
+    <div class="admin-toolbar__right" style="display:flex; gap:12px; align-items:center">
         <form method="get" style="display:flex;gap:8px">
             <input type="hidden" name="status_filter" value="<?= h($filterStatus) ?>">
             <input type="text" name="search" value="<?= h($search) ?>" placeholder="Search orders…" class="admin-search-input">
             <button type="submit" class="admin-btn admin-btn--sm">Search</button>
         </form>
+        <a href="<?= SITE_URL ?>/admin/order-new.php" class="admin-btn admin-btn--primary">
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;margin-right:6px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Order
+        </a>
     </div>
 </div>
 

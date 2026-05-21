@@ -100,6 +100,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         json_response(['success' => $ok]);
     }
 
+    if ($action === 'bulk_delete') {
+        $ids = json_decode($_POST['media_ids'] ?? '[]', true);
+        if (empty($ids) || !is_array($ids)) json_response(['success' => false, 'message' => 'No IDs provided'], 400);
+
+        $deleted = 0;
+        foreach ($ids as $id) {
+            if (media_delete((int)$id)) {
+                $deleted++;
+            }
+        }
+        json_response(['success' => true, 'deleted' => $deleted]);
+    }
+
     if ($action === 'update_alt') {
         $id  = (int)($_POST['media_id'] ?? 0);
         $alt = trim($_POST['alt_text'] ?? '');
