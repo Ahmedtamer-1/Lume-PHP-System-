@@ -22,6 +22,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'], $_POST['s
     if (in_array($newStatus, $validStatuses)) {
         db()->prepare('UPDATE orders SET status = ? WHERE id = ?')
             ->execute([$newStatus, (int) $_POST['order_id']]);
+        
+        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true]);
+            exit;
+        }
+
         header('Location: ' . SITE_URL . '/admin/orders.php?msg=updated');
         exit;
     }
@@ -209,7 +216,15 @@ require_once __DIR__ . '/includes/header.php';
             <tr>
                 <td><a href="<?= SITE_URL ?>/admin/orders.php?id=<?= $o['id'] ?>" style="color:var(--a-accent)"><strong><?= h($o['order_number']) ?></strong></a></td>
                 <td><?= h($o['shipping_name'] ?? $o['guest_email'] ?? '—') ?></td>
-                <td><span class="admin-badge admin-badge--<?= h($o['status']) ?>"><?= h($o['status']) ?></span></td>
+                <td>
+                    <select class="admin-badge admin-badge--<?= h($o['status']) ?>" 
+                            style="border:none; cursor:pointer; outline:none; padding-right:20px; font-family:inherit; font-weight:600; text-transform:uppercase" 
+                            onchange="quickUpdateStatus(this, <?= $o['id'] ?>)">
+                        <?php foreach(['pending','paid','processing','shipped','delivered','cancelled','refunded'] as $s): ?>
+                            <option value="<?= $s ?>" <?= $o['status'] === $s ? 'selected' : '' ?> style="background:var(--a-bg); color:var(--a-text); text-transform:uppercase"><?= h($s) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </td>
                 <td><?= money((float)$o['total']) ?></td>
                 <td style="color:var(--a-muted);font-size:.8rem"><?= h($o['payment_method'] ?? '—') ?></td>
                 <td style="color:var(--a-muted)"><?= date('d M Y', strtotime($o['created_at'])) ?></td>
@@ -224,5 +239,35 @@ require_once __DIR__ . '/includes/header.php';
     </table>
 </div>
 <?php endif; ?>
+
+<script>
+function quickUpdateStatus(select, orderId) {
+    select.style.opacity = '0.5';
+    
+    const formData = new FormData();
+    formData.append('order_id', orderId);
+    formData.append('status', select.value);
+    
+    fetch('<?= SITE_URL ?>/admin/orders.php', {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        select.style.opacity = '1';
+        if (data.success) {
+            AdminUI.toast('Order status updated', 'success');
+            select.className = 'admin-badge admin-badge--' + select.value;
+        } else {
+            AdminUI.toast('Failed to update status', 'error');
+        }
+    })
+    .catch(() => {
+        select.style.opacity = '1';
+        AdminUI.toast('Error updating status', 'error');
+    });
+}
+</script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

@@ -159,6 +159,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         </button>
         <a href="<?= SITE_URL ?>/" class="lume-header__nav-link <?= $currentPage === 'index.php' ? 'is-active' : '' ?>">Home</a>
         <a href="<?= SITE_URL ?>/shop.php" class="lume-header__nav-link <?= $currentPage === 'shop.php' ? 'is-active' : '' ?>">Shop</a>
+        <a href="<?= SITE_URL ?>/track-order.php" class="lume-header__nav-link <?= $currentPage === 'track-order.php' ? 'is-active' : '' ?>">Track Order</a>
         <a href="<?= SITE_URL ?>/about.php" class="lume-header__nav-link <?= $currentPage === 'about.php' ? 'is-active' : '' ?>">About</a>
         <a href="<?= SITE_URL ?>/contact.php" class="lume-header__nav-link <?= $currentPage === 'contact.php' ? 'is-active' : '' ?>">Contact</a>
     </nav>
@@ -234,6 +235,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         </div>
         <a href="<?= SITE_URL ?>/" class="lume-mobile-menu__link">Home</a>
         <a href="<?= SITE_URL ?>/shop.php" class="lume-mobile-menu__link">Shop</a>
+        <a href="<?= SITE_URL ?>/track-order.php" class="lume-mobile-menu__link">Track Order</a>
         <a href="<?= SITE_URL ?>/about.php" class="lume-mobile-menu__link">About</a>
         <a href="<?= SITE_URL ?>/contact.php" class="lume-mobile-menu__link">Contact</a>
         <div class="lume-mobile-menu__divider"></div>
