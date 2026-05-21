@@ -70,7 +70,15 @@ if (isset($_GET['id'])) {
                     <tbody>
                     <?php foreach ($orderItems as $i): ?>
                         <tr>
-                            <td><strong><?= h($i['name']) ?></strong></td>
+                            <td>
+                                <strong><?= h($i['name']) ?></strong>
+                                <?php if (!empty($i['variant_size']) || !empty($i['variant_color'])): ?>
+                                    <div style="font-size:0.8rem;color:var(--a-muted);margin-top:4px;">
+                                        <?php if (!empty($i['variant_size'])) echo 'Size: ' . h($i['variant_size']) . '&nbsp;&nbsp;'; ?>
+                                        <?php if (!empty($i['variant_color'])) echo 'Color: ' . h($i['variant_color']); ?>
+                                    </div>
+                                <?php endif; ?>
+                            </td>
                             <td style="color:var(--a-muted)"><?= h($i['sku'] ?? '—') ?></td>
                             <td><?= money((float)$i['price']) ?></td>
                             <td><?= (int)$i['quantity'] ?></td>
@@ -85,10 +93,13 @@ if (isset($_GET['id'])) {
             <div style="margin-top:24px;background:var(--a-surface);border:1px solid var(--a-border);border-radius:var(--a-radius);padding:24px">
                 <h3 style="font-size:.85rem;text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px;color:var(--a-gold)">Shipping Details</h3>
                 <p style="margin-bottom:6px"><strong><?= h($order['shipping_name'] ?? '—') ?></strong></p>
-                <p style="color:var(--a-muted);font-size:.85rem"><?= h($order['shipping_addr'] ?? '') ?></p>
-                <p style="color:var(--a-muted);font-size:.85rem"><?= h($order['shipping_city'] ?? '') ?>, <?= h($order['shipping_country'] ?? '') ?></p>
+                <p style="color:var(--a-muted);font-size:.85rem;margin-bottom:4px;"><?= h($order['shipping_addr'] ?? '') ?></p>
+                <p style="color:var(--a-muted);font-size:.85rem;margin-bottom:8px;"><?= h($order['shipping_city'] ?? '') ?>, <?= h($order['shipping_country'] ?? '') ?></p>
+                <?php if (!empty($order['phone'])): ?>
+                    <p style="color:var(--a-muted);font-size:.85rem;margin-bottom:4px;"><strong>Phone:</strong> <?= h($order['phone']) ?></p>
+                <?php endif; ?>
                 <?php if (!empty($order['guest_email'])): ?>
-                    <p style="color:var(--a-accent);font-size:.85rem;margin-top:8px"><?= h($order['guest_email']) ?></p>
+                    <p style="color:var(--a-accent);font-size:.85rem;margin-top:4px"><?= h($order['guest_email']) ?></p>
                 <?php endif; ?>
                 <?php if (!empty($order['notes'])): ?>
                     <p style="color:var(--a-muted);font-size:.82rem;margin-top:12px;font-style:italic">"<?= h($order['notes']) ?>"</p>
@@ -100,6 +111,13 @@ if (isset($_GET['id'])) {
         <div>
             <div style="background:var(--a-surface);border:1px solid var(--a-border);border-radius:var(--a-radius);padding:24px">
                 <h3 style="font-size:.85rem;text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px;color:var(--a-gold)">Summary</h3>
+                <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:.85rem">
+                    <span style="color:var(--a-muted)">Date</span><span><?= date('M j, Y', strtotime($order['created_at'])) ?></span>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:.85rem">
+                    <span style="color:var(--a-muted)">Payment</span><span style="text-transform:uppercase"><?= h($order['payment_method'] ?? 'COD') ?></span>
+                </div>
+                <hr style="border:none;border-top:1px solid var(--a-border);margin:12px 0">
                 <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:.85rem">
                     <span style="color:var(--a-muted)">Subtotal</span><span><?= money((float)$order['subtotal']) ?></span>
                 </div>
