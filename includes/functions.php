@@ -487,6 +487,16 @@ function create_order(array $data): int
                         $item['quantity'],
                         $item['price'] * $item['quantity'],
                     ]);
+
+            // Deduct stock
+            if (!empty($item['variant_id'])) {
+                $pdo->prepare('UPDATE product_variants SET stock = GREATEST(0, stock - ?) WHERE id = ?')
+                    ->execute([$item['quantity'], $item['variant_id']]);
+            }
+            if (!empty($item['product_id'])) {
+                $pdo->prepare('UPDATE products SET stock = GREATEST(0, stock - ?) WHERE id = ?')
+                    ->execute([$item['quantity'], $item['product_id']]);
+            }
         }
 
         $pdo->commit();
