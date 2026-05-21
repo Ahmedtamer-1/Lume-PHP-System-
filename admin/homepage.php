@@ -348,6 +348,7 @@ function onTypeChange() {
     if (type === 'hero') {
         html += '<div class="admin-form__group"><label>Text Alignment</label><select data-setting="alignment"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></div>';
         html += '<div class="admin-form__group"><label>Overlay Opacity (0.0 to 1.0)</label><input type="number" step="0.1" min="0" max="1" data-setting="overlay" value="0.5"></div>';
+        html += '<div class="admin-form__group"><label>Show Particles Effect</label><select data-setting="show_particles"><option value="true">Yes</option><option value="false">No</option></select></div>';
     } else if (type === 'featured_products') {
         html += '<div class="admin-form__group"><label>Product Count</label><input type="number" data-setting="product_count" value="4"></div>';
         html += '<div class="admin-form__group"><label>Specific Category ID (Optional)</label><input type="number" data-setting="category_id" placeholder="Leave empty for all products"></div>';

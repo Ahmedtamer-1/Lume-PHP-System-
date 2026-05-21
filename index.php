@@ -34,7 +34,7 @@ foreach ($sections as $section):
         // ═══════════════════════════════════════
         case 'hero':
             $bgImage = $sett['bg_image'] ?? $section['image'] ?? 'assets/images/hero-bg.png';
-            $showParticles = $sett['show_particles'] ?? true;
+            $showParticles = isset($sett['show_particles']) ? filter_var($sett['show_particles'], FILTER_VALIDATE_BOOLEAN) : true;
 ?>
 <section class="lume-hero" id="hero">
     <div class="lume-hero__bg" style="background-image:url('<?= SITE_URL ?>/<?= h($bgImage) ?>')"></div>
