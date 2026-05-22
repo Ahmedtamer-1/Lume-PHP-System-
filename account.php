@@ -26,7 +26,8 @@ if ($action === 'google') {
             'scope' => 'email profile',
             'access_type' => 'online'
         ]);
-        redirect($googleOauthUrl);
+        header('Location: ' . $googleOauthUrl);
+        exit;
     }
 }
 
