@@ -63,6 +63,10 @@ if(!defined('DB_CHARSET')) define('DB_CHARSET', 'utf8mb4');
 // Paste your Pixel ID from Meta Events Manager
 if(!defined('META_PIXEL_ID')) define('META_PIXEL_ID', '');        // e.g. '1234567890123456'
 
+// ── Google OAuth ─────────────────────────────────────────────
+if(!defined('GOOGLE_CLIENT_ID')) define('GOOGLE_CLIENT_ID', '');
+if(!defined('GOOGLE_CLIENT_SECRET')) define('GOOGLE_CLIENT_SECRET', '');
+
 // ── Payment Gateway ──────────────────────────────────────────
 // Supports: paymob | fawry | stripe (set below)
 if(!defined('GATEWAY_PROVIDER')) define('GATEWAY_PROVIDER', 'paymob');
