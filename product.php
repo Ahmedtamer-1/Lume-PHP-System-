@@ -214,7 +214,10 @@ $sizeChart = $product['size_chart'] ?? null;
             </div>
             <button class="lume-btn lume-btn--full lume-btn--solid" id="btn-add-single"
                     <?= $hasVariants ? 'disabled style="opacity:.4;cursor:not-allowed"' : '' ?>
-                    data-product-id="<?= (int)$product['id'] ?>">
+                    data-product-id="<?= (int)$product['id'] ?>"
+                    data-product-name="<?= h($product['name']) ?>"
+                    data-product-price="<?= (float)($product['sale_price'] ?: $product['price'] ?? 0) ?>"
+                    <?php if (!$hasVariants): ?>onclick="addToCart(<?= (int)$product['id'] ?>, parseInt(document.getElementById('qty-val')?.textContent||'1'), null, {name:this.dataset.productName, price:parseFloat(this.dataset.productPrice)}); return false;"<?php endif; ?>>
                 Add to Bag
             </button>
             <?php if ($showStock): ?>
@@ -297,6 +300,8 @@ $sizeChart = $product['size_chart'] ?? null;
 <script id="product-config" type="application/json"><?= json_encode([
     'showStock'    => $showStock,
     'lowThreshold' => $lowThreshold,
+    'productName'  => $product['name'],
+    'productPrice' => (float)($product['sale_price'] ?: $product['price'] ?? 0),
 ], JSON_UNESCAPED_UNICODE) ?></script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

@@ -123,14 +123,27 @@ function updateBadge(n){
   if(cartBadge){cartBadge.textContent=n;cartBadge.style.display=n>0?'flex':'none';}
 }
 
-window.addToCart=function(productId,qty,variantId){
+window.addToCart=function(productId,qty,variantId,pixelData){
   qty=qty||1;
   const fd=new FormData();fd.append('action','add');fd.append('product_id',productId);fd.append('quantity',qty);fd.append('csrf',CSRF);
   if(variantId)fd.append('variant_id',variantId);
   fetch(BASE+'/api/cart.php',{method:'POST',body:fd,headers:{'X-Requested-With':'XMLHttpRequest'}})
   .then(r=>r.json()).then(data=>{
-    if(data.success){if(window.showToast)showToast('✓ Added to bag');openCart();}
-    else{alert(data.message||'Error');}
+    if(data.success){
+      if(window.showToast)showToast('✓ Added to bag');
+      // ── Meta Pixel: AddToCart ──
+      if(typeof fbq==='function'){
+        const pd=pixelData||{};
+        fbq('track','AddToCart',{
+          content_ids:[String(productId)],
+          content_type:'product',
+          value:pd.price||0,
+          currency:'EGP',
+          content_name:pd.name||''
+        });
+      }
+      openCart();
+    }else{alert(data.message||'Error');}
   }).catch(()=>alert('Connection error'));
 };
 window.removeCartItem=function(cartId){
@@ -229,9 +242,36 @@ document.addEventListener('DOMContentLoaded',initCounters);
 
 // ─── Meta Pixel helpers ───
 window.lumePixel={
-  addToCart:function(p){if(typeof fbq==='function')fbq('track','AddToCart',{content_ids:[p.id],content_type:'product',value:p.price,currency:'EGP'});},
-  purchase:function(o){if(typeof fbq==='function')fbq('track','Purchase',{value:o.total,currency:'EGP'});}
+  initiateCheckout:function(o){
+    if(typeof fbq==='function')fbq('track','InitiateCheckout',{
+      value:o.total||0,
+      currency:'EGP',
+      num_items:o.num_items||1
+    });
+  },
+  purchase:function(o){
+    if(typeof fbq==='function')fbq('track','Purchase',{
+      value:o.total||0,
+      currency:'EGP',
+      num_items:o.num_items||1
+    });
+  }
 };
+
+// ─── Auto-fire InitiateCheckout on checkout page ───
+(function(){
+  const checkoutConfig = document.getElementById('checkout-config');
+  if(!checkoutConfig) return; // not on checkout page
+  try {
+    const cfg = JSON.parse(checkoutConfig.textContent);
+    if(cfg && typeof fbq === 'function') {
+      fbq('track','InitiateCheckout',{
+        value: cfg.subtotal||0,
+        currency:'EGP'
+      });
+    }
+  } catch(e){}
+})();
 
 // ═══════════════════════════════════════════
 // SIZE CHART MODAL
@@ -459,7 +499,11 @@ window.lumePixel={
         }
         btnAdd.onclick = () => {
           const qty = parseInt(document.getElementById('qty-val')?.textContent || '1');
-          window.addToCart(btnAdd.dataset.productId, qty, matched.id);
+          const pixelPrice = matched.price !== null ? matched.price : (config.productPrice || 0);
+          window.addToCart(btnAdd.dataset.productId, qty, matched.id, {
+            name: config.productName || '',
+            price: pixelPrice
+          });
         };
       } else {
         btnAdd.disabled      = true;

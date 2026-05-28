@@ -638,9 +638,14 @@ function h(string $s): string
 
 function redirect(string $path): never
 {
+    // If it's already an absolute URL (e.g. Paymob iframe redirect), use it directly
+    if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+        header('Location: ' . $path);
+        exit;
+    }
     $base = rtrim(SITE_URL, '/');
-    $path = ltrim($path, '/');
-    header('Location: ' . $base . '/' . $path);
+    $path = '/' . ltrim($path, '/');
+    header('Location: ' . $base . $path);
     exit;
 }
 
