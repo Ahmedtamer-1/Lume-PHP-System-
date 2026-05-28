@@ -4,6 +4,7 @@
  * 
  * All redirect logic runs BEFORE header.php to avoid "headers already sent" errors.
  */
+ob_start(); // Buffer all output so headers can always be sent safely
 require_once __DIR__ . '/includes/functions.php';
 lume_session_start();
 
@@ -155,6 +156,7 @@ if (!$showSuccess && $_SERVER['REQUEST_METHOD'] === 'POST') {
                             
                             redirect($iframeUrl);
                         } catch (Exception $e) {
+                            error_log('Paymob Error: ' . $e->getMessage());
                             $error = "Payment initiation failed: " . $e->getMessage();
                         }
                     } else {
