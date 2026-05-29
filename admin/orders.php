@@ -3,6 +3,7 @@
  * Admin — Orders Management
  */
 require_once __DIR__ . '/includes/auth.php';
+require_once dirname(__DIR__) . '/includes/mailer.php';
 $pageTitle = 'Orders';
 $adminPage = 'orders';
 
@@ -52,7 +53,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'], $_POST['s
         db()->prepare('UPDATE orders SET status = ? WHERE id = ?')
             ->execute([$newStatus, (int) $_POST['order_id']]);
         log_activity('update_order_status', 'order', (int) $_POST['order_id'], "Status: $newStatus");
-        
+
+        // Send shipping notification email when order is marked shipped
+        if ($newStatus === 'shipped') {
+            send_order_email('shipped', (int) $_POST['order_id']);
+        }
         if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
             header('Content-Type: application/json');
             echo json_encode(['success' => true]);

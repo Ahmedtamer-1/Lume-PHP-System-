@@ -32,6 +32,12 @@ $settingKeys = [
     // Footer sections
     'show_marquee', 'marquee_text',
     'show_newsletter', 'newsletter_title', 'newsletter_eyebrow', 'newsletter_subtitle',
+    // Email / SMTP
+    'email_enabled',
+    'email_from_name', 'email_from_address',
+    'email_confirmation_enabled', 'email_shipped_enabled', 'email_cancelled_enabled',
+    'email_resend_api_key',
+    'smtp_host', 'smtp_port', 'smtp_username', 'smtp_password', 'smtp_secure',
 ];
 
 // Handle form save
@@ -109,6 +115,7 @@ require_once __DIR__ . '/includes/header.php';
         <button type="button" class="admin-settings-tab" data-tab="social">Social</button>
         <button type="button" class="admin-settings-tab" data-tab="payment">Payment</button>
         <button type="button" class="admin-settings-tab" data-tab="paymob">Paymob</button>
+        <button type="button" class="admin-settings-tab" data-tab="email">📧 Email</button>
     </div>
 
     <!-- ── General ── -->
@@ -486,6 +493,106 @@ require_once __DIR__ . '/includes/header.php';
                 <label>HMAC Secret</label>
                 <input type="password" name="paymob_hmac" value="<?= h($s('paymob_hmac')) ?>" placeholder="Enter HMAC Secret">
                 <span class="admin-form__hint">Required to verify secure webhook callbacks.</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Email / SMTP ── -->
+    <div class="admin-settings-section" data-section="email" hidden>
+        <h2 class="admin-settings-section__title">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            Email Notifications
+        </h2>
+        <p style="font-size:.75rem;color:var(--a-muted);margin-bottom:20px;line-height:1.6">
+            Send automated emails to customers when orders are placed, shipped, or cancelled.<br>
+            Use <strong>Resend API Key</strong> (recommended — free 3,000 emails/month at <a href="https://resend.com" target="_blank" style="color:var(--a-accent)">resend.com</a>)
+            or fill in SMTP details for Zoho/Hostinger/Gmail.
+        </p>
+
+        <div class="admin-form__check" style="margin-bottom:20px">
+            <input type="hidden" name="email_enabled" value="0">
+            <input type="checkbox" name="email_enabled" value="1" id="email_on" <?= $s('email_enabled', '0') === '1' ? 'checked' : '' ?>>
+            <label for="email_on"><strong>Enable transactional emails</strong></label>
+        </div>
+
+        <div class="admin-form__row">
+            <div class="admin-form__group">
+                <label>From Name</label>
+                <input type="text" name="email_from_name" value="<?= h($s('email_from_name', $s('site_name', SITE_NAME))) ?>" placeholder="e.g. LUMEEGY">
+            </div>
+            <div class="admin-form__group">
+                <label>From Email Address</label>
+                <input type="email" name="email_from_address" value="<?= h($s('email_from_address')) ?>" placeholder="orders@yourdomain.com">
+            </div>
+        </div>
+
+        <hr style="border:none;border-top:1px solid var(--a-border);margin:20px 0">
+        <p style="font-size:.8rem;font-weight:600;color:var(--a-text);margin-bottom:12px">Email Types</p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px">
+            <div style="padding:14px;border:1px solid var(--a-border);border-radius:var(--a-radius)">
+                <div class="admin-form__check">
+                    <input type="hidden" name="email_confirmation_enabled" value="0">
+                    <input type="checkbox" name="email_confirmation_enabled" value="1" id="email_conf" <?= $s('email_confirmation_enabled', '1') === '1' ? 'checked' : '' ?>>
+                    <label for="email_conf"><strong>Order Confirmation</strong></label>
+                </div>
+                <p style="font-size:.72rem;color:var(--a-muted);margin:6px 0 0 22px">Sent when order is placed / payment confirmed</p>
+            </div>
+            <div style="padding:14px;border:1px solid var(--a-border);border-radius:var(--a-radius)">
+                <div class="admin-form__check">
+                    <input type="hidden" name="email_shipped_enabled" value="0">
+                    <input type="checkbox" name="email_shipped_enabled" value="1" id="email_ship" <?= $s('email_shipped_enabled', '1') === '1' ? 'checked' : '' ?>>
+                    <label for="email_ship"><strong>Shipping Update</strong></label>
+                </div>
+                <p style="font-size:.72rem;color:var(--a-muted);margin:6px 0 0 22px">Sent when you mark an order as Shipped</p>
+            </div>
+            <div style="padding:14px;border:1px solid var(--a-border);border-radius:var(--a-radius)">
+                <div class="admin-form__check">
+                    <input type="hidden" name="email_cancelled_enabled" value="0">
+                    <input type="checkbox" name="email_cancelled_enabled" value="1" id="email_cancel" <?= $s('email_cancelled_enabled', '1') === '1' ? 'checked' : '' ?>>
+                    <label for="email_cancel"><strong>Cancellation Notice</strong></label>
+                </div>
+                <p style="font-size:.72rem;color:var(--a-muted);margin:6px 0 0 22px">Sent when a payment is declined or order is cancelled</p>
+            </div>
+        </div>
+
+        <hr style="border:none;border-top:1px solid var(--a-border);margin:20px 0">
+        <p style="font-size:.8rem;font-weight:600;color:var(--a-text);margin-bottom:4px">Option 1 — Resend API <span style="font-size:.7rem;font-weight:400;color:var(--a-accent)">(Recommended)</span></p>
+        <p style="font-size:.72rem;color:var(--a-muted);margin-bottom:12px">Sign up free at resend.com → Create API Key → paste below. No SMTP config needed.</p>
+        <div class="admin-form__group" style="max-width:500px">
+            <label>Resend API Key</label>
+            <input type="password" name="email_resend_api_key" value="<?= h($s('email_resend_api_key')) ?>" placeholder="re_xxxxxxxxxxxxxxxxxxxx">
+            <span class="admin-form__hint">If set, Resend is used. SMTP fields below are ignored.</span>
+        </div>
+
+        <hr style="border:none;border-top:1px solid var(--a-border);margin:20px 0">
+        <p style="font-size:.8rem;font-weight:600;color:var(--a-text);margin-bottom:4px">Option 2 — SMTP (Zoho / Hostinger / Gmail)</p>
+        <p style="font-size:.72rem;color:var(--a-muted);margin-bottom:12px">Only used if Resend API Key is empty.</p>
+        <div class="admin-form__row">
+            <div class="admin-form__group">
+                <label>SMTP Host</label>
+                <input type="text" name="smtp_host" value="<?= h($s('smtp_host')) ?>" placeholder="smtp.zoho.com">
+            </div>
+            <div class="admin-form__group">
+                <label>SMTP Port</label>
+                <input type="number" name="smtp_port" value="<?= h($s('smtp_port', '587')) ?>" placeholder="587">
+                <span class="admin-form__hint">587 (TLS) or 465 (SSL)</span>
+            </div>
+            <div class="admin-form__group">
+                <label>Encryption</label>
+                <select name="smtp_secure" style="width:100%;padding:8px 12px;background:var(--a-bg);border:1px solid var(--a-border);border-radius:var(--a-radius);color:var(--a-text)">
+                    <option value="tls" <?= $s('smtp_secure', 'tls') === 'tls' ? 'selected' : '' ?>>STARTTLS (port 587)</option>
+                    <option value="ssl" <?= $s('smtp_secure') === 'ssl' ? 'selected' : '' ?>>SSL (port 465)</option>
+                </select>
+            </div>
+        </div>
+        <div class="admin-form__row">
+            <div class="admin-form__group">
+                <label>SMTP Username</label>
+                <input type="text" name="smtp_username" value="<?= h($s('smtp_username')) ?>" placeholder="orders@yourdomain.com" autocomplete="off">
+            </div>
+            <div class="admin-form__group">
+                <label>SMTP Password</label>
+                <input type="password" name="smtp_password" value="<?= h($s('smtp_password')) ?>" placeholder="••••••••" autocomplete="new-password">
             </div>
         </div>
     </div>

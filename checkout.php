@@ -175,6 +175,9 @@ if (!$showSuccess && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     } else {
                         cart_clear();
+                        // COD order confirmed — send confirmation email
+                        require_once __DIR__ . '/includes/mailer.php';
+                        send_order_email('confirmation', $orderId);
                         // Set session and redirect — NO HTML has been output yet, so this works
                         $_SESSION['order_success'] = $orderId;
                         redirect('/checkout.php?success=1');

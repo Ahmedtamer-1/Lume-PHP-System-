@@ -5,6 +5,7 @@
  * Handles server-to-server transaction status updates from Paymob.
  */
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/mailer.php';
 
 // 1. Ensure method is POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -126,10 +127,14 @@ if ($success) {
     if ($order['status'] !== 'paid') {
         db()->prepare('UPDATE orders SET status = "paid", payment_ref = ?, updated_at = NOW() WHERE id = ?')
             ->execute([$transactionId, $order['id']]);
+        // Send order confirmation email
+        send_order_email('confirmation', (int)$order['id']);
     }
 } else {
     // Payment failed or was declined — auto-cancel and restore stock
     cancel_order((int)$order['id']);
+    // Send cancellation email
+    send_order_email('cancelled', (int)$order['id']);
 
     // Append a system note with the failed transaction ID for admin visibility
     if ($transactionId) {
