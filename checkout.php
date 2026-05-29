@@ -135,6 +135,15 @@ if (!$showSuccess && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     // Handle Payment Method
                     if ($paymentMethod === 'online') {
+                        // ── Cancel any stale pending online order from a previous attempt ──
+                        // This happens when the user navigated back from the Paymob iframe
+                        // without completing payment, then tries to checkout again.
+                        $stalePendingId = $_SESSION['paymob_pending_order'] ?? null;
+                        if ($stalePendingId) {
+                            cancel_order((int)$stalePendingId);
+                            unset($_SESSION['paymob_pending_order']);
+                        }
+
                         try {
                             require_once __DIR__ . '/includes/paymob.php';
                             
@@ -157,8 +166,13 @@ if (!$showSuccess && $_SERVER['REQUEST_METHOD'] === 'POST') {
                             redirect($iframeUrl);
                         } catch (Exception $e) {
                             error_log('Paymob Error: ' . $e->getMessage());
-                            $error = "Payment initiation failed: " . $e->getMessage();
+                            // Paymob initiation failed — cancel the just-created order
+                            // and restore stock so the user isn't left with a locked order
+                            cancel_order($orderId);
+                            $error = "Payment initiation failed: " . $e->getMessage() . " Please try again.";
+
                         }
+
                     } else {
                         cart_clear();
                         // Set session and redirect — NO HTML has been output yet, so this works

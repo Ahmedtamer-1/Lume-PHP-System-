@@ -99,7 +99,7 @@ $merchantOrderIdRaw = $obj['order']['merchant_order_id'] ?? '';
 // Note: We appended '_' . time() to avoid duplicate errors in Paymob. We must extract the actual order number.
 $parts = explode('_', $merchantOrderIdRaw);
 $orderNumber = $parts[0];
-$success = $obj['success'] ?? false;
+$success     = (bool)($obj['success'] ?? false);
 $transactionId = $obj['id'] ?? null;
 
 // Find the order
@@ -113,16 +113,29 @@ if (!$order) {
     exit('Order not found');
 }
 
-// Only update if it's currently pending or if we're upgrading to paid
-if ($order['status'] === 'pending') {
-    if ($success) {
-        db()->prepare('UPDATE orders SET status = "paid", payment_ref = ? WHERE id = ?')
+// Idempotency: never downgrade a paid/delivered order
+$terminalStatuses = ['paid', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'];
+if (in_array($order['status'], $terminalStatuses) && !$success) {
+    // Already resolved — acknowledge silently
+    http_response_code(200);
+    exit('OK');
+}
+
+if ($success) {
+    // Only mark paid if not already paid
+    if ($order['status'] !== 'paid') {
+        db()->prepare('UPDATE orders SET status = "paid", payment_ref = ?, updated_at = NOW() WHERE id = ?')
             ->execute([$transactionId, $order['id']]);
-    } else {
-        // We can leave it pending so they can retry, or mark as cancelled. We'll leave it pending for now.
-        // We log the failed attempt.
-        db()->prepare('UPDATE orders SET notes = CONCAT(IFNULL(notes, ""), "\n[System] Failed payment attempt ID: ", ?) WHERE id = ?')
-            ->execute([$transactionId, $order['id']]);
+    }
+} else {
+    // Payment failed or was declined — auto-cancel and restore stock
+    cancel_order((int)$order['id']);
+
+    // Append a system note with the failed transaction ID for admin visibility
+    if ($transactionId) {
+        db()->prepare(
+            'UPDATE orders SET notes = CONCAT(IFNULL(notes, ""), "\n[System] Declined Paymob transaction ID: ", ?) WHERE id = ?'
+        )->execute([$transactionId, $order['id']]);
     }
 }
 

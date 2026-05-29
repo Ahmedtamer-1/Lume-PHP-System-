@@ -3,17 +3,19 @@
  * LUMEEGY — Paymob Checkout Callback (Redirect)
  * 
  * Handles the user redirect after they complete or fail the payment in the iframe.
+ * On failure: auto-cancels the pending order, restores stock, and restores the cart
+ * so the user can retry without losing their items.
  */
 require_once __DIR__ . '/includes/functions.php';
 lume_session_start();
 
 $receivedHmac = $_GET['hmac'] ?? '';
 if (!$receivedHmac) {
-    // Missing HMAC, something is wrong
-    redirect('/checkout.php');
+    // Missing HMAC — likely a direct hit or bookmark; redirect gracefully
+    redirect('/shop.php');
 }
 
-// Verify HMAC
+// ── Verify HMAC ──────────────────────────────────────────────
 $hmacSecret = setting('paymob_hmac');
 $hmacFields = [
     'amount_cents',
@@ -41,7 +43,6 @@ $hmacFields = [
 $hmacString = '';
 foreach ($hmacFields as $field) {
     if (isset($_GET[$field])) {
-        // GET params arrive as strings, 'true' or 'false'
         $hmacString .= $_GET[$field];
     }
 }
@@ -49,26 +50,44 @@ foreach ($hmacFields as $field) {
 $calculatedHmac = hash_hmac('sha512', $hmacString, $hmacSecret);
 
 if (!hash_equals(strtolower($calculatedHmac), strtolower($receivedHmac))) {
-    // Invalid signature, possible tampering
+    // Invalid signature — show a generic error, do not touch the order
     $error = "Payment verification failed. Security signature mismatch.";
 } else {
-    // Signature valid. Check success.
+    // ── Signature valid — check outcome ──────────────────────
     $success = ($_GET['success'] ?? 'false') === 'true';
+
     if ($success) {
+        // Payment succeeded — the server-to-server webhook will mark the order paid.
+        // We just redirect to the success screen here.
         $orderId = $_SESSION['paymob_pending_order'] ?? null;
         if ($orderId) {
             unset($_SESSION['paymob_pending_order']);
             $_SESSION['order_success'] = $orderId;
             redirect('/checkout.php?success=1');
         } else {
-            redirect('/shop.php');
+            // Session lost (e.g. opened in different tab) — redirect to account page
+            redirect('/account.php');
         }
     } else {
-        $error = "Your payment was declined or cancelled. Please try again.";
+        // ── Payment declined / cancelled ─────────────────────
+        $pendingOrderId = $_SESSION['paymob_pending_order'] ?? null;
+
+        if ($pendingOrderId) {
+            // Cancel the order and restore stock
+            cancel_order((int)$pendingOrderId);
+
+            // Restore the cart so the user can retry without re-adding items
+            cart_restore_from_order((int)$pendingOrderId);
+
+            // Clear the pending session reference
+            unset($_SESSION['paymob_pending_order']);
+        }
+
+        $error = "Your payment was declined or cancelled. Your items have been restored to your cart — please try again.";
     }
 }
 
-// Display error if we reached here
+// ── Render failure page ───────────────────────────────────────
 $pageTitle = 'Payment Failed — ' . setting('site_name', SITE_NAME);
 require_once __DIR__ . '/includes/header.php';
 ?>
@@ -79,8 +98,8 @@ require_once __DIR__ . '/includes/header.php';
         </div>
         <h1 class="lume-section__title">Payment Failed</h1>
         <p style="color:var(--muted);margin:16px auto;max-width:400px;line-height:1.7"><?= h($error) ?></p>
-        <div style="margin-top:32px;display:flex;gap:16px;justify-content:center">
-            <a href="<?= SITE_URL ?>/cart.php" class="lume-btn lume-btn--solid">Return to Cart</a>
+        <div style="margin-top:32px;display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
+            <a href="<?= SITE_URL ?>/cart.php" class="lume-btn lume-btn--solid">Try Again</a>
             <a href="<?= SITE_URL ?>/shop.php" class="lume-btn">Continue Shopping</a>
         </div>
     </div>

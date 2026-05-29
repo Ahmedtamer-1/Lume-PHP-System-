@@ -520,6 +520,97 @@ function create_order(array $data): int
     }
 }
 
+/**
+ * Cancel an order and restore stock for all its items.
+ *
+ * Safe to call multiple times — skips orders already cancelled/refunded.
+ * Returns true if the order was cancelled, false if it was already in a
+ * terminal state or not found.
+ */
+function cancel_order(int $orderId): bool
+{
+    $pdo = db();
+
+    // Fetch current order state
+    $stmt = $pdo->prepare('SELECT id, status FROM orders WHERE id = ?');
+    $stmt->execute([$orderId]);
+    $order = $stmt->fetch();
+
+    if (!$order) {
+        return false;
+    }
+
+    // Only cancel orders that are in a cancellable state
+    $terminal = ['cancelled', 'refunded', 'delivered'];
+    if (in_array($order['status'], $terminal)) {
+        return false;
+    }
+
+    $pdo->beginTransaction();
+    try {
+        // Fetch all items
+        $items = $pdo->prepare('SELECT * FROM order_items WHERE order_id = ?');
+        $items->execute([$orderId]);
+        $orderItems = $items->fetchAll();
+
+        // Restore stock for each item
+        foreach ($orderItems as $item) {
+            if (!empty($item['variant_id'])) {
+                $pdo->prepare(
+                    'UPDATE product_variants SET stock = stock + ? WHERE id = ?'
+                )->execute([$item['quantity'], $item['variant_id']]);
+            }
+            if (!empty($item['product_id'])) {
+                $pdo->prepare(
+                    'UPDATE products SET stock = stock + ? WHERE id = ?'
+                )->execute([$item['quantity'], $item['product_id']]);
+            }
+        }
+
+        // Mark as cancelled
+        $pdo->prepare(
+            'UPDATE orders SET status = "cancelled", updated_at = NOW() WHERE id = ?'
+        )->execute([$orderId]);
+
+        $pdo->commit();
+        return true;
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        error_log('cancel_order() failed for order #' . $orderId . ': ' . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Restore cart items from an order so the user can retry payment.
+ *
+ * Reads the order_items and re-adds them to the current cart session.
+ * Skips items whose products are no longer active.
+ */
+function cart_restore_from_order(int $orderId): void
+{
+    $items = db()->prepare('SELECT * FROM order_items WHERE order_id = ?');
+    $items->execute([$orderId]);
+    $orderItems = $items->fetchAll();
+
+    foreach ($orderItems as $item) {
+        if (empty($item['product_id'])) {
+            continue;
+        }
+        // Check the product is still active before re-adding
+        $p = db()->prepare('SELECT id, is_active FROM products WHERE id = ? AND is_active = 1');
+        $p->execute([$item['product_id']]);
+        if (!$p->fetch()) {
+            continue;
+        }
+        cart_add(
+            (int)$item['product_id'],
+            (int)$item['quantity'],
+            !empty($item['variant_id']) ? (int)$item['variant_id'] : null
+        );
+    }
+}
+
 // ════════════════════════════════════════════════════════
 // MEDIA LIBRARY
 // ════════════════════════════════════════════════════════
