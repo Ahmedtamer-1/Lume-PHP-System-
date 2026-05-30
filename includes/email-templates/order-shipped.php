@@ -92,9 +92,16 @@ $accent   = '#C4714A';
         <!-- CTA -->
         <tr>
           <td style="padding:0 40px 40px;text-align:center;">
-            <a href="<?= $siteUrl ?>/track-order.php"
-               style="display:inline-block;padding:14px 36px;background:<?= $accent ?>;color:#fff;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;border-radius:2px;">
+            <?php
+            $trackUrl = $siteUrl . '/track-order.php?order_number=' . urlencode($order['order_number']) . '&email=' . urlencode($order['guest_email'] ?: ($order['user_email'] ?? ''));
+            ?>
+            <a href="<?= $trackUrl ?>"
+               style="display:inline-block;padding:14px 36px;background:<?= $accent ?>;color:#fff;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;border-radius:2px;margin:0 5px 10px;">
               Track My Order
+            </a>
+            <a href="<?= $siteUrl ?>/shop.php"
+               style="display:inline-block;padding:14px 36px;background:transparent;border:1px solid <?= $accent ?>;color:<?= $accent ?>;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;border-radius:2px;margin:0 5px 10px;">
+              Continue Shopping
             </a>
           </td>
         </tr>
