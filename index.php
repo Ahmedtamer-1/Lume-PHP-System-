@@ -244,22 +244,33 @@ foreach ($sections as $section):
     <?php endif; ?>
     
     <div class="lume-testimonials lume-reveal" style="margin-top: <?= empty($section['title']) ? '0' : '48px' ?>;">
-        <div class="lume-testimonials__track">
+        <div class="lume-testimonials__track" id="testimonial-track-<?= $s['id'] ?? '1' ?>">
             <?php foreach ($reviewsList as $rev): 
                 $parts = array_map('trim', explode('|', $rev));
                 if (count($parts) < 2) continue;
                 $text = $parts[0];
                 $author = $parts[1];
                 $stars = isset($parts[2]) ? (int)$parts[2] : 5;
+                $initial = mb_substr($author, 0, 1, 'UTF-8');
             ?>
             <div class="lume-testimonial-card">
                 <div class="lume-testimonial-card__stars">
                     <?= str_repeat('★', $stars) ?><?= str_repeat('☆', 5 - $stars) ?>
                 </div>
-                <p class="lume-testimonial-card__text">"<?= h($text) ?>"</p>
-                <p class="lume-testimonial-card__author">— <?= h($author) ?></p>
+                <p class="lume-testimonial-card__text"><?= h($text) ?></p>
+                <div class="lume-testimonial-card__author-wrap">
+                    <div class="lume-testimonial-card__avatar"><?= h(strtoupper($initial)) ?></div>
+                    <div class="lume-testimonial-card__author-info">
+                        <strong><?= h($author) ?></strong>
+                        <span>Verified buyer</span>
+                    </div>
+                </div>
             </div>
             <?php endforeach; ?>
+        </div>
+        <div class="lume-testimonials__nav">
+            <button class="lume-nav-btn lume-nav-btn--prev" onclick="document.getElementById('testimonial-track-<?= $s['id'] ?? '1' ?>').scrollBy({left: -320, behavior: 'smooth'})">◄</button>
+            <button class="lume-nav-btn lume-nav-btn--next" onclick="document.getElementById('testimonial-track-<?= $s['id'] ?? '1' ?>').scrollBy({left: 320, behavior: 'smooth'})">►</button>
         </div>
     </div>
 </section>

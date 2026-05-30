@@ -94,6 +94,7 @@ require_once __DIR__ . '/includes/header.php';
                     <option value="text_block">📝 Text Block</option>
                     <option value="category_grid">🗂️ Category Grid</option>
                     <option value="social_carousel">📸 Social Carousel</option>
+                    <option value="testimonials">💬 Testimonials</option>
                 </select>
             </div>
 
