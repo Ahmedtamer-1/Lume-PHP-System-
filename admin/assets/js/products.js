@@ -178,6 +178,8 @@ function showProductForm(product){
         f.querySelector('[name=slug]').value=product.slug||'';
         f.querySelector('[name=category_id]').value=product.category_id||'';
         f.querySelector('[name=description]').value=product.description||'';
+        f.querySelector('[name=meta_title]').value=product.meta_title||'';
+        f.querySelector('[name=meta_desc]').value=product.meta_desc||'';
         f.querySelector('[name=price]').value=product.price||'';
         f.querySelector('[name=sale_price]').value=product.sale_price||'';
         f.querySelector('[name=cost_price]').value=product.cost_price||'';

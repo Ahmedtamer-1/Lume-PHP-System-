@@ -2,8 +2,12 @@
 require_once __DIR__ . '/includes/functions.php';
 $categorySlug = $_GET['category'] ?? null;
 $search = $_GET['q'] ?? null;
-$pageTitle = 'Shop — ' . setting('site_name', SITE_NAME);
+$siteName = setting('site_name', SITE_NAME);
+$pageTitle = 'Shop — ' . $siteName;
 $pageDescription = 'Browse our full collection of luxury clothing, accessories, and fashion essentials.';
+$pageKeywords = 'shop, ' . $siteName . ', fashion, clothing, accessories';
+// Canonical: no query params for category filters to avoid duplicate content
+$canonicalUrl = SITE_URL . '/shop.php' . ($categorySlug ? '?category=' . urlencode($categorySlug) : '');
 require_once __DIR__ . '/includes/header.php';
 
 $categories = get_categories();

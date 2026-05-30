@@ -322,10 +322,12 @@ endif;
 
 <script id="checkout-config" type="application/json">
 <?= json_encode([
-    'subtotal' => $subtotal,
-    'freeShippingOver' => $freeShippingOver,
-    'codFee' => $codFee,
-    'currency' => currency_symbol()
+    'subtotal'        => $subtotal,
+    'freeShippingOver'=> $freeShippingOver,
+    'codFee'          => $codFee,
+    'currency'        => currency_symbol(),
+    'num_items'       => (int)array_sum(array_column($items, 'quantity')),
+    'product_ids'     => array_values(array_unique(array_column($items, 'product_id'))),
 ]) ?>
 </script>
 <script src="<?= SITE_URL ?>/assets/js/checkout.js"></script>

@@ -78,6 +78,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'save_product') {
     $slug        = trim($_POST['slug'] ?? '');
     $categoryId  = (int)($_POST['category_id'] ?? 0) ?: null;
     $description = trim($_POST['description'] ?? '');
+    $metaTitle   = trim($_POST['meta_title'] ?? '') ?: null;
+    $metaDesc    = trim($_POST['meta_desc'] ?? '') ?: null;
     $price       = (float)($_POST['price'] ?? 0);
     $salePrice   = trim($_POST['sale_price'] ?? '') !== '' ? (float)$_POST['sale_price'] : null;
     $costPrice   = trim($_POST['cost_price'] ?? '') !== '' ? (float)$_POST['cost_price'] : null;
@@ -138,17 +140,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'save_product') {
     try {
         if ($id > 0) {
             db()->prepare(
-                'UPDATE products SET category_id=?, name=?, slug=?, description=?, price=?, sale_price=?, cost_price=?,
+                'UPDATE products SET category_id=?, name=?, slug=?, description=?, meta_title=?, meta_desc=?, price=?, sale_price=?, cost_price=?,
                  sku=?, stock=?, is_featured=?, is_active=?, has_variants=?, image=?, gallery=?, size_chart=? WHERE id=?'
-            )->execute([$categoryId, $name, $slug, $description, $price, $salePrice, $costPrice,
+            )->execute([$categoryId, $name, $slug, $description, $metaTitle, $metaDesc, $price, $salePrice, $costPrice,
                         $sku, $stock, $isFeatured, $isActive, $hasVariants, $imagePath, $galleryEncoded, $sizeChart, $id]);
             log_activity('update_product', 'product', $id);
             echo json_encode(['success' => true, 'message' => 'Product updated!', 'product_id' => $id]);
         } else {
             db()->prepare(
-                'INSERT INTO products (category_id, name, slug, description, price, sale_price, cost_price, sku, stock, is_featured, is_active, has_variants, image, gallery, size_chart)
-                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
-            )->execute([$categoryId, $name, $slug, $description, $price, $salePrice, $costPrice,
+                'INSERT INTO products (category_id, name, slug, description, meta_title, meta_desc, price, sale_price, cost_price, sku, stock, is_featured, is_active, has_variants, image, gallery, size_chart)
+                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
+            )->execute([$categoryId, $name, $slug, $description, $metaTitle, $metaDesc, $price, $salePrice, $costPrice,
                         $sku, $stock, $isFeatured, $isActive, $hasVariants, $imagePath, $galleryEncoded, $sizeChart]);
             $newId = (int)db()->lastInsertId();
             log_activity('create_product', 'product', $newId);

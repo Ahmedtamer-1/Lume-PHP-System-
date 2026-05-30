@@ -11,8 +11,21 @@ if (!$product) {
     exit;
 }
 
-$pageTitle       = h($product['name']) . ' — ' . setting('site_name', SITE_NAME);
-$pageDescription = mb_substr(strip_tags($product['description'] ?? ''), 0, 160);
+// ── SEO meta ──────────────────────────────────────────────────────
+$siteName        = setting('site_name', SITE_NAME);
+$pageTitle       = !empty($product['meta_title'])
+    ? h($product['meta_title'])
+    : h($product['name']) . ' — ' . $siteName;
+$pageDescription = !empty($product['meta_desc'])
+    ? h($product['meta_desc'])
+    : mb_substr(strip_tags($product['description'] ?? ''), 0, 160);
+$pageKeywords    = h($product['name'])
+    . (!empty($product['category_name']) ? ', ' . h($product['category_name']) : '')
+    . ', ' . $siteName;
+$ogType          = 'product';
+$ogImage         = product_image($product); // product's own image
+$canonicalUrl    = SITE_URL . '/product.php?slug=' . urlencode($product['slug']);
+// ──────────────────────────────────────────────────────────────────
 require_once __DIR__ . '/includes/header.php';
 
 $hasVariants       = !empty($product['has_variants']);
@@ -302,6 +315,34 @@ $sizeChart = $product['size_chart'] ?? null;
     'lowThreshold' => $lowThreshold,
     'productName'  => $product['name'],
     'productPrice' => (float)($product['sale_price'] ?: $product['price'] ?? 0),
+    'productId'    => (int)$product['id'],
 ], JSON_UNESCAPED_UNICODE) ?></script>
 
+<!-- JSON-LD Structured Data — Schema.org Product -->
+<script type="application/ld+json"><?= json_encode([
+    '@context'    => 'https://schema.org',
+    '@type'       => 'Product',
+    'name'        => $product['name'],
+    'description' => strip_tags($product['description'] ?? ''),
+    'image'       => product_image($product),
+    'url'         => SITE_URL . '/product.php?slug=' . urlencode($product['slug']),
+    'sku'         => $product['sku'] ?? '',
+    'brand'       => [
+        '@type' => 'Brand',
+        'name'  => setting('site_name', SITE_NAME),
+    ],
+    'offers' => [
+        '@type'         => 'Offer',
+        'url'           => SITE_URL . '/product.php?slug=' . urlencode($product['slug']),
+        'priceCurrency' => setting('currency', 'EGP'),
+        'price'         => number_format((float)($product['sale_price'] ?: $product['price'] ?? 0), 2, '.', ''),
+        'availability'  => $inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+        'seller'        => [
+            '@type' => 'Organization',
+            'name'  => setting('site_name', SITE_NAME),
+        ],
+    ],
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></script>
+
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
+

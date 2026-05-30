@@ -134,12 +134,15 @@ window.addToCart=function(productId,qty,variantId,pixelData){
       // ── Meta Pixel: AddToCart ──
       if(typeof fbq==='function'){
         const pd=pixelData||{};
+        // Include variant ID in content_ids when available
+        const contentId = variantId ? String(variantId) : String(productId);
         fbq('track','AddToCart',{
-          content_ids:[String(productId)],
+          content_ids:[contentId],
           content_type:'product',
           value:pd.price||0,
-          currency:'EGP',
-          content_name:pd.name||''
+          currency:CURRENCY.trim()||'EGP',
+          content_name:pd.name||'',
+          num_items:qty
         });
       }
       openCart();
@@ -267,7 +270,9 @@ window.lumePixel={
     if(cfg && typeof fbq === 'function') {
       fbq('track','InitiateCheckout',{
         value: cfg.subtotal||0,
-        currency:'EGP'
+        currency: CURRENCY.trim()||'EGP',
+        num_items: cfg.num_items||1,
+        content_ids: (cfg.product_ids||[]).map(String)
       });
     }
   } catch(e){}
