@@ -26,6 +26,10 @@ if (empty($sections)) {
 
 foreach ($sections as $section):
     $sett = json_decode($section['settings'] ?? '{}', true) ?: [];
+    
+    $padStyle = '';
+    if (isset($sett['padding_top']) && $sett['padding_top'] !== '') $padStyle .= 'padding-top:' . (int)$sett['padding_top'] . 'px;';
+    if (isset($sett['padding_bottom']) && $sett['padding_bottom'] !== '') $padStyle .= 'padding-bottom:' . (int)$sett['padding_bottom'] . 'px;';
 
     switch ($section['section_type']):
 
@@ -66,7 +70,7 @@ foreach ($sections as $section):
             $count   = (int)($sett['product_count'] ?? 4);
             $featured = get_featured_products($count);
 ?>
-<section class="lume-section lume-section--center container" id="featured">
+<section class="lume-section lume-section--center container" id="featured" style="<?= $padStyle ?>">
     <p class="lume-section__eyebrow lume-reveal"><?= h($eyebrow) ?></p>
     <h2 class="lume-section__title lume-reveal"><?= h($section['title'] ?? 'Featured Products') ?></h2>
     <div class="lume-divider lume-reveal" style="margin-bottom:16px"></div>
@@ -106,7 +110,7 @@ foreach ($sections as $section):
             $eyebrow  = $sett['eyebrow'] ?? 'Our Story';
             $storyImg = $sett['image'] ?? $section['image'] ?? 'assets/images/hero-bg.png';
 ?>
-<section class="lume-section container" id="story">
+<section class="lume-section container" id="story" style="<?= $padStyle ?>">
     <div class="lume-about-intro">
         <div class="lume-about-intro__img lume-reveal-left">
             <img src="<?= SITE_URL ?>/<?= h($storyImg) ?>" alt="<?= h($section['title'] ?? 'Brand story') ?>" loading="lazy">
@@ -131,7 +135,7 @@ foreach ($sections as $section):
         case 'image_banner':
             $bannerImg = $section['image'] ?: ($sett['image'] ?? 'assets/images/hero-bg.png');
 ?>
-<section class="lume-section" style="padding:0">
+<section class="lume-section" style="padding:0; <?= $padStyle ?>">
     <div style="position:relative;aspect-ratio:21/9;overflow:hidden;background:#111">
         <img src="<?= SITE_URL ?>/<?= h($bannerImg) ?>" alt="<?= h($section['title'] ?? '') ?>" loading="lazy" style="width:100%;height:100%;object-fit:cover;opacity:.7">
         <?php if (!empty($section['title'])): ?>
@@ -155,7 +159,7 @@ foreach ($sections as $section):
         case 'text_block':
             $eyebrow = $sett['eyebrow'] ?? '';
 ?>
-<section class="lume-section lume-section--center container">
+<section class="lume-section lume-section--center container" style="<?= $padStyle ?>">
     <?php if ($eyebrow): ?><p class="lume-section__eyebrow lume-reveal"><?= h($eyebrow) ?></p><?php endif; ?>
     <?php if (!empty($section['title'])): ?><h2 class="lume-section__title lume-reveal"><?= h($section['title']) ?></h2><?php endif; ?>
     <div class="lume-divider lume-reveal" style="margin-bottom:16px"></div>
@@ -178,7 +182,7 @@ foreach ($sections as $section):
         case 'category_grid':
             $categories = get_categories();
 ?>
-<section class="lume-section lume-section--center container">
+<section class="lume-section lume-section--center container" style="<?= $padStyle ?>">
     <h2 class="lume-section__title lume-reveal"><?= h($section['title'] ?? 'Shop by Category') ?></h2>
     <div class="lume-divider lume-reveal" style="margin-bottom:32px"></div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px;margin-top:32px">
@@ -199,7 +203,7 @@ foreach ($sections as $section):
             $imagesList = array_filter(array_map('trim', explode("\n", $imagesText)));
             if (empty($imagesList)) break; // Skip if no images
 ?>
-<section class="lume-section" style="padding-bottom: 0;">
+<section class="lume-section" style="padding-bottom: 0; <?= $padStyle ?>">
     <?php if (!empty($section['title'])): ?>
     <div class="container lume-section--center">
         <h2 class="lume-section__title lume-reveal"><?= h($section['title']) ?></h2>
@@ -229,7 +233,7 @@ foreach ($sections as $section):
             $reviewsList = array_filter(array_map('trim', explode("\n", $reviewsText)));
             if (empty($reviewsList)) break;
 ?>
-<section class="lume-section container">
+<section class="lume-section container" style="<?= $padStyle ?>">
     <?php if (!empty($section['title'])): ?>
     <div class="lume-section--center">
         <h2 class="lume-section__title lume-reveal"><?= h($section['title']) ?></h2>

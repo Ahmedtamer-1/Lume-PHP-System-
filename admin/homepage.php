@@ -131,6 +131,17 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
             </div>
 
+            <div class="admin-form__row">
+                <div class="admin-form__group">
+                    <label>Padding Top (px)</label>
+                    <input type="number" id="form-padding-top" data-setting="padding_top" placeholder="e.g. 120">
+                </div>
+                <div class="admin-form__group">
+                    <label>Padding Bottom (px)</label>
+                    <input type="number" id="form-padding-bottom" data-setting="padding_bottom" placeholder="e.g. 120">
+                </div>
+            </div>
+
             <div id="dynamic-fields-wrap" style="background: rgba(0,0,0,0.02); padding: 16px; border-radius: 4px; margin-bottom: 16px; border: 1px solid var(--a-border);">
                 <!-- Dynamic fields will be injected here via JS -->
             </div>
@@ -222,8 +233,8 @@ function editSection(id) {
         document.getElementById('form-settings').value = JSON.stringify(s.settings || {});
         onTypeChange();
         // Populate dynamic fields
-        const wrap = document.getElementById('dynamic-fields-wrap');
-        const inputs = wrap.querySelectorAll('[data-setting]');
+        const form = document.getElementById('section-form');
+        const inputs = form.querySelectorAll('[data-setting]');
         inputs.forEach(input => {
             const key = input.getAttribute('data-setting');
             if (s.settings && s.settings[key] !== undefined) {
@@ -240,8 +251,8 @@ function saveSection(e) {
     e.preventDefault();
     
     // Serialize dynamic fields into JSON string
-    const wrap = document.getElementById('dynamic-fields-wrap');
-    const inputs = wrap.querySelectorAll('[data-setting]');
+    const form = document.getElementById('section-form');
+    const inputs = form.querySelectorAll('[data-setting]');
     let settingsObj = {};
     inputs.forEach(input => {
         if (input.value !== '') {
