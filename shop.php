@@ -137,12 +137,6 @@ foreach ($products as $p) {
                 <?php if (!empty($p['sale_price'])): ?>
                 <span class="lume-product-card__badge">Sale</span>
                 <?php endif; ?>
-            </a>
-            <div class="lume-product-card__body">
-                <p class="lume-product-card__cat"><?= h($p['category_name'] ?? '') ?></p>
-                <h3 class="lume-product-card__name"><a href="<?= SITE_URL ?>/product.php?slug=<?= h($p['slug']) ?>"><?= h($p['name']) ?></a></h3>
-                <div class="lume-product-card__price"><?= product_price($p) ?></div>
-                
                 <?php if (!empty($productColors[$pid])): ?>
                 <div class="lume-product-card__swatches">
                     <?php foreach ($productColors[$pid] as $cn => $cData): ?>
@@ -155,6 +149,12 @@ foreach ($products as $p) {
                     <?php endforeach; ?>
                 </div>
                 <?php endif; ?>
+            </a>
+            <div class="lume-product-card__body">
+                <p class="lume-product-card__cat"><?= h($p['category_name'] ?? '') ?></p>
+                <h3 class="lume-product-card__name"><a href="<?= SITE_URL ?>/product.php?slug=<?= h($p['slug']) ?>"><?= h($p['name']) ?></a></h3>
+                <div class="lume-product-card__price"><?= product_price($p) ?></div>
+                
 
                 <div class="lume-product-card__actions">
                     <?php if (!empty($variantProducts[$pid])): ?>

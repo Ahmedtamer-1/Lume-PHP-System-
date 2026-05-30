@@ -416,16 +416,16 @@ function currency_symbol(): string
 
 function money(float $amount): string
 {
-    return currency_symbol() . number_format($amount, 2);
+    return '<span class="lume-price-val">' . number_format($amount, 2) . '</span><span class="lume-price-cur">' . currency_symbol() . '</span>';
 }
 
 function product_price(array $product): string
 {
     if (!empty($product['sale_price'])) {
-        return '<span class="price-sale">' . money((float) $product['sale_price']) . '</span>'
-            . '<span class="price-original">' . money((float) $product['price']) . '</span>';
+        return '<div class="price-original">' . money((float) $product['price']) . '</div>'
+             . '<div class="price-sale">' . money((float) $product['sale_price']) . '</div>';
     }
-    return '<span class="price">' . money((float) $product['price']) . '</span>';
+    return '<div class="price">' . money((float) $product['price']) . '</div>';
 }
 
 function asset_url(?string $path): string

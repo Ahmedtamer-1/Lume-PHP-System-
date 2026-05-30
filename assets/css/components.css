@@ -83,16 +83,19 @@
 .lume-product-card__body {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     padding: 16px;
     border-top: 1px solid var(--border);
 }
 .lume-product-card__name {
     font-family: var(--font-sans);
-    font-size: .95rem;
+    font-size: 1rem;
     font-weight: 400;
     margin: 0;
     text-transform: lowercase;
+    flex: 1;
+    padding-right: 16px;
+    line-height: 1.4;
 }
 .lume-product-card__name a {
     color: inherit;
@@ -105,30 +108,53 @@
 .lume-product-card__price {
     margin: 0;
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-end;
+    flex-shrink: 0;
 }
 .price {
     color: inherit;
-    font-size: .95rem;
-    font-weight: 600;
 }
 .price-sale {
     color: var(--terracotta);
-    font-size: .95rem;
-    font-weight: 600;
-    margin-right: 6px;
 }
 .price-original {
     color: var(--muted);
     font-size: .8rem;
     text-decoration: line-through;
-    margin-right: 6px;
+    margin-bottom: 2px;
+}
+
+.lume-price-val {
+    font-size: 1rem;
+    font-weight: 600;
+}
+.lume-price-cur {
+    font-size: .65rem;
+    margin-left: 2px;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.lume-product-card__swatches {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    display: flex !important;
+    gap: 4px;
+    z-index: 2;
+}
+.lume-product-card__swatch-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: inline-block;
 }
 
 /* Hide extra elements in grid view */
 .lume-product-card__cat,
-.lume-product-card__actions,
-.lume-product-card__swatches {
+.lume-product-card__actions {
     display: none !important;
 }
 
