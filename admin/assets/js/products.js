@@ -240,7 +240,31 @@ function showProductForm(product){
         renderGalleryPreview();
         renderSizeChartPreview();
     }
+    
+    // Disable stock input if has_variants is checked
+    const stockInput = f.querySelector('[name=stock]');
+    const hasVariantsCb = f.querySelector('[name=has_variants]');
+    if (stockInput && hasVariantsCb) {
+        stockInput.readOnly = hasVariantsCb.checked;
+        stockInput.style.opacity = hasVariantsCb.checked ? '0.5' : '1';
+        stockInput.title = hasVariantsCb.checked ? 'Stock is calculated automatically from variants' : '';
+    }
 }
+
+// Add event listener for has_variants toggle
+document.addEventListener('DOMContentLoaded', () => {
+    const hasVariantsCb = document.querySelector('#product-form [name=has_variants]');
+    if (hasVariantsCb) {
+        hasVariantsCb.addEventListener('change', function() {
+            const stockInput = document.querySelector('#product-form [name=stock]');
+            if (stockInput) {
+                stockInput.readOnly = this.checked;
+                stockInput.style.opacity = this.checked ? '0.5' : '1';
+                stockInput.title = this.checked ? 'Stock is calculated automatically from variants' : '';
+            }
+        });
+    }
+});
 
 function editProduct(id){
     fetch(API+'?action=get_product&id='+id,{headers:{'X-Requested-With':'XMLHttpRequest'}})

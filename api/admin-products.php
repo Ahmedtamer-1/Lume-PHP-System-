@@ -139,6 +139,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'save_product') {
 
     try {
         if ($id > 0) {
+            if ($hasVariants) {
+                $st = db()->prepare('SELECT COALESCE(SUM(stock),0) FROM product_variants WHERE product_id = ?');
+                $st->execute([$id]);
+                $stock = (int)$st->fetchColumn();
+            }
             db()->prepare(
                 'UPDATE products SET category_id=?, name=?, slug=?, description=?, meta_title=?, meta_desc=?, price=?, sale_price=?, cost_price=?,
                  sku=?, stock=?, is_featured=?, is_active=?, has_variants=?, image=?, gallery=?, size_chart=? WHERE id=?'
@@ -219,6 +224,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'save_variant') {
             db()->prepare(
                 'UPDATE product_variants SET size=?, color_name=?, color_hex=?, sku=?, price_override=?, cost_price=?, stock=?, sort_order=?, is_active=?, image=? WHERE id=? AND product_id=?'
             )->execute([$size, $colorName, $colorHex, $sku, $priceOverV, $costPriceV, $stock, $sortOrder, $isActive, $imagePath, $vid, $productId]);
+            
+            // Sync total stock back to product
+            db()->prepare('UPDATE products SET stock = (SELECT COALESCE(SUM(stock),0) FROM product_variants WHERE product_id = ?) WHERE id = ? AND has_variants = 1')->execute([$productId, $productId]);
+            
             log_activity('update_variant', 'variant', $vid);
             echo json_encode(['success' => true, 'message' => 'Variant updated.', 'variant_id' => $vid]);
         } else {
@@ -226,6 +235,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'save_variant') {
                 'INSERT INTO product_variants (product_id, size, color_name, color_hex, sku, price_override, cost_price, stock, sort_order, is_active, image) VALUES (?,?,?,?,?,?,?,?,?,?,?)'
             )->execute([$productId, $size, $colorName, $colorHex, $sku, $priceOverV, $costPriceV, $stock, $sortOrder, $isActive, $imagePath]);
             $newVid = (int)db()->lastInsertId();
+            
+            // Sync total stock back to product
+            db()->prepare('UPDATE products SET stock = (SELECT COALESCE(SUM(stock),0) FROM product_variants WHERE product_id = ?) WHERE id = ? AND has_variants = 1')->execute([$productId, $productId]);
+            
             log_activity('create_variant', 'variant', $newVid);
             echo json_encode(['success' => true, 'message' => 'Variant added.', 'variant_id' => $newVid]);
         }
@@ -241,6 +254,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'delete_variant') {
     $id        = (int)($_POST['id'] ?? 0);
     $productId = (int)($_POST['product_id'] ?? 0);
     db()->prepare('DELETE FROM product_variants WHERE id = ? AND product_id = ?')->execute([$id, $productId]);
+    
+    // Sync total stock back to product if it still has variants
+    db()->prepare('UPDATE products SET stock = (SELECT COALESCE(SUM(stock),0) FROM product_variants WHERE product_id = ?) WHERE id = ? AND has_variants = 1')->execute([$productId, $productId]);
+
     log_activity('delete_variant', 'variant', $id);
     echo json_encode(['success' => true]);
     exit;
