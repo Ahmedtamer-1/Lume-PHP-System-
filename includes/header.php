@@ -98,7 +98,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <title><?= h($pageTitle) ?></title>
 
     <?php if ($siteFavicon): ?>
-    <link rel="icon" href="<?= SITE_URL . '/' . h($siteFavicon) ?>">
+    <link rel="icon" href="<?= h(asset_url($siteFavicon)) ?>">
     <?php endif; ?>
 
     <!-- Fonts (dynamic from theme settings) -->
@@ -184,7 +184,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <div class="lume-header__logo">
         <a href="<?= SITE_URL ?>/" aria-label="<?= h(setting('site_name', SITE_NAME)) ?> — Home">
             <?php if ($siteLogo): ?>
-                <img src="<?= SITE_URL . '/' . h($siteLogo) ?>" alt="<?= h(setting('site_name', SITE_NAME)) ?>" style="max-height:40px;width:auto">
+                <img src="<?= h(asset_url($siteLogo)) ?>" alt="<?= h(setting('site_name', SITE_NAME)) ?>" style="max-height:40px;width:auto">
             <?php else: ?>
                 <span class="lume-logo-text"><?= h(setting('site_name', SITE_NAME)) ?></span>
             <?php endif; ?>
@@ -309,6 +309,8 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 <input type="hidden" id="lume-base-url" value="<?= SITE_URL ?>">
 <meta name="lume-currency-symbol" content="<?= h(currency_symbol()) ?>">
 <meta name="lume-show-stock" content="<?= h($showStock) ?>">
+
+<?php track_visitor(); ?>
 
 <!-- Page content starts below -->
 <main id="main-content">

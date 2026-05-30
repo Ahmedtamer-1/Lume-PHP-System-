@@ -803,4 +803,25 @@ function hexToRgb(string $hex): string
     return "$r, $g, $b";
 }
 
+function track_visitor(): void
+{
+    try {
+        db()->exec("CREATE TABLE IF NOT EXISTS daily_visitors (
+            visit_date DATE PRIMARY KEY,
+            visitors INT DEFAULT 1,
+            views INT DEFAULT 1
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+        
+        $date = date('Y-m-d');
+        
+        lume_session_start();
+        if (empty($_SESSION['has_visited_today_' . $date])) {
+            db()->prepare("INSERT INTO daily_visitors (visit_date, visitors, views) VALUES (?, 1, 1) ON DUPLICATE KEY UPDATE visitors = visitors + 1, views = views + 1")->execute([$date]);
+            $_SESSION['has_visited_today_' . $date] = true;
+        } else {
+            db()->prepare("INSERT INTO daily_visitors (visit_date, visitors, views) VALUES (?, 1, 1) ON DUPLICATE KEY UPDATE views = views + 1")->execute([$date]);
+        }
+    } catch (Exception $e) {}
+}
+
 // Note: currency_symbol() is defined above (line ~393).

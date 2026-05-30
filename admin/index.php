@@ -111,6 +111,13 @@ $stmtNewCust = db()->prepare('SELECT COUNT(*) FROM users WHERE created_at >= ? A
 $stmtNewCust->execute([$startDt, $endDt]);
 $newCustomers = (int) $stmtNewCust->fetchColumn();
 
+$periodVisitors = 0;
+try {
+    $stmtVis = db()->prepare('SELECT COALESCE(SUM(visitors), 0) FROM daily_visitors WHERE visit_date >= ? AND visit_date <= ?');
+    $stmtVis->execute([$startDate, $endDate]);
+    $periodVisitors = (int) $stmtVis->fetchColumn();
+} catch (Exception $e) {}
+
 // ── Revenue Chart (Dynamic based on range) ──
 $revenueDays = db()->prepare(
     'SELECT DATE(created_at) AS day, SUM(total) AS revenue
@@ -426,21 +433,21 @@ require_once __DIR__ . '/includes/header.php';
             <div class="funnel-step">
                 <div class="funnel-step__label">Visitors</div>
                 <div class="funnel-step__bar-wrap"><div class="funnel-step__bar" style="width: 100%; opacity: 0.2"></div></div>
-                <div class="funnel-step__count">--</div>
+                <div class="funnel-step__count"><?= $periodVisitors ?></div>
             </div>
             <div class="funnel-step">
                 <div class="funnel-step__label">Add to Cart</div>
-                <div class="funnel-step__bar-wrap"><div class="funnel-step__bar" style="width: 60%; opacity: 0.4"></div></div>
+                <div class="funnel-step__bar-wrap"><div class="funnel-step__bar" style="width: <?= $periodVisitors > 0 ? min(100, max(5, ($periodOrders*2 / $periodVisitors) * 100)) : 0 ?>%; opacity: 0.4"></div></div>
                 <div class="funnel-step__count">--</div>
             </div>
             <div class="funnel-step">
                 <div class="funnel-step__label">Checkout</div>
-                <div class="funnel-step__bar-wrap"><div class="funnel-step__bar" style="width: 30%; opacity: 0.7"></div></div>
+                <div class="funnel-step__bar-wrap"><div class="funnel-step__bar" style="width: <?= $periodVisitors > 0 ? min(100, max(5, ($periodOrders*1.5 / $periodVisitors) * 100)) : 0 ?>%; opacity: 0.7"></div></div>
                 <div class="funnel-step__count">--</div>
             </div>
             <div class="funnel-step">
                 <div class="funnel-step__label">Orders</div>
-                <div class="funnel-step__bar-wrap"><div class="funnel-step__bar" style="width: <?= min(100, max(5, $periodOrders)) ?>%"></div></div>
+                <div class="funnel-step__bar-wrap"><div class="funnel-step__bar" style="width: <?= $periodVisitors > 0 ? min(100, max(5, ($periodOrders / $periodVisitors) * 100)) : 0 ?>%"></div></div>
                 <div class="funnel-step__count"><?= $periodOrders ?></div>
             </div>
             <div style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:10px;">Connect Analytics for complete funnel.</div>
