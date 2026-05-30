@@ -70,20 +70,20 @@
 }
 .lume-product-card__badge {
     position: absolute;
-    top: 12px;
-    left: 12px;
-    background: var(--terracotta);
-    color: var(--cream);
+    top: 0;
+    left: 0;
+    background: #888888;
+    color: #111111;
     font-size: .6rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: .1em;
-    padding: 4px 10px;
+    padding: 6px 12px;
 }
 .lume-product-card__body {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     padding: 16px;
     border-top: 1px solid var(--border);
 }
@@ -120,17 +120,25 @@
 }
 .price-original {
     color: var(--muted);
-    font-size: .8rem;
     text-decoration: line-through;
     margin-bottom: 2px;
+    opacity: 0.7;
+}
+.price-original .lume-price-val {
+    font-size: .75rem;
+    font-weight: 400;
+}
+.price-original .lume-price-cur {
+    font-size: .55rem;
+    font-weight: 400;
 }
 
 .lume-price-val {
-    font-size: 1rem;
+    font-size: 1.05rem;
     font-weight: 600;
 }
 .lume-price-cur {
-    font-size: .65rem;
+    font-size: .7rem;
     margin-left: 2px;
     font-weight: 500;
     text-transform: uppercase;
