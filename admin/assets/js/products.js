@@ -81,17 +81,24 @@ function renderProductList(){
     document.getElementById('product-count').textContent = filteredProducts.length + ' products';
 
     tb.innerHTML=filteredProducts.map(p=>{
-        const img=p.image_url?`<img src="${p.image_url}" alt="" class="admin-table__img">`:`<div class="admin-table__img" style="display:flex;align-items:center;justify-content:center;color:var(--a-muted)">—</div>`;
-        const price=p.sale_price?`<span style="color:var(--a-accent)">${money(p.sale_price)}</span><br><span style="font-size:.72rem;color:var(--a-muted);text-decoration:line-through">${money(p.price)}</span>`:money(p.price);
-        const star=p.is_featured==1?'<span style="color:var(--a-gold);font-size:.65rem;margin-left:4px">★</span>':'';
-        const badge=p.is_active==1?'<span class="admin-badge admin-badge--active">Active</span>':'<span class="admin-badge admin-badge--inactive">Inactive</span>';
-        const vBtn=p.has_variants==1?`<button class="admin-btn admin-btn--sm" style="color:var(--a-accent)" onclick="openVariants(${p.id})">Variants</button>`:'';
-        return `<tr>
+        const stockVal = parseInt(p.stock);
+        const lowStockStyle = stockVal <= 5 ? 'color:var(--amber);font-weight:bold;' : '';
+        const rowStyle = stockVal <= 5 ? 'background:rgba(200,184,154,.05);' : '';
+        
+        const imgStyle = `width:40px;height:40px;object-fit:cover;border-radius:6px;border:0.5px solid var(--border)`;
+        const img=p.image_url?`<img src="${p.image_url}" alt="" style="${imgStyle}">`:`<div style="${imgStyle};display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:10px;background:var(--bg-primary)">—</div>`;
+        const price=p.sale_price?`<span style="color:var(--accent)">${money(p.sale_price)}</span><br><span style="font-size:.72rem;color:var(--text-muted);text-decoration:line-through">${money(p.price)}</span>`:money(p.price);
+        const star=p.is_featured==1?'<span style="color:var(--amber);font-size:.65rem;margin-left:4px">★</span>':'';
+        
+        const badge = `<label class="hp-section-toggle" style="transform:scale(0.8);transform-origin:left center;margin:0"><input type="checkbox" ${p.is_active==1?'checked':''} onchange="toggleProductActive(${p.id}, this.checked)"><span class="hp-section-toggle__slider"></span></label>`;
+        const vBtn=p.has_variants==1?`<button class="admin-btn admin-btn--sm" style="color:var(--accent)" onclick="openVariants(${p.id})">Variants</button>`:'';
+        
+        return `<tr style="${rowStyle}">
             <td><input type="checkbox" class="product-row-checkbox" value="${p.id}" ${selectedProductIds.includes(p.id) ? 'checked' : ''} onchange="toggleProductSelect(this, ${p.id})"></td>
-            <td><div class="admin-table__product">${img}<div><strong>${esc(p.name)}</strong>${star}<br><span style="font-size:.72rem;color:var(--a-muted)">${esc(p.sku||'')}</span></div></div></td>
-            <td style="color:var(--a-muted)">${esc(p.category_name||'—')}</td>
+            <td><div style="display:flex;align-items:center;gap:12px">${img}<div><strong>${esc(p.name)}</strong>${star}<br><span style="font-size:.72rem;color:var(--text-muted)">${esc(p.sku||'')}</span></div></div></td>
+            <td style="color:var(--text-muted)">${esc(p.category_name||'—')}</td>
             <td>${price}</td>
-            <td>${parseInt(p.stock)}</td>
+            <td style="${lowStockStyle}">${stockVal} ${stockVal <= 5 ? '<span style="font-size:.7rem">⚠️</span>' : ''}</td>
             <td>${badge}</td>
             <td><div class="admin-table__actions">
                 <button class="admin-btn admin-btn--sm" onclick="editProduct(${p.id})">Edit</button>
@@ -101,6 +108,24 @@ function renderProductList(){
         </tr>`;
     }).join('');
     updateProductBulkActionBar();
+}
+
+function toggleProductActive(id, isActive) {
+    const fd = new FormData();
+    fd.append('action', 'bulk_action');
+    fd.append('bulk_action_type', isActive ? 'mark_active' : 'mark_inactive');
+    fd.append('bulk_ids', JSON.stringify([id]));
+    fetch(API, {method:'POST', body:fd, headers:{'X-Requested-With':'XMLHttpRequest'}})
+    .then(r => r.json()).then(d => {
+        if(d.success) {
+            const p = allProducts.find(x => x.id == id);
+            if(p) p.is_active = isActive ? 1 : 0;
+            updateProductBulkActionBar();
+        } else {
+            alert('Failed to toggle status');
+            loadProducts(); // reload to reset state
+        }
+    });
 }
 
 function toggleAllProducts(masterCheckbox) {

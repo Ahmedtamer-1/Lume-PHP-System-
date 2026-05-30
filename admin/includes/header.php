@@ -23,7 +23,8 @@ $totalNotifs = $unreadMessages + $pendingOrders;
     <title><?= h($pageTitle ?? 'Admin') ?> — <?= h(setting('site_name', SITE_NAME)) ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <link rel="stylesheet" href="<?= SITE_URL ?>/admin/assets/css/admin.css?v=<?= time() ?>">
 </head>
 <body data-page="<?= h($adminPage) ?>">
@@ -142,6 +143,12 @@ $totalNotifs = $unreadMessages + $pendingOrders;
                 <h1 class="admin-topbar__title"><?= h($pageTitle ?? 'Dashboard') ?></h1>
             </div>
             <div class="admin-topbar__right">
+                <?php if (($adminPage ?? '') === 'dashboard' && isset($rangeLabel)): ?>
+                <div class="admin-date-pill">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    <?= h($rangeLabel) ?>
+                </div>
+                <?php endif; ?>
                 <!-- Global Search (desktop) -->
                 <div class="admin-topbar__search">
                     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>

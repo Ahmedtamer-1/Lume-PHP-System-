@@ -78,6 +78,25 @@
     }
 
     // ═══════════════════════════════════════════════════
+    // QUICK ACTIONS FAB TRAY
+    // ═══════════════════════════════════════════════════
+    const fabTray = document.getElementById('fab-tray');
+    const fabTrigger = document.getElementById('fab-tray-trigger');
+
+    if (fabTray && fabTrigger) {
+        fabTrigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            fabTray.classList.toggle('open');
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!fabTray.contains(e.target)) {
+                fabTray.classList.remove('open');
+            }
+        });
+    }
+
+    // ═══════════════════════════════════════════════════
     // GLOBAL SEARCH (Ctrl+K)
     // ═══════════════════════════════════════════════════
     const searchOverlay = document.getElementById('admin-search-overlay');
@@ -197,10 +216,11 @@
             e.preventDefault();
             openSearch();
         }
-        // Escape → Close modals/search/sidebar
+        // Escape → Close modals/search/sidebar/FAB
         if (e.key === 'Escape') {
             closeSearch();
             closeSidebar();
+            if (fabTray) fabTray.classList.remove('open');
             // Close any open modal
             document.querySelectorAll('.hp-modal-overlay, .media-detail-overlay, #media-picker-modal, #media-picker-overlay').forEach(m => {
                 if (m.style.display !== 'none') m.style.display = 'none';
@@ -315,6 +335,99 @@
         if (stats) observer.observe(stats);
     } else {
         animateCounters();
+    }
+
+    // Radial Dials Animation
+    if ('IntersectionObserver' in window) {
+        const dialObserver = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-dial');
+                    dialObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.2 });
+        document.querySelectorAll('.radial-dial-svg').forEach(dial => dialObserver.observe(dial));
+    } else {
+        document.querySelectorAll('.radial-dial-svg').forEach(dial => dial.classList.add('animate-dial'));
+    }
+
+    // ═══════════════════════════════════════════════════
+    // CHART.JS & SPARKLINES
+    // ═══════════════════════════════════════════════════
+    function drawSparkline(svgElement, data) {
+        if (!svgElement || !data || !data.length) return;
+        const max = Math.max(...data, 1);
+        const min = Math.min(...data, 0);
+        const range = max - min;
+        const width = 100;
+        const height = 32;
+        const padding = 2; // leave room for stroke
+        const step = data.length > 1 ? width / (data.length - 1) : width;
+        
+        let pathD = `M 0 ${height - padding}`;
+        data.forEach((val, i) => {
+            const x = i * step;
+            const y = height - padding - ((val - min) / range) * (height - padding * 2);
+            if (i === 0) pathD = `M ${x} ${y}`;
+            else pathD += ` L ${x} ${y}`;
+        });
+        
+        svgElement.innerHTML = `<path d="${pathD}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>`;
+    }
+
+    if (window.sparklineData) {
+        const sparklineRev = document.getElementById('sparkline-revenue');
+        if (sparklineRev) drawSparkline(sparklineRev, window.sparklineData);
+    }
+
+    if (window.chartLabels && window.chartData && typeof Chart !== 'undefined') {
+        const ctx = document.getElementById('revenueChart');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: window.chartLabels,
+                    datasets: [{
+                        label: 'Revenue',
+                        data: window.chartData,
+                        borderColor: '#1A1A1A', // Accent color
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHitRadius: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false, drawBorder: false },
+                            ticks: { color: '#888', font: { family: 'Inter', size: 10 } }
+                        },
+                        y: {
+                            grid: { color: '#E5E5E5', drawBorder: false },
+                            ticks: { color: '#888', font: { family: 'Inter', size: 10 }, maxTicksLimit: 5 }
+                        }
+                    }
+                }
+            });
+
+            // Adjust colors for dark mode dynamically
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                const chart = Chart.getChart(ctx);
+                if (chart) {
+                    chart.data.datasets[0].borderColor = '#FAFAFA';
+                    chart.options.scales.y.grid.color = '#1E1E1E';
+                    chart.update();
+                }
+            }
+        }
     }
 
     // ═══════════════════════════════════════════════════

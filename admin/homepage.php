@@ -14,7 +14,7 @@ require_once __DIR__ . '/includes/header.php';
 
 <div class="admin-toolbar">
     <div class="admin-toolbar__left">
-        <span style="font-size:.85rem;color:var(--a-muted)"><?= count($sections) ?> sections</span>
+        <span style="font-size:.85rem;color:var(--text-muted)"><?= count($sections) ?> sections</span>
     </div>
     <div class="admin-toolbar__right">
         <a href="<?= SITE_URL ?>/" target="_blank" class="admin-btn admin-btn--sm" style="opacity:.7">
@@ -71,14 +71,14 @@ require_once __DIR__ . '/includes/header.php';
     <?php endif; ?>
 </div>
 
-<p style="text-align:center;margin-top:24px;font-size:.72rem;color:var(--a-muted)">Drag and drop sections to reorder • Toggle to show/hide on the homepage</p>
+<p style="text-align:center;margin-top:24px;font-size:.72rem;color:var(--text-muted)">Drag and drop sections to reorder • Toggle to show/hide on the homepage</p>
 
 <!-- Add Section Modal -->
 <div class="hp-modal-overlay" id="add-modal" style="display:none">
     <div class="hp-modal">
         <div class="hp-modal__head">
             <h3 id="modal-title">Add Section</h3>
-            <button onclick="closeModal()" style="background:none;border:none;color:var(--a-muted);font-size:1.2rem;cursor:pointer">✕</button>
+            <button onclick="closeModal()" style="background:none;border:none;color:var(--text-muted);font-size:1.2rem;cursor:pointer">✕</button>
         </div>
         <form id="section-form" onsubmit="saveSection(event)">
             <input type="hidden" name="section_id" id="form-section-id" value="0">
@@ -129,7 +129,7 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
             </div>
 
-            <div id="dynamic-fields-wrap" style="background: rgba(0,0,0,0.02); padding: 16px; border-radius: 4px; margin-bottom: 16px; border: 1px solid var(--a-border);">
+            <div id="dynamic-fields-wrap" style="background: rgba(0,0,0,0.02); padding: 16px; border-radius: 4px; margin-bottom: 16px; border: 0.5px solid var(--border);">
                 <!-- Dynamic fields will be injected here via JS -->
             </div>
             <input type="hidden" name="settings" id="form-settings" value="{}">
@@ -152,7 +152,7 @@ require_once __DIR__ . '/includes/header.php';
     <div class="hp-modal" style="max-width:800px">
         <div class="hp-modal__head">
             <h3>Select Media</h3>
-            <button onclick="closeMediaPicker()" style="background:none;border:none;color:var(--a-muted);font-size:1.2rem;cursor:pointer">✕</button>
+            <button onclick="closeMediaPicker()" style="background:none;border:none;color:var(--text-muted);font-size:1.2rem;cursor:pointer">✕</button>
         </div>
         <div class="media-grid" id="picker-grid" style="max-height:60vh;overflow-y:auto;padding:16px 0"></div>
     </div>
@@ -160,24 +160,26 @@ require_once __DIR__ . '/includes/header.php';
 
 <style>
 .hp-sections-list{display:flex;flex-direction:column;gap:8px}
-.hp-section-card{display:flex;align-items:center;gap:16px;padding:16px 20px;background:var(--a-surface);border:1px solid var(--a-border);border-radius:var(--a-radius);transition:all .2s;cursor:grab}
-.hp-section-card:hover{border-color:var(--a-accent)}
+.hp-section-card{display:flex;align-items:center;gap:16px;height:56px;padding:0 16px;background:var(--bg-surface);border:0.5px solid var(--border);border-radius:var(--radius-sm);transition:all .2s;cursor:grab}
+.hp-section-card:hover{border-color:var(--accent)}
 .hp-section-card.dragging{opacity:.5;border-style:dashed}
-.hp-section-card.drag-over{border-color:var(--a-gold);background:rgba(200,184,154,.05)}
-.hp-section-card__drag{font-size:1.2rem;color:var(--a-muted);cursor:grab;user-select:none;flex-shrink:0}
-.hp-section-card__info{flex:1;min-width:0}
-.hp-section-card__type{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:var(--a-accent);margin-bottom:4px}
-.hp-section-card__title{font-size:.9rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hp-section-card__sub{font-size:.72rem;color:var(--a-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hp-section-card__controls{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.hp-section-card.drag-over{border-color:var(--amber);background:rgba(200,184,154,.05)}
+.hp-section-card__drag{font-size:1.2rem;color:var(--text-muted);cursor:grab;user-select:none;flex-shrink:0;opacity:0.5;transition:opacity 0.2s}
+.hp-section-card:hover .hp-section-card__drag{opacity:1}
+.hp-section-card__info{flex:1;min-width:0;display:flex;align-items:center;gap:12px}
+.hp-section-card__type{font-size:11px;font-family:monospace;text-transform:uppercase;letter-spacing:0.05em;background:var(--bg-primary);padding:4px 8px;border-radius:4px;border:0.5px solid var(--border);color:var(--text-primary)}
+.hp-section-card__title{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text-primary)}
+.hp-section-card__sub{font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hp-section-card__controls{display:flex;align-items:center;gap:8px;flex-shrink:0;opacity:0;pointer-events:none;transition:opacity 0.2s}
+.hp-section-card:hover .hp-section-card__controls, .hp-section-card__controls:focus-within{opacity:1;pointer-events:auto}
 .hp-section-toggle{position:relative;width:40px;height:22px;display:inline-block}
 .hp-section-toggle input{display:none}
-.hp-section-toggle__slider{position:absolute;top:0;left:0;right:0;bottom:0;background:var(--a-border);border-radius:22px;cursor:pointer;transition:.3s}
-.hp-section-toggle__slider::before{content:'';position:absolute;left:3px;bottom:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:.3s}
-.hp-section-toggle input:checked+.hp-section-toggle__slider{background:var(--a-green)}
+.hp-section-toggle__slider{position:absolute;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:22px;cursor:pointer;transition:.3s}
+.hp-section-toggle__slider::before{content:'';position:absolute;left:3px;bottom:3px;width:16px;height:16px;background:var(--bg-surface);border-radius:50%;transition:.3s;box-shadow:0 1px 2px rgba(0,0,0,0.1)}
+.hp-section-toggle input:checked+.hp-section-toggle__slider{background:var(--green)}
 .hp-section-toggle input:checked+.hp-section-toggle__slider::before{transform:translateX(18px)}
 .hp-modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;z-index:200;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:24px}
-.hp-modal{background:var(--a-surface);border:1px solid var(--a-border);border-radius:var(--a-radius);padding:32px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;animation:modalIn .3s ease}
+.hp-modal{background:var(--bg-surface);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:32px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;animation:modalIn .3s ease}
 @keyframes modalIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 .hp-modal__head{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
 .hp-modal__head h3{font-size:1rem;font-weight:600}
@@ -309,13 +311,13 @@ document.querySelectorAll('.hp-section-card').forEach(card => {
 function openMediaPicker(inputId) {
     pickerTargetInput = document.getElementById(inputId);
     const grid = document.getElementById('picker-grid');
-    grid.innerHTML = '<div style="text-align:center;padding:24px;color:var(--a-muted)">Loading…</div>';
+    grid.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-muted)">Loading…</div>';
     document.getElementById('media-picker-modal').style.display = 'flex';
 
     fetch(BASE + '/api/media.php?page=1', {headers:{'X-Requested-With':'XMLHttpRequest'}})
     .then(r => r.json()).then(data => {
         if (!data.items || !data.items.length) {
-            grid.innerHTML = '<div style="text-align:center;padding:24px;color:var(--a-muted)">No media uploaded yet.</div>';
+            grid.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-muted)">No media uploaded yet.</div>';
             return;
         }
         grid.innerHTML = data.items.map(m => `
@@ -357,10 +359,10 @@ function onTypeChange() {
     } else if (type === 'brand_story' || type === 'text_block') {
         html += '<div class="admin-form__group"><label>Background Color</label><input type="color" data-setting="bg_color" value="#ffffff" style="height:38px;padding:2px"></div>';
     } else {
-        html = '<div style="font-size:0.8rem;color:var(--a-muted)">No specific extra settings for this section type.</div>';
+        html = '<div style="font-size:0.8rem;color:var(--text-muted)">No specific extra settings for this section type.</div>';
     }
     
-    wrap.innerHTML = '<h4 style="font-size:0.85rem;margin-bottom:12px;text-transform:uppercase;color:var(--a-muted)">Specific Settings</h4>' + html;
+    wrap.innerHTML = '<h4 style="font-size:0.85rem;margin-bottom:12px;text-transform:uppercase;color:var(--text-muted)">Specific Settings</h4>' + html;
 }
 </script>
 

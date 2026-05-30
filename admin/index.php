@@ -267,291 +267,249 @@ function trendPct($current, $previous) {
 $revenueTrend = trendPct($periodRevenue, $prevPeriodRevenue);
 $ordersTrend  = trendPct($periodOrders, $prevPeriodOrders);
 
+// ── Inventory Alerts ──
+$lowStockCount = 0;
+try {
+    $lowStockCount = (int) db()->query('SELECT COUNT(*) FROM products WHERE stock <= 5 AND is_active = 1')->fetchColumn();
+} catch (Exception $e) {}
+
+// ── Abandoned Carts ──
+$abandonedCarts = 0;
+try {
+    $abandonedCarts = (int) db()->query('SELECT COUNT(DISTINCT session_key) FROM cart_sessions WHERE updated_at < DATE_SUB(NOW(), INTERVAL 1 HOUR)')->fetchColumn();
+} catch (Exception $e) {}
+
+// ── Sparkline Data ──
+$sparklineData = !empty($chartData) ? json_encode(array_slice($chartData, -7)) : '[]';
+
 require_once __DIR__ . '/includes/header.php';
 ?>
 
-<!-- HEADER WITH FILTERS -->
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
-    <div>
-        <!-- Keep global quick actions here if you want -->
+<!-- INVENTORY ALERT -->
+<?php if ($lowStockCount > 0): ?>
+<div class="inventory-alert">
+    <div class="inventory-alert__icon">
+        <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
     </div>
-    <form method="get" id="date-filter-form" style="display:flex;align-items:center;gap:12px;background:var(--a-surface);padding:8px 16px;border-radius:var(--a-radius);border:1px solid var(--a-border);">
-        <label style="font-size:.85rem;font-weight:600;color:var(--a-muted)">Date Range:</label>
-        <select name="range" onchange="document.getElementById('date-filter-form').submit()" style="background:var(--a-bg);border:1px solid var(--a-border);color:var(--a-text);padding:6px 12px;border-radius:4px;font-size:.85rem;">
-            <option value="today" <?= $range === 'today' ? 'selected' : '' ?>>Today</option>
-            <option value="yesterday" <?= $range === 'yesterday' ? 'selected' : '' ?>>Yesterday</option>
-            <option value="7days" <?= $range === '7days' ? 'selected' : '' ?>>Last 7 Days</option>
-            <option value="30days" <?= $range === '30days' ? 'selected' : '' ?>>Last 30 Days</option>
-            <option value="this_month" <?= $range === 'this_month' ? 'selected' : '' ?>>This Month</option>
-            <option value="last_month" <?= $range === 'last_month' ? 'selected' : '' ?>>Last Month</option>
-            <option value="all_time" <?= $range === 'all_time' ? 'selected' : '' ?>>All Time</option>
-        </select>
-    </form>
+    <div class="inventory-alert__text">
+        <div class="inventory-alert__title"><?= $lowStockCount ?> Products Low on Stock</div>
+        <div class="inventory-alert__sub">Inventory is running low and needs to be restocked.</div>
+    </div>
+    <a href="<?= SITE_URL ?>/admin/products.php" class="inventory-alert__link">View Products</a>
 </div>
+<?php endif; ?>
 
-<!-- QUICK ACTIONS -->
-<div class="admin-quick-actions">
-    <a href="<?= SITE_URL ?>/admin/products.php" class="admin-quick-action">
-        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Add Product
-    </a>
-    <a href="<?= SITE_URL ?>/admin/orders.php" class="admin-quick-action">
-        <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
-        View Orders
-    </a>
-    <a href="<?= SITE_URL ?>/admin/ad-spend.php" class="admin-quick-action" style="border-color:var(--a-gold);color:var(--a-gold)">
-        <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        Log Ad Spend
-    </a>
-    <a href="<?= SITE_URL ?>/admin/subscribers.php" class="admin-quick-action">
-        <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg>
-        Subscribers
-    </a>
-</div>
-
-<!-- STAT CARDS (GLOBAL) -->
+<!-- TOP 4 METRIC CARDS -->
 <div class="admin-stats">
-    <div class="admin-stat-card">
-        <p class="admin-stat-card__label">Total Customers (All Time)</p>
-        <p class="admin-stat-card__value"><?= $totalCustomers ?></p>
-    </div>
-    <div class="admin-stat-card">
-        <p class="admin-stat-card__label">Total Products (All Time)</p>
-        <p class="admin-stat-card__value"><?= $totalProducts ?></p>
-    </div>
-    <div class="admin-stat-card">
-        <p class="admin-stat-card__label">Total Orders (All Time)</p>
-        <p class="admin-stat-card__value"><?= $totalOrders ?></p>
-    </div>
-    <div class="admin-stat-card">
-        <p class="admin-stat-card__label">Newsletter Subs (All Time)</p>
-        <p class="admin-stat-card__value"><?= $totalSubs ?></p>
-    </div>
-</div>
-
-<!-- FILTERED STATS WITH TRENDS -->
-<h2 style="font-size:1.1rem;font-weight:600;margin:32px 0 16px;color:var(--a-text)">Metrics for: <span style="color:var(--a-accent)"><?= $rangeLabel ?></span></h2>
-<div class="admin-stats" style="margin-bottom:32px">
-    <div class="admin-stat-card" style="border-left:3px solid var(--a-accent)">
-        <p class="admin-stat-card__label">Revenue (<?= $rangeLabel ?>)</p>
-        <p class="admin-stat-card__value" style="font-size:1.4rem"><?= money($periodRevenue) ?></p>
+    <!-- Revenue -->
+    <div class="admin-stat-card admin-stat-card--accent">
+        <div class="admin-stat-card__label">Revenue</div>
+        <div class="admin-stat-card__value accent"><?= money($periodRevenue) ?></div>
         <?php if ($revenueTrend != 0): ?>
         <span class="admin-stat-card__trend admin-stat-card__trend--<?= $revenueTrend >= 0 ? 'up' : 'down' ?>">
             <svg viewBox="0 0 24 24"><polyline points="<?= $revenueTrend >= 0 ? '18 15 12 9 6 15' : '6 9 12 15 18 9' ?>"/></svg>
-            <?= abs($revenueTrend) ?>% vs prev. period
+            <?= $revenueTrend > 0 ? '+' : '' ?><?= $revenueTrend ?>%
         </span>
         <?php endif; ?>
+        <svg class="metric-sparkline metric-sparkline--green" viewBox="0 0 100 32" preserveAspectRatio="none" id="sparkline-revenue"></svg>
     </div>
-    <div class="admin-stat-card" style="border-left:3px solid var(--a-accent)">
-        <p class="admin-stat-card__label">Orders (<?= $rangeLabel ?>)</p>
-        <p class="admin-stat-card__value" style="font-size:1.4rem"><?= $periodOrders ?></p>
+
+    <!-- Orders -->
+    <div class="admin-stat-card">
+        <div class="admin-stat-card__label">Orders</div>
+        <div class="admin-stat-card__value"><?= $periodOrders ?></div>
         <?php if ($ordersTrend != 0): ?>
         <span class="admin-stat-card__trend admin-stat-card__trend--<?= $ordersTrend >= 0 ? 'up' : 'down' ?>">
             <svg viewBox="0 0 24 24"><polyline points="<?= $ordersTrend >= 0 ? '18 15 12 9 6 15' : '6 9 12 15 18 9' ?>"/></svg>
-            <?= abs($ordersTrend) ?>% vs prev. period
+            <?= $ordersTrend > 0 ? '+' : '' ?><?= $ordersTrend ?>%
         </span>
         <?php endif; ?>
     </div>
-    <div class="admin-stat-card" style="border-left:3px solid var(--a-green)">
-        <p class="admin-stat-card__label">New Customers (<?= $rangeLabel ?>)</p>
-        <p class="admin-stat-card__value" style="font-size:1.4rem"><?= $newCustomers ?></p>
+
+    <!-- AOV -->
+    <div class="admin-stat-card">
+        <div class="admin-stat-card__label">Avg Order Value</div>
+        <div class="admin-stat-card__value"><?= money($aov) ?></div>
     </div>
-    <div class="admin-stat-card" style="border-left:3px solid var(--a-gold)">
-        <p class="admin-stat-card__label">Average Order Value</p>
-        <p class="admin-stat-card__value" style="font-size:1.4rem"><?= money($aov) ?></p>
+
+    <!-- Abandoned Carts -->
+    <div class="admin-stat-card">
+        <div class="admin-stat-card__label">Abandoned Carts</div>
+        <div class="admin-stat-card__value"><?= $abandonedCarts ?></div>
+        <span class="admin-stat-card__trend" style="margin-top:8px;display:block;opacity:0.6;font-weight:normal;">Last 30 days sessions</span>
     </div>
 </div>
 
-<!-- FINANCIAL INSIGHTS (Net Profit) -->
-<h2 style="font-size:1.1rem;font-weight:600;margin-bottom:16px;color:var(--a-text)">Financial Insights (<?= $rangeLabel ?>)</h2>
-<div class="admin-stats" style="margin-bottom:32px">
-    <div class="admin-stat-card">
-        <p class="admin-stat-card__label">Gross Product Revenue</p>
-        <p class="admin-stat-card__value green"><?= money($netProductRevenue) ?></p>
-    </div>
-    <div class="admin-stat-card">
-        <p class="admin-stat-card__label">Cost of Goods (COGS)</p>
-        <p class="admin-stat-card__value" style="color:var(--a-red)">-<?= money($totalCogs) ?></p>
-    </div>
-    <div class="admin-stat-card">
-        <p class="admin-stat-card__label">Ad Spend (Marketing)</p>
-        <p class="admin-stat-card__value" style="color:var(--a-red)">-<?= money($totalAdSpend) ?></p>
-    </div>
-    <div class="admin-stat-card" style="border-left:3px solid var(--a-gold);background:rgba(200,184,154,0.05)">
-        <p class="admin-stat-card__label">Net Profit (<?= $rangeLabel ?>)</p>
-        <p class="admin-stat-card__value" style="color:var(--a-gold);font-size:1.4rem"><?= money($netProfit) ?></p>
-        <p style="font-size:.7rem;color:var(--a-muted);margin-top:4px">Revenue - COGS - Ad Spend</p>
-    </div>
-</div>
+<!-- FINANCIAL INSIGHTS: RADIAL DIALS -->
+<div class="radial-dials">
+    <?php
+    // Calculate percentages relative to Gross Product Revenue
+    $revPct = 100;
+    $cogsPct = $netProductRevenue > 0 ? min(100, round(($totalCogs / $netProductRevenue) * 100)) : 0;
+    $adPct = $netProductRevenue > 0 ? min(100, round(($totalAdSpend / $netProductRevenue) * 100)) : 0;
+    $profitPct = $netProductRevenue > 0 ? max(0, min(100, round(($netProfit / $netProductRevenue) * 100))) : 0;
 
-<div class="admin-dashboard-grid--equal" style="margin-bottom:32px">
-    <!-- REVENUE BY CATEGORY -->
-    <div class="admin-dashboard-panel">
-        <h3 class="admin-dashboard-panel__title">Revenue by Category (<?= $rangeLabel ?>)</h3>
-        <?php if (empty($categoryRevenue)): ?>
-            <p style="color:var(--a-muted);font-size:.85rem">No category sales data yet</p>
-        <?php else: ?>
-            <?php foreach ($categoryRevenue as $idx => $cr): ?>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;<?= $idx < count($categoryRevenue)-1 ? 'border-bottom:1px solid var(--a-border)' : '' ?>">
-                <div>
-                    <span style="font-size:.85rem;font-weight:500"><?= h($cr['name']) ?></span>
-                    <br><span style="font-size:.72rem;color:var(--a-muted)"><?= (int)$cr['items_sold'] ?> items sold</span>
-                </div>
-                <div style="text-align:right">
-                    <span style="font-size:.85rem;color:var(--a-green)"><?= money((float)$cr['cat_revenue']) ?></span>
+    function renderDial($pct, $val, $label, $colorVar) {
+        // Circumference of r=52 is ~326
+        $dashTotal = 326;
+        $dashOffset = $dashTotal - ($dashTotal * ($pct / 100));
+        return '
+        <div class="radial-dial-card">
+            <div class="radial-dial__wrap">
+                <svg class="radial-dial-svg" style="--dash-total: '.$dashTotal.'; --dash-offset: '.$dashOffset.';">
+                    <circle class="dial-track" cx="60" cy="60" r="52"></circle>
+                    <circle class="dial-progress" cx="60" cy="60" r="52" style="stroke: var('.$colorVar.');"></circle>
+                </svg>
+                <div class="radial-dial__center">
+                    <div class="radial-dial__value">'.money($val).'</div>
                 </div>
             </div>
-            <?php endforeach; ?>
-        <?php endif; ?>
-    </div>
-    <!-- ADDITIONAL FINANCIAL METRICS -->
-    <div class="admin-dashboard-panel">
-        <h3 class="admin-dashboard-panel__title">Deductions & Collections (<?= $rangeLabel ?>)</h3>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--a-border)">
-            <span style="font-size:.85rem;font-weight:500">Shipping Collected</span>
-            <span style="font-size:.85rem;color:var(--a-green)">+<?= money($totalShipping) ?></span>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;">
-            <span style="font-size:.85rem;font-weight:500">Discounts Given</span>
-            <span style="font-size:.85rem;color:var(--a-red)">-<?= money($totalDiscounts) ?></span>
-        </div>
-        <p style="font-size:.75rem;color:var(--a-muted);margin-top:12px">Total Revenue at the top already includes shipping fees and has discounts deducted.</p>
-    </div>
+            <div class="radial-dial__name">'.$label.'</div>
+        </div>';
+    }
+    echo renderDial($revPct, $netProductRevenue, 'Product Rev', '--dial-revenue');
+    echo renderDial($cogsPct, $totalCogs, 'COGS', '--dial-cogs');
+    echo renderDial($adPct, $totalAdSpend, 'Ad Spend', '--dial-adspend');
+    echo renderDial($profitPct, $netProfit, 'Net Profit', '--dial-profit');
+    ?>
 </div>
 
+<!-- MAIN CHARTS ROW -->
 <div class="admin-dashboard-grid">
-    <!-- REVENUE CHART -->
+    <!-- Revenue Line Chart -->
     <div class="admin-dashboard-panel">
-        <h3 class="admin-dashboard-panel__title">Revenue Trend</h3>
-        <div id="chart" style="display:flex;align-items:flex-end;gap:8px;height:180px;padding-top:8px;overflow-x:auto;">
-            <?php
-            $maxVal = max(1, empty($chartData) ? 0 : max($chartData));
-            foreach ($chartData as $i => $val):
-                $pct = ($val / $maxVal) * 100;
-                $height = max(4, $pct) . '%';
-            ?>
-            <div style="flex:1;min-width:30px;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%">
-                <span style="font-size:.65rem;color:var(--a-muted)"><?= $val > 0 ? money($val) : '—' ?></span>
-                <div style="flex:1;width:100%;display:flex;align-items:flex-end">
-                    <div style="width:100%;height:<?= $height ?>;background:linear-gradient(180deg,var(--a-accent),rgba(196,113,74,.3));border-radius:3px 3px 0 0;transition:height .3s"></div>
+        <div class="admin-dashboard-panel__title">Revenue Trend</div>
+        <div class="chart-container">
+            <?php if (empty($chartData)): ?>
+                <div class="admin-empty" style="padding: 40px 20px;">
+                    <div class="admin-empty__icon">
+                        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                    </div>
+                    <div class="admin-empty__text">No orders yet</div>
                 </div>
-                <span style="font-size:.65rem;color:var(--a-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;"><?= $chartLabels[$i] ?? '' ?></span>
-            </div>
-            <?php endforeach; ?>
+            <?php else: ?>
+                <canvas id="revenueChart"></canvas>
+            <?php endif; ?>
         </div>
     </div>
 
-    <!-- ORDER STATUS BREAKDOWN -->
+    <!-- Deductions Table -->
     <div class="admin-dashboard-panel">
-        <h3 class="admin-dashboard-panel__title">Order Status (<?= $rangeLabel ?>)</h3>
-        <?php if (empty($statusBreakdown)): ?>
-            <p style="color:var(--a-muted);font-size:.85rem">No orders in this period</p>
-        <?php else: ?>
-            <?php
-            $totalStatusOrders = array_sum(array_column($statusBreakdown, 'cnt'));
-            foreach ($statusBreakdown as $sb):
-                $pct = round(($sb['cnt'] / max(1, $totalStatusOrders)) * 100);
-            ?>
-            <div style="margin-bottom:14px">
-                <div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:4px">
-                    <span style="text-transform:capitalize"><?= h($sb['status']) ?></span>
-                    <span style="color:var(--a-muted)"><?= $sb['cnt'] ?> (<?= $pct ?>%)</span>
-                </div>
-                <div style="height:6px;background:var(--a-bg);border-radius:3px;overflow:hidden">
-                    <div style="height:100%;width:<?= $pct ?>%;background:var(--a-accent);border-radius:3px;transition:width .6s ease"></div>
-                </div>
-            </div>
-            <?php endforeach; ?>
-        <?php endif; ?>
+        <div class="admin-dashboard-panel__title">Deductions</div>
+        <table class="deductions-table">
+            <tr>
+                <td class="d-label">Shipping Collected</td>
+                <td class="d-value d-pos">+<?= money($totalShipping) ?></td>
+            </tr>
+            <tr>
+                <td class="d-label">Discounts Given</td>
+                <td class="d-value d-neg">-<?= money($totalDiscounts) ?></td>
+            </tr>
+            <tr>
+                <td class="d-label">Cost of Goods</td>
+                <td class="d-value d-neg">-<?= money($totalCogs) ?></td>
+            </tr>
+            <tr>
+                <td class="d-label">Ad Spend</td>
+                <td class="d-value d-neg">-<?= money($totalAdSpend) ?></td>
+            </tr>
+        </table>
     </div>
 </div>
 
-<div class="admin-dashboard-grid--equal">
-    <!-- TOP PRODUCTS -->
+<!-- BOTTOM WIDGETS ROW -->
+<div class="admin-dashboard-grid--3">
+    <!-- Conversion Funnel -->
     <div class="admin-dashboard-panel">
-        <h3 class="admin-dashboard-panel__title">Top Products (<?= $rangeLabel ?>)</h3>
+        <div class="admin-dashboard-panel__title">Conversion Funnel</div>
+        <div class="funnel-wrap">
+            <div class="funnel-step">
+                <div class="funnel-step__label">Visitors</div>
+                <div class="funnel-step__bar-wrap"><div class="funnel-step__bar" style="width: 100%; opacity: 0.2"></div></div>
+                <div class="funnel-step__count">--</div>
+            </div>
+            <div class="funnel-step">
+                <div class="funnel-step__label">Add to Cart</div>
+                <div class="funnel-step__bar-wrap"><div class="funnel-step__bar" style="width: 60%; opacity: 0.4"></div></div>
+                <div class="funnel-step__count">--</div>
+            </div>
+            <div class="funnel-step">
+                <div class="funnel-step__label">Checkout</div>
+                <div class="funnel-step__bar-wrap"><div class="funnel-step__bar" style="width: 30%; opacity: 0.7"></div></div>
+                <div class="funnel-step__count">--</div>
+            </div>
+            <div class="funnel-step">
+                <div class="funnel-step__label">Orders</div>
+                <div class="funnel-step__bar-wrap"><div class="funnel-step__bar" style="width: <?= min(100, max(5, $periodOrders)) ?>%"></div></div>
+                <div class="funnel-step__count"><?= $periodOrders ?></div>
+            </div>
+            <div style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:10px;">Connect Analytics for complete funnel.</div>
+        </div>
+    </div>
+
+    <!-- Product Performance -->
+    <div class="admin-dashboard-panel">
+        <div class="admin-dashboard-panel__title">Top Products</div>
         <?php if (empty($topProducts)): ?>
-            <p style="color:var(--a-muted);font-size:.85rem">No sales data in this period</p>
+            <div class="admin-empty" style="padding:20px 0;"><div class="admin-empty__text">No sales data</div></div>
         <?php else: ?>
-            <?php foreach ($topProducts as $idx => $tp): ?>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;<?= $idx < count($topProducts)-1 ? 'border-bottom:1px solid var(--a-border)' : '' ?>">
-                <div>
-                    <span style="font-size:.7rem;color:var(--a-accent);margin-right:6px">#<?= $idx + 1 ?></span>
-                    <span style="font-size:.85rem"><?= h($tp['name']) ?></span>
-                </div>
-                <div style="text-align:right">
-                    <span style="font-size:.82rem"><?= (int)$tp['total_qty'] ?> sold</span>
-                    <br><span style="font-size:.72rem;color:var(--a-muted)"><?= money((float)$tp['total_revenue']) ?></span>
-                </div>
-            </div>
-            <?php endforeach; ?>
+            <table class="admin-table" style="font-size:12px;">
+                <thead>
+                    <tr>
+                        <th style="padding:6px 0;background:transparent;border:none;">Product</th>
+                        <th style="padding:6px 0;background:transparent;border:none;text-align:right;">Sold</th>
+                        <th style="padding:6px 0;background:transparent;border:none;text-align:right;">Rev</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($topProducts as $tp): ?>
+                    <tr>
+                        <td style="padding:8px 0;border-bottom:0.5px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;"><?= h($tp['name']) ?></td>
+                        <td style="padding:8px 0;border-bottom:0.5px solid var(--border);text-align:right;"><?= (int)$tp['total_qty'] ?></td>
+                        <td style="padding:8px 0;border-bottom:0.5px solid var(--border);text-align:right;"><?= money((float)$tp['total_revenue']) ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
         <?php endif; ?>
     </div>
 
-    <!-- RECENT ORDERS -->
+    <!-- Activity Log -->
     <div class="admin-dashboard-panel">
-        <h3 class="admin-dashboard-panel__title">
-            Recent Orders
-            <a href="<?= SITE_URL ?>/admin/orders.php">View All →</a>
-        </h3>
-        <?php if (empty($recentOrders)): ?>
-            <p style="color:var(--a-muted);font-size:.85rem">No orders in this period</p>
+        <div class="admin-dashboard-panel__title">
+            Activity Log
+            <a href="<?= SITE_URL ?>/admin/activity.php">View All</a>
+        </div>
+        <?php if (empty($recentActivity)): ?>
+            <div class="admin-empty" style="padding:20px 0;"><div class="admin-empty__text">No recent activity</div></div>
         <?php else: ?>
-            <?php foreach ($recentOrders as $idx => $o): ?>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;<?= $idx < count($recentOrders)-1 ? 'border-bottom:1px solid var(--a-border)' : '' ?>">
-                <div>
-                    <a href="<?= SITE_URL ?>/admin/orders.php?id=<?= $o['id'] ?>" style="font-size:.85rem;color:var(--a-accent)"><?= h($o['order_number']) ?></a>
-                    <br><span style="font-size:.72rem;color:var(--a-muted)"><?= h($o['shipping_name'] ?? '') ?></span>
+            <div class="admin-timeline">
+                <?php foreach ($recentActivity as $act): 
+                    $who = trim(($act['first_name'] ?? '') . ' ' . ($act['last_name'] ?? ''));
+                    if (!$who) $who = 'System';
+                    $diff = time() - strtotime($act['created_at']);
+                    if ($diff < 60) $timeAgo = 'now';
+                    elseif ($diff < 3600) $timeAgo = floor($diff/60) . 'm ago';
+                    elseif ($diff < 86400) $timeAgo = floor($diff/3600) . 'h ago';
+                    else $timeAgo = floor($diff/86400) . 'd ago';
+                ?>
+                <div class="admin-timeline__item">
+                    <div class="admin-timeline__dot"></div>
+                    <div class="admin-timeline__content">
+                        <strong><?= h($who) ?></strong> <?= h($act['action']) ?>
+                    </div>
+                    <div class="admin-timeline__meta"><?= $timeAgo ?></div>
                 </div>
-                <div style="text-align:right">
-                    <span class="admin-badge admin-badge--<?= h($o['status']) ?>"><?= h($o['status']) ?></span>
-                    <br><span style="font-size:.82rem;margin-top:2px;display:inline-block"><?= money((float)$o['total']) ?></span>
-                </div>
+                <?php endforeach; ?>
             </div>
-            <?php endforeach; ?>
         <?php endif; ?>
     </div>
 </div>
 
-<?php if (!empty($recentActivity)): ?>
-<!-- RECENT ACTIVITY -->
-<div class="admin-dashboard-panel" style="margin-top:24px">
-    <h3 class="admin-dashboard-panel__title">
-        Recent Activity
-        <a href="<?= SITE_URL ?>/admin/activity.php">View All →</a>
-    </h3>
-    <div class="admin-timeline">
-        <?php foreach ($recentActivity as $act): 
-            $icons = ['create' => '➕', 'update' => '✏️', 'delete' => '🗑️', 'login' => '🔑', 'export' => '📤'];
-            $icon = '📋';
-            foreach ($icons as $key => $emoji) {
-                if (stripos($act['action'], $key) !== false) { $icon = $emoji; break; }
-            }
-            $who = trim(($act['first_name'] ?? '') . ' ' . ($act['last_name'] ?? ''));
-            if (!$who) $who = 'System';
-            $timeAgo = '';
-            $diff = time() - strtotime($act['created_at']);
-            if ($diff < 60) $timeAgo = 'just now';
-            elseif ($diff < 3600) $timeAgo = floor($diff/60) . 'm ago';
-            elseif ($diff < 86400) $timeAgo = floor($diff/3600) . 'h ago';
-            else $timeAgo = floor($diff/86400) . 'd ago';
-        ?>
-        <div class="admin-timeline__item">
-            <div class="admin-timeline__dot"></div>
-            <div class="admin-timeline__content">
-                <span style="margin-right:4px"><?= $icon ?></span>
-                <strong><?= h($who) ?></strong> <?= h($act['action']) ?>
-                <?php if ($act['entity_type']): ?>
-                    <span style="color:var(--a-muted)"><?= h($act['entity_type']) ?></span>
-                <?php endif; ?>
-            </div>
-            <div class="admin-timeline__meta">
-                <span><?= $timeAgo ?></span>
-            </div>
-        </div>
-        <?php endforeach; ?>
-    </div>
-</div>
-<?php endif; ?>
+<script>
+window.chartLabels = <?= json_encode($chartLabels) ?>;
+window.chartData = <?= json_encode($chartData) ?>;
+window.sparklineData = <?= $sparklineData ?>;
+</script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
