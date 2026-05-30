@@ -7,7 +7,7 @@
 .lume-hero__subtitle{font-family:var(--font-sans);font-size:clamp(.7rem,1vw,.85rem);text-transform:uppercase;letter-spacing:.25em;color:var(--gold);margin-bottom:40px;opacity:0;animation:heroFadeUp .8s .7s cubic-bezier(.16,1,.3,1) forwards}
 .lume-hero__cta{display:inline-block;padding:16px 48px;border:1px solid var(--cream);color:var(--cream);font-size:.75rem;text-transform:uppercase;letter-spacing:.15em;transition:all .4s cubic-bezier(.16,1,.3,1);opacity:0;animation:heroFadeUp .8s 1s cubic-bezier(.16,1,.3,1) forwards;position:relative;overflow:hidden}
 .lume-hero__cta::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent);transition:left .6s}
-.lume-hero__cta:hover{background:var(--terracotta);border-color:var(--terracotta);transform:translateY(-2px);box-shadow:0 8px 30px rgba(196,113,74,.3)}
+.lume-hero__cta:hover{background:var(--btn-color, var(--terracotta));border-color:var(--btn-color, var(--terracotta));color:var(--bg) !important;transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.3)}
 .lume-hero__cta:hover::before{left:100%}
 @keyframes heroTitleIn{to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes heroFadeUp{to{opacity:1;transform:translateY(0)}}
@@ -384,3 +384,32 @@ select.lume-form__input{appearance:none;background-image:url("data:image/svg+xml
 .lume-newsletter__input{border-right:1px solid var(--bg);border-bottom:none}
 }
 @media(max-width:480px){.lume-products{grid-template-columns:1fr}}
+
+/* SOCIAL CAROUSEL */
+.lume-social-carousel {
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none; /* Firefox */
+}
+.lume-social-carousel::-webkit-scrollbar {
+    display: none; /* Safari and Chrome */
+}
+.lume-social-carousel__track {
+    display: flex;
+    gap: 16px;
+    padding: 0 24px;
+}
+.lume-social-carousel__item {
+    flex: 0 0 auto;
+    width: 280px;
+    aspect-ratio: 4/5;
+}
+.lume-social-carousel__item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: filter 0.3s;
+}
+.lume-social-carousel__item:hover img {
+    filter: brightness(0.85);
+}

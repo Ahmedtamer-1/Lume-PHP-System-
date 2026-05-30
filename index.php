@@ -35,8 +35,10 @@ foreach ($sections as $section):
         case 'hero':
             $bgImage = $sett['bg_image'] ?? $section['image'] ?? 'assets/images/hero-bg.png';
             $showParticles = isset($sett['show_particles']) ? filter_var($sett['show_particles'], FILTER_VALIDATE_BOOLEAN) : true;
+            $textColor = $sett['text_color'] ?? '#ffffff';
+            $btnColor = $sett['button_color'] ?? '#ffffff';
 ?>
-<section class="lume-hero" id="hero">
+<section class="lume-hero" id="hero" style="color: <?= h($textColor) ?>">
     <div class="lume-hero__bg" style="background-image:url('<?= SITE_URL ?>/<?= h($bgImage) ?>')"></div>
     <div class="lume-hero__overlay" style="opacity: <?= h($sett['overlay'] ?? '1') ?>;"></div>
     <?php if ($showParticles): ?>
@@ -47,10 +49,10 @@ foreach ($sections as $section):
     </div>
     <?php endif; ?>
     <div class="lume-hero__content">
-        <h1 class="lume-hero__title"><?= h($section['title'] ?? SITE_NAME) ?></h1>
-        <p class="lume-hero__subtitle"><?= h($section['subtitle'] ?? SITE_TAGLINE) ?></p>
+        <h1 class="lume-hero__title" style="color: <?= h($textColor) ?>"><?= h($section['title'] ?? SITE_NAME) ?></h1>
+        <p class="lume-hero__subtitle" style="color: <?= h($textColor) ?>"><?= h($section['subtitle'] ?? SITE_TAGLINE) ?></p>
         <?php if (!empty($section['button_text'])): ?>
-        <a href="<?= SITE_URL ?>/<?= ltrim(h($section['button_url'] ?? 'shop.php'), '/') ?>" class="lume-hero__cta"><?= h($section['button_text']) ?></a>
+        <a href="<?= SITE_URL ?>/<?= ltrim(h($section['button_url'] ?? 'shop.php'), '/') ?>" class="lume-hero__cta" style="--btn-color: <?= h($btnColor) ?>; border-color: var(--btn-color); color: var(--btn-color);"><?= h($section['button_text']) ?></a>
         <?php endif; ?>
     </div>
 </section>
@@ -185,6 +187,36 @@ foreach ($sections as $section):
             <h3 style="font-family:var(--font-serif);font-size:1.2rem;text-transform:uppercase;letter-spacing:.05em"><?= h($cat['name']) ?></h3>
         </a>
         <?php endforeach; ?>
+    </div>
+</section>
+<?php break;
+
+        // ═══════════════════════════════════════
+        // SOCIAL CAROUSEL
+        // ═══════════════════════════════════════
+        case 'social_carousel':
+            $imagesText = $sett['images'] ?? '';
+            $imagesList = array_filter(array_map('trim', explode("\n", $imagesText)));
+            if (empty($imagesList)) break; // Skip if no images
+?>
+<section class="lume-section" style="padding-bottom: 0;">
+    <?php if (!empty($section['title'])): ?>
+    <div class="container lume-section--center">
+        <h2 class="lume-section__title lume-reveal"><?= h($section['title']) ?></h2>
+        <?php if (!empty($section['subtitle'])): ?>
+        <p class="lume-section__subtitle lume-reveal"><?= h($section['subtitle']) ?></p>
+        <?php endif; ?>
+    </div>
+    <?php endif; ?>
+    
+    <div class="lume-social-carousel lume-reveal" style="margin-top: <?= empty($section['title']) ? '0' : '48px' ?>;">
+        <div class="lume-social-carousel__track">
+            <?php foreach ($imagesList as $imgUrl): ?>
+            <div class="lume-social-carousel__item">
+                <img src="<?= SITE_URL ?>/<?= ltrim(h($imgUrl), '/') ?>" alt="Social image" loading="lazy">
+            </div>
+            <?php endforeach; ?>
+        </div>
     </div>
 </section>
 <?php break;

@@ -45,6 +45,7 @@ require_once __DIR__ . '/includes/header.php';
             'image_banner' => '🖼️ Image Banner',
             'text_block' => '📝 Text Block',
             'category_grid' => '🗂️ Category Grid',
+            'social_carousel' => '📸 Social Carousel',
             'testimonials' => '💬 Testimonials',
             'newsletter_cta' => '✉️ Newsletter CTA',
         ];
@@ -92,6 +93,7 @@ require_once __DIR__ . '/includes/header.php';
                     <option value="image_banner">🖼️ Image Banner</option>
                     <option value="text_block">📝 Text Block</option>
                     <option value="category_grid">🗂️ Category Grid</option>
+                    <option value="social_carousel">📸 Social Carousel</option>
                 </select>
             </div>
 
@@ -346,6 +348,8 @@ function onTypeChange() {
     let html = '';
     
     if (type === 'hero') {
+        html += '<div class="admin-form__group"><label>Text Color</label><input type="color" data-setting="text_color" value="#ffffff" style="height:38px;padding:2px"></div>';
+        html += '<div class="admin-form__group"><label>Button Color</label><input type="color" data-setting="button_color" value="#ffffff" style="height:38px;padding:2px"></div>';
         html += '<div class="admin-form__group"><label>Text Alignment</label><select data-setting="alignment"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></div>';
         html += '<div class="admin-form__group"><label>Overlay Opacity (0.0 to 1.0)</label><input type="number" step="0.1" min="0" max="1" data-setting="overlay" value="0.5"></div>';
         html += '<div class="admin-form__group"><label>Show Particles Effect</label><select data-setting="show_particles"><option value="true">Yes</option><option value="false">No</option></select></div>';
@@ -356,6 +360,8 @@ function onTypeChange() {
         html += '<div class="admin-form__group"><label>Grid Columns</label><select data-setting="columns"><option value="3">3 Columns</option><option value="4">4 Columns</option></select></div>';
     } else if (type === 'brand_story' || type === 'text_block') {
         html += '<div class="admin-form__group"><label>Background Color</label><input type="color" data-setting="bg_color" value="#ffffff" style="height:38px;padding:2px"></div>';
+    } else if (type === 'social_carousel') {
+        html += '<div class="admin-form__group"><label>Carousel Images (One URL per line)</label><textarea data-setting="images" rows="5" placeholder="/assets/images/social1.jpg\n/assets/images/social2.jpg"></textarea></div>';
     } else {
         html = '<div style="font-size:0.8rem;color:var(--a-muted)">No specific extra settings for this section type.</div>';
     }
