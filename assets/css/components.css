@@ -157,8 +157,9 @@
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--muted);
     display: inline-block;
+    box-shadow: 0 0 2px rgba(0,0,0,0.1);
 }
 
 /* Hide extra elements in grid view */
