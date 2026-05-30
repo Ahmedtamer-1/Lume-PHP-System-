@@ -91,6 +91,22 @@ require_once __DIR__ . '/includes/header.php';
                 <label>Description</label>
                 <textarea name="description"></textarea>
             </div>
+
+            <!-- SEO Fields -->
+            <div style="margin:8px 0;padding:16px;background:var(--a-bg);border:1px solid var(--a-border);border-radius:4px">
+                <p style="font-size:.72rem;font-weight:600;color:var(--a-accent);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px">🔍 SEO / Meta Tags</p>
+                <div class="admin-form__group">
+                    <label>Meta Title <span style="font-weight:400;color:var(--a-muted)">(leave empty to auto-generate)</span></label>
+                    <input type="text" name="meta_title" maxlength="200" placeholder="Product Name — Brand">
+                    <span class="admin-form__hint">Ideal length: 50–60 characters. Shown in Google search results.</span>
+                </div>
+                <div class="admin-form__group" style="margin-top:10px">
+                    <label>Meta Description <span style="font-weight:400;color:var(--a-muted)">(leave empty to use product description)</span></label>
+                    <textarea name="meta_desc" rows="2" maxlength="300" placeholder="Compelling description for search results…"></textarea>
+                    <span class="admin-form__hint">Ideal length: 150–160 characters. Shown under title in Google.</span>
+                </div>
+            </div>
+
             <div class="admin-form__row-3">
                 <div class="admin-form__group">
                     <label>Price (EGP) *</label>

@@ -40,9 +40,9 @@ $accent    = '#C4714A';
         <!-- Hero message -->
         <tr>
           <td style="padding:40px 40px 24px;text-align:center;">
-            <div style="width:56px;height:56px;border-radius:50%;border:2px solid <?= $gold ?>;display:inline-flex;align-items:center;justify-content:center;margin-bottom:20px;">
-              <span style="font-size:24px;color:<?= $gold ?>;">✓</span>
-            </div>
+            <table width="56" height="56" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 20px;border-radius:50%;border:2px solid <?= $gold ?>;display:inline-table;"><tr><td align="center" valign="middle" style="width:56px;height:56px;text-align:center;vertical-align:middle;">
+              <span style="font-size:24px;color:<?= $gold ?>;line-height:1;display:block;">&#10003;</span>
+            </td></tr></table>
             <h2 style="margin:0 0 8px;font-size:20px;font-weight:400;color:<?= $text ?>;">Thank you, <?= htmlspecialchars(explode(' ', $order['shipping_name'] ?? 'there')[0]) ?>!</h2>
             <p style="margin:0;color:<?= $muted ?>;font-size:14px;line-height:1.6;">Your order has been received and is being processed.<br>We'll notify you when it ships.</p>
           </td>
@@ -151,8 +151,15 @@ $accent    = '#C4714A';
         <!-- CTA -->
         <tr>
           <td style="padding:0 40px 40px;text-align:center;">
+            <?php
+            $trackUrl = $siteUrl . '/track-order.php?order_number=' . urlencode($order['order_number']) . '&email=' . urlencode($order['guest_email'] ?: ($order['user_email'] ?? ''));
+            ?>
+            <a href="<?= $trackUrl ?>"
+               style="display:inline-block;padding:14px 36px;background:<?= $gold ?>;color:#0a0a0a;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;border-radius:2px;margin:0 5px 10px;">
+              Track Order
+            </a>
             <a href="<?= $siteUrl ?>/shop.php"
-               style="display:inline-block;padding:14px 36px;background:<?= $gold ?>;color:#0a0a0a;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;border-radius:2px;">
+               style="display:inline-block;padding:14px 36px;background:transparent;border:1px solid <?= $gold ?>;color:<?= $gold ?>;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;border-radius:2px;margin:0 5px 10px;">
               Continue Shopping
             </a>
           </td>

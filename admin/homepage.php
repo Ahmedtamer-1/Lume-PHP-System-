@@ -45,6 +45,7 @@ require_once __DIR__ . '/includes/header.php';
             'image_banner' => '🖼️ Image Banner',
             'text_block' => '📝 Text Block',
             'category_grid' => '🗂️ Category Grid',
+            'social_carousel' => '📸 Social Carousel',
             'testimonials' => '💬 Testimonials',
             'newsletter_cta' => '✉️ Newsletter CTA',
         ];
@@ -92,6 +93,8 @@ require_once __DIR__ . '/includes/header.php';
                     <option value="image_banner">🖼️ Image Banner</option>
                     <option value="text_block">📝 Text Block</option>
                     <option value="category_grid">🗂️ Category Grid</option>
+                    <option value="social_carousel">📸 Social Carousel</option>
+                    <option value="testimonials">💬 Testimonials</option>
                 </select>
             </div>
 
@@ -126,6 +129,17 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="admin-form__group">
                     <label>Button URL</label>
                     <input type="text" name="button_url" id="form-btn-url" placeholder="/shop.php">
+                </div>
+            </div>
+
+            <div class="admin-form__row">
+                <div class="admin-form__group">
+                    <label>Padding Top (px)</label>
+                    <input type="number" id="form-padding-top" data-setting="padding_top" placeholder="e.g. 120">
+                </div>
+                <div class="admin-form__group">
+                    <label>Padding Bottom (px)</label>
+                    <input type="number" id="form-padding-bottom" data-setting="padding_bottom" placeholder="e.g. 120">
                 </div>
             </div>
 
@@ -222,8 +236,8 @@ function editSection(id) {
         document.getElementById('form-settings').value = JSON.stringify(s.settings || {});
         onTypeChange();
         // Populate dynamic fields
-        const wrap = document.getElementById('dynamic-fields-wrap');
-        const inputs = wrap.querySelectorAll('[data-setting]');
+        const form = document.getElementById('section-form');
+        const inputs = form.querySelectorAll('[data-setting]');
         inputs.forEach(input => {
             const key = input.getAttribute('data-setting');
             if (s.settings && s.settings[key] !== undefined) {
@@ -240,8 +254,8 @@ function saveSection(e) {
     e.preventDefault();
     
     // Serialize dynamic fields into JSON string
-    const wrap = document.getElementById('dynamic-fields-wrap');
-    const inputs = wrap.querySelectorAll('[data-setting]');
+    const form = document.getElementById('section-form');
+    const inputs = form.querySelectorAll('[data-setting]');
     let settingsObj = {};
     inputs.forEach(input => {
         if (input.value !== '') {
@@ -250,7 +264,6 @@ function saveSection(e) {
     });
     document.getElementById('form-settings').value = JSON.stringify(settingsObj);
     
-    const form = document.getElementById('section-form');
     const fd = new FormData(form);
     const id = fd.get('section_id');
     fd.append('action', id > 0 ? 'update' : 'add');
@@ -348,6 +361,8 @@ function onTypeChange() {
     let html = '';
     
     if (type === 'hero') {
+        html += '<div class="admin-form__group"><label>Text Color</label><input type="color" data-setting="text_color" value="#ffffff" style="height:38px;padding:2px"></div>';
+        html += '<div class="admin-form__group"><label>Button Color</label><input type="color" data-setting="button_color" value="#ffffff" style="height:38px;padding:2px"></div>';
         html += '<div class="admin-form__group"><label>Text Alignment</label><select data-setting="alignment"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></div>';
         html += '<div class="admin-form__group"><label>Overlay Opacity (0.0 to 1.0)</label><input type="number" step="0.1" min="0" max="1" data-setting="overlay" value="0.5"></div>';
         html += '<div class="admin-form__group"><label>Show Particles Effect</label><select data-setting="show_particles"><option value="true">Yes</option><option value="false">No</option></select></div>';
@@ -358,6 +373,10 @@ function onTypeChange() {
         html += '<div class="admin-form__group"><label>Grid Columns</label><select data-setting="columns"><option value="3">3 Columns</option><option value="4">4 Columns</option></select></div>';
     } else if (type === 'brand_story' || type === 'text_block') {
         html += '<div class="admin-form__group"><label>Background Color</label><input type="color" data-setting="bg_color" value="#ffffff" style="height:38px;padding:2px"></div>';
+    } else if (type === 'social_carousel') {
+        html += '<div class="admin-form__group"><label>Carousel Images (One URL per line)</label><textarea data-setting="images" rows="5" placeholder="/assets/images/social1.jpg\n/assets/images/social2.jpg"></textarea></div>';
+    } else if (type === 'testimonials') {
+        html += '<div class="admin-form__group"><label>Reviews (One per line: Text | Author | Stars)</label><textarea data-setting="reviews" rows="5" placeholder="Amazing quality! | John Doe | 5\nFits perfectly | Jane Smith | 4"></textarea></div>';
     } else {
         html = '<div style="font-size:0.8rem;color:var(--text-muted)">No specific extra settings for this section type.</div>';
     }

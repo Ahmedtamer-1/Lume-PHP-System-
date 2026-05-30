@@ -30,7 +30,9 @@ lume_session_start();
 $pageTitle       = $pageTitle       ?? setting('default_meta_title', SITE_NAME . ' — ' . SITE_TAGLINE);
 $pageDescription = $pageDescription ?? setting('default_meta_description', 'Discover LUMEEGY — a luxury Egyptian fashion brand.');
 $pageKeywords    = $pageKeywords    ?? setting('default_meta_keywords', '');
-$ogImage         = setting('og_image') ? SITE_URL . '/' . setting('og_image') : '';
+$ogImage         = $ogImage         ?? (setting('og_image') ? SITE_URL . '/' . setting('og_image') : '');
+$ogType          = $ogType          ?? 'website';
+$canonicalUrl    = $canonicalUrl    ?? (SITE_URL . strtok($_SERVER['REQUEST_URI'], '?'));
 
 $cartCount       = cart_count();
 $currentUser     = current_user();
@@ -71,14 +73,27 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <meta name="description" content="<?= h($pageDescription) ?>">
     <?php if ($pageKeywords): ?><meta name="keywords" content="<?= h($pageKeywords) ?>"><?php endif; ?>
     <meta name="theme-color" content="<?= h($themeBg) ?>">
+    <meta name="robots" content="index, follow">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="<?= h($canonicalUrl) ?>">
 
     <!-- Open Graph -->
-    <meta property="og:type"        content="website">
+    <meta property="og:type"        content="<?= h($ogType) ?>">
     <meta property="og:title"       content="<?= h($pageTitle) ?>">
     <meta property="og:description" content="<?= h($pageDescription) ?>">
     <meta property="og:site_name"   content="<?= h(setting('site_name', SITE_NAME)) ?>">
-    <meta property="og:url"         content="<?= h(SITE_URL . $_SERVER['REQUEST_URI']) ?>">
-    <?php if ($ogImage): ?><meta property="og:image" content="<?= h($ogImage) ?>"><?php endif; ?>
+    <meta property="og:url"         content="<?= h($canonicalUrl) ?>">
+    <?php if ($ogImage): ?>
+    <meta property="og:image"       content="<?= h($ogImage) ?>">
+    <meta property="og:image:alt"   content="<?= h($pageTitle) ?>">
+    <?php endif; ?>
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:title"       content="<?= h($pageTitle) ?>">
+    <meta name="twitter:description" content="<?= h($pageDescription) ?>">
+    <?php if ($ogImage): ?><meta name="twitter:image" content="<?= h($ogImage) ?>"><?php endif; ?>
 
     <title><?= h($pageTitle) ?></title>
 
@@ -121,6 +136,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
     t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
     document,'script','https://connect.facebook.net/en_US/fbevents.js');
+    fbq('set', 'autoConfig', false, '<?= h($pixelId) ?>');
     fbq('init', '<?= h($pixelId) ?>');
     fbq('track', 'PageView');
     </script>

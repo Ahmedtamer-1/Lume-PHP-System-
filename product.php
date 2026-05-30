@@ -11,8 +11,21 @@ if (!$product) {
     exit;
 }
 
-$pageTitle       = h($product['name']) . ' — ' . setting('site_name', SITE_NAME);
-$pageDescription = mb_substr(strip_tags($product['description'] ?? ''), 0, 160);
+// ── SEO meta ──────────────────────────────────────────────────────
+$siteName        = setting('site_name', SITE_NAME);
+$pageTitle       = !empty($product['meta_title'])
+    ? h($product['meta_title'])
+    : h($product['name']) . ' — ' . $siteName;
+$pageDescription = !empty($product['meta_desc'])
+    ? h($product['meta_desc'])
+    : mb_substr(strip_tags($product['description'] ?? ''), 0, 160);
+$pageKeywords    = h($product['name'])
+    . (!empty($product['category_name']) ? ', ' . h($product['category_name']) : '')
+    . ', ' . $siteName;
+$ogType          = 'product';
+$ogImage         = product_image($product); // product's own image
+$canonicalUrl    = SITE_URL . '/product.php?slug=' . urlencode($product['slug']);
+// ──────────────────────────────────────────────────────────────────
 require_once __DIR__ . '/includes/header.php';
 
 $hasVariants       = !empty($product['has_variants']);
@@ -247,6 +260,36 @@ $sizeChart = $product['size_chart'] ?? null;
     </div>
 </section>
 
+<?php
+// Fetch recommendations
+$recommendations = get_products([
+    'category_id' => $product['category_id'],
+    'exclude_id'  => $product['id'],
+    'limit'       => 4
+]);
+?>
+<?php if (!empty($recommendations)): ?>
+<section class="lume-section container" style="padding-top: 0; margin-top: 64px;">
+    <h2 class="lume-section__title" style="margin-bottom: 32px; font-size: clamp(1.2rem, 2vw, 1.5rem);">You Might Also Like</h2>
+    <div class="lume-products">
+        <?php foreach ($recommendations as $rec): ?>
+        <div class="lume-product-card lume-reveal">
+            <a href="<?= SITE_URL ?>/product.php?slug=<?= h($rec['slug']) ?>" class="lume-product-card__img-wrap">
+                <img src="<?= product_image($rec) ?>" alt="<?= h($rec['name']) ?>" class="lume-product-card__img" loading="lazy">
+                <?php if (!empty($rec['sale_price'])): ?>
+                <span class="lume-product-card__badge">Sale</span>
+                <?php endif; ?>
+            </a>
+            <div class="lume-product-card__body">
+                <h3 class="lume-product-card__name"><a href="<?= SITE_URL ?>/product.php?slug=<?= h($rec['slug']) ?>"><?= h($rec['name']) ?></a></h3>
+                <div class="lume-product-card__price"><?= product_price($rec) ?></div>
+            </div>
+        </div>
+        <?php endforeach; ?>
+    </div>
+</section>
+<?php endif; ?>
+
 <!-- Lightbox -->
 <div class="lume-lightbox" id="lume-lightbox">
     <button class="lume-lightbox__close" id="lightbox-close" aria-label="Close">✕</button>
@@ -302,6 +345,34 @@ $sizeChart = $product['size_chart'] ?? null;
     'lowThreshold' => $lowThreshold,
     'productName'  => $product['name'],
     'productPrice' => (float)($product['sale_price'] ?: $product['price'] ?? 0),
+    'productId'    => (int)$product['id'],
 ], JSON_UNESCAPED_UNICODE) ?></script>
 
+<!-- JSON-LD Structured Data — Schema.org Product -->
+<script type="application/ld+json"><?= json_encode([
+    '@context'    => 'https://schema.org',
+    '@type'       => 'Product',
+    'name'        => $product['name'],
+    'description' => strip_tags($product['description'] ?? ''),
+    'image'       => product_image($product),
+    'url'         => SITE_URL . '/product.php?slug=' . urlencode($product['slug']),
+    'sku'         => $product['sku'] ?? '',
+    'brand'       => [
+        '@type' => 'Brand',
+        'name'  => setting('site_name', SITE_NAME),
+    ],
+    'offers' => [
+        '@type'         => 'Offer',
+        'url'           => SITE_URL . '/product.php?slug=' . urlencode($product['slug']),
+        'priceCurrency' => setting('currency', 'EGP'),
+        'price'         => number_format((float)($product['sale_price'] ?: $product['price'] ?? 0), 2, '.', ''),
+        'availability'  => $inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+        'seller'        => [
+            '@type' => 'Organization',
+            'name'  => setting('site_name', SITE_NAME),
+        ],
+    ],
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></script>
+
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
+

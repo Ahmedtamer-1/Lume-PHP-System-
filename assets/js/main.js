@@ -113,7 +113,7 @@ function loadCart(){
           <button class="lume-cart-item-remove" onclick="removeCartItem(${i.id})">Remove</button>
         </div>
       </div>`).join('');
-    cartTotal.textContent=data.total_display;
+    cartTotal.innerHTML=data.total_display;
     cartFooter.style.display='block';
     updateBadge(data.count);
   }).catch(()=>{});
@@ -134,12 +134,15 @@ window.addToCart=function(productId,qty,variantId,pixelData){
       // ── Meta Pixel: AddToCart ──
       if(typeof fbq==='function'){
         const pd=pixelData||{};
+        // Include variant ID in content_ids when available
+        const contentId = variantId ? String(variantId) : String(productId);
         fbq('track','AddToCart',{
-          content_ids:[String(productId)],
+          content_ids:[contentId],
           content_type:'product',
           value:pd.price||0,
-          currency:'EGP',
-          content_name:pd.name||''
+          currency:CURRENCY.trim()||'EGP',
+          content_name:pd.name||'',
+          num_items:qty
         });
       }
       openCart();
@@ -267,7 +270,9 @@ window.lumePixel={
     if(cfg && typeof fbq === 'function') {
       fbq('track','InitiateCheckout',{
         value: cfg.subtotal||0,
-        currency:'EGP'
+        currency: CURRENCY.trim()||'EGP',
+        num_items: cfg.num_items||1,
+        content_ids: (cfg.product_ids||[]).map(String)
       });
     }
   } catch(e){}
@@ -628,6 +633,37 @@ window.lumePixel={
           dot.style.outlineOffset = '2px';
         }
       });
+    });
+  });
+})();
+
+// ─── Drag to Scroll for Carousels ───
+(function(){
+  const sliders = document.querySelectorAll('.lume-social-carousel, .lume-testimonials');
+  sliders.forEach(slider => {
+    let isDown = false;
+    let startX;
+    let scrollLeft;
+    slider.addEventListener('mousedown', (e) => {
+      isDown = true;
+      slider.style.cursor = 'grabbing';
+      startX = e.pageX - slider.offsetLeft;
+      scrollLeft = slider.scrollLeft;
+    });
+    slider.addEventListener('mouseleave', () => {
+      isDown = false;
+      slider.style.cursor = '';
+    });
+    slider.addEventListener('mouseup', () => {
+      isDown = false;
+      slider.style.cursor = '';
+    });
+    slider.addEventListener('mousemove', (e) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - slider.offsetLeft;
+      const walk = (x - startX) * 1.5;
+      slider.scrollLeft = scrollLeft - walk;
     });
   });
 })();

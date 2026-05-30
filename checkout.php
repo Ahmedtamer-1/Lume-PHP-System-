@@ -197,6 +197,23 @@ require_once __DIR__ . '/includes/header.php';
 
 // ── Success Page ──
 if ($showSuccess):
+    // Fetch order details for Pixel Purchase event
+    $stmt = db()->prepare('SELECT * FROM orders WHERE id = ?');
+    $stmt->execute([$successId]);
+    $order = $stmt->fetch();
+    
+    $orderTotal = 0;
+    $numItems = 0;
+    $productIds = [];
+    
+    if ($order) {
+        $orderTotal = (float)$order['total'];
+        $itemStmt = db()->prepare('SELECT product_id, quantity FROM order_items WHERE order_id = ?');
+        $itemStmt->execute([$successId]);
+        $orderItems = $itemStmt->fetchAll();
+        $numItems = array_sum(array_column($orderItems, 'quantity'));
+        $productIds = array_values(array_unique(array_column($orderItems, 'product_id')));
+    }
 ?>
 <section class="lume-section container" style="text-align:center;padding:200px 0">
     <div style="max-width:520px;margin:0 auto">
@@ -205,10 +222,27 @@ if ($showSuccess):
         </div>
         <p class="lume-section__eyebrow">Thank You</p>
         <h1 class="lume-section__title">Order Confirmed</h1>
-        <p style="color:var(--muted);margin:16px auto;max-width:400px;line-height:1.7">Your order <strong style="color:var(--gold)">#<?= h($successId) ?></strong> has been received. We'll send you a confirmation email shortly.</p>
+        <p style="color:var(--muted);margin:16px auto;max-width:400px;line-height:1.7">Your order <strong style="color:var(--gold)">#<?= h($order['order_number'] ?? $successId) ?></strong> has been received. We'll send you a confirmation email shortly.</p>
         <a href="<?= SITE_URL ?>/shop.php" class="lume-btn lume-btn--solid" style="margin-top:32px">Continue Shopping</a>
     </div>
 </section>
+
+<?php if ($orderTotal > 0): ?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof fbq === 'function') {
+        fbq('track', 'Purchase', {
+            value: <?= json_encode($orderTotal) ?>,
+            currency: '<?= h(currency_symbol()) ?>',
+            num_items: <?= json_encode($numItems) ?>,
+            content_ids: <?= json_encode(array_map('strval', $productIds)) ?>,
+            content_type: 'product'
+        });
+    }
+});
+</script>
+<?php endif; ?>
+
 <?php
     require_once __DIR__ . '/includes/footer.php';
     exit;
@@ -322,10 +356,12 @@ endif;
 
 <script id="checkout-config" type="application/json">
 <?= json_encode([
-    'subtotal' => $subtotal,
-    'freeShippingOver' => $freeShippingOver,
-    'codFee' => $codFee,
-    'currency' => currency_symbol()
+    'subtotal'        => $subtotal,
+    'freeShippingOver'=> $freeShippingOver,
+    'codFee'          => $codFee,
+    'currency'        => currency_symbol(),
+    'num_items'       => (int)array_sum(array_column($items, 'quantity')),
+    'product_ids'     => array_values(array_unique(array_column($items, 'product_id'))),
 ]) ?>
 </script>
 <script src="<?= SITE_URL ?>/assets/js/checkout.js"></script>

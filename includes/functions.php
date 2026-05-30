@@ -360,6 +360,14 @@ function get_products(array $opts = []): array
         $where[] = 'c.slug = ?';
         $params[] = $opts['category_slug'];
     }
+    if (!empty($opts['category_id'])) {
+        $where[] = 'c.id = ?';
+        $params[] = (int)$opts['category_id'];
+    }
+    if (!empty($opts['exclude_id'])) {
+        $where[] = 'p.id != ?';
+        $params[] = (int)$opts['exclude_id'];
+    }
     if (!empty($opts['search'])) {
         $where[] = '(p.name LIKE ? OR p.description LIKE ?)';
         $term = '%' . $opts['search'] . '%';
@@ -416,16 +424,16 @@ function currency_symbol(): string
 
 function money(float $amount): string
 {
-    return currency_symbol() . number_format($amount, 2);
+    return '<span class="lume-price-val">' . number_format($amount, 2) . '</span><span class="lume-price-cur">' . currency_symbol() . '</span>';
 }
 
 function product_price(array $product): string
 {
     if (!empty($product['sale_price'])) {
-        return '<span class="price-sale">' . money((float) $product['sale_price']) . '</span>'
-            . '<span class="price-original">' . money((float) $product['price']) . '</span>';
+        return '<div class="price-original">' . money((float) $product['price']) . '</div>'
+             . '<div class="price-sale">' . money((float) $product['sale_price']) . '</div>';
     }
-    return '<span class="price">' . money((float) $product['price']) . '</span>';
+    return '<div class="price">' . money((float) $product['price']) . '</div>';
 }
 
 function asset_url(?string $path): string

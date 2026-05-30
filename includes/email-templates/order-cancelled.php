@@ -36,9 +36,9 @@ $muted    = '#888880';
         <!-- Hero -->
         <tr>
           <td style="padding:40px 40px 24px;text-align:center;">
-            <div style="width:56px;height:56px;border-radius:50%;border:2px solid #555;display:inline-flex;align-items:center;justify-content:center;margin-bottom:20px;">
-              <span style="font-size:22px;color:#888;">✕</span>
-            </div>
+            <table width="56" height="56" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 20px;border-radius:50%;border:2px solid #555;display:inline-table;"><tr><td align="center" valign="middle" style="width:56px;height:56px;text-align:center;vertical-align:middle;">
+              <span style="font-size:22px;color:#888;line-height:1;display:block;">&#10005;</span>
+            </td></tr></table>
             <h2 style="margin:0 0 8px;font-size:20px;font-weight:400;color:<?= $text ?>;">Your order has been cancelled</h2>
             <p style="margin:0;color:<?= $muted ?>;font-size:14px;line-height:1.7;max-width:400px;margin:8px auto 0;">
               Order <strong style="color:<?= $gold ?>;"><?= htmlspecialchars($order['order_number']) ?></strong> has been cancelled.
