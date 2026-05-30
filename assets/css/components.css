@@ -431,8 +431,8 @@ select.lume-form__input{appearance:none;background-image:url("data:image/svg+xml
 }
 .lume-social-carousel__track {
     display: flex;
-    gap: 16px;
-    padding: 0 24px;
+    gap: 0;
+    padding: 0;
 }
 .lume-social-carousel__item {
     flex: 0 0 auto;
