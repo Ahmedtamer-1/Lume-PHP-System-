@@ -113,7 +113,7 @@ function loadCart(){
           <button class="lume-cart-item-remove" onclick="removeCartItem(${i.id})">Remove</button>
         </div>
       </div>`).join('');
-    cartTotal.textContent=data.total_display;
+    cartTotal.innerHTML=data.total_display;
     cartFooter.style.display='block';
     updateBadge(data.count);
   }).catch(()=>{});
