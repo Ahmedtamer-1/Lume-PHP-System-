@@ -262,7 +262,6 @@ function saveSection(e) {
     });
     document.getElementById('form-settings').value = JSON.stringify(settingsObj);
     
-    const form = document.getElementById('section-form');
     const fd = new FormData(form);
     const id = fd.get('section_id');
     fd.append('action', id > 0 ? 'update' : 'add');
