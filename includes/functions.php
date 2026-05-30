@@ -360,6 +360,14 @@ function get_products(array $opts = []): array
         $where[] = 'c.slug = ?';
         $params[] = $opts['category_slug'];
     }
+    if (!empty($opts['category_id'])) {
+        $where[] = 'c.id = ?';
+        $params[] = (int)$opts['category_id'];
+    }
+    if (!empty($opts['exclude_id'])) {
+        $where[] = 'p.id != ?';
+        $params[] = (int)$opts['exclude_id'];
+    }
     if (!empty($opts['search'])) {
         $where[] = '(p.name LIKE ? OR p.description LIKE ?)';
         $term = '%' . $opts['search'] . '%';

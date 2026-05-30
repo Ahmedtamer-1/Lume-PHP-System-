@@ -260,6 +260,36 @@ $sizeChart = $product['size_chart'] ?? null;
     </div>
 </section>
 
+<?php
+// Fetch recommendations
+$recommendations = get_products([
+    'category_id' => $product['category_id'],
+    'exclude_id'  => $product['id'],
+    'limit'       => 4
+]);
+?>
+<?php if (!empty($recommendations)): ?>
+<section class="lume-section container" style="padding-top: 0; margin-top: 64px;">
+    <h2 class="lume-section__title" style="margin-bottom: 32px; font-size: clamp(1.2rem, 2vw, 1.5rem);">You Might Also Like</h2>
+    <div class="lume-products">
+        <?php foreach ($recommendations as $rec): ?>
+        <div class="lume-product-card lume-reveal">
+            <a href="<?= SITE_URL ?>/product.php?slug=<?= h($rec['slug']) ?>" class="lume-product-card__img-wrap">
+                <img src="<?= product_image($rec) ?>" alt="<?= h($rec['name']) ?>" class="lume-product-card__img" loading="lazy">
+                <?php if (!empty($rec['sale_price'])): ?>
+                <span class="lume-product-card__badge">Sale</span>
+                <?php endif; ?>
+            </a>
+            <div class="lume-product-card__body">
+                <h3 class="lume-product-card__name"><a href="<?= SITE_URL ?>/product.php?slug=<?= h($rec['slug']) ?>"><?= h($rec['name']) ?></a></h3>
+                <div class="lume-product-card__price"><?= product_price($rec) ?></div>
+            </div>
+        </div>
+        <?php endforeach; ?>
+    </div>
+</section>
+<?php endif; ?>
+
 <!-- Lightbox -->
 <div class="lume-lightbox" id="lume-lightbox">
     <button class="lume-lightbox__close" id="lightbox-close" aria-label="Close">✕</button>

@@ -447,3 +447,53 @@ select.lume-form__input{appearance:none;background-image:url("data:image/svg+xml
 .lume-social-carousel__item:hover img {
     filter: brightness(0.85);
 }
+
+/* TESTIMONIALS CAROUSEL */
+.lume-testimonials {
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 32px;
+}
+.lume-testimonials::-webkit-scrollbar {
+    display: none;
+}
+.lume-testimonials__track {
+    display: flex;
+    gap: 24px;
+    padding: 0 24px;
+}
+.lume-testimonial-card {
+    flex: 0 0 auto;
+    width: 320px;
+    padding: 32px;
+    background: rgba(245, 245, 240, 0.03);
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    transition: transform 0.4s ease, border-color 0.4s ease;
+}
+.lume-testimonial-card:hover {
+    border-color: var(--gold);
+    transform: translateY(-4px);
+}
+.lume-testimonial-card__stars {
+    color: var(--gold);
+    font-size: 1.2rem;
+    letter-spacing: 2px;
+}
+.lume-testimonial-card__text {
+    font-size: 1rem;
+    line-height: 1.6;
+    font-style: italic;
+    color: var(--cream);
+    flex: 1;
+}
+.lume-testimonial-card__author {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    font-weight: 600;
+}

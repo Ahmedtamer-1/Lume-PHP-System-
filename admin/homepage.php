@@ -362,6 +362,8 @@ function onTypeChange() {
         html += '<div class="admin-form__group"><label>Background Color</label><input type="color" data-setting="bg_color" value="#ffffff" style="height:38px;padding:2px"></div>';
     } else if (type === 'social_carousel') {
         html += '<div class="admin-form__group"><label>Carousel Images (One URL per line)</label><textarea data-setting="images" rows="5" placeholder="/assets/images/social1.jpg\n/assets/images/social2.jpg"></textarea></div>';
+    } else if (type === 'testimonials') {
+        html += '<div class="admin-form__group"><label>Reviews (One per line: Text | Author | Stars)</label><textarea data-setting="reviews" rows="5" placeholder="Amazing quality! | John Doe | 5\nFits perfectly | Jane Smith | 4"></textarea></div>';
     } else {
         html = '<div style="font-size:0.8rem;color:var(--a-muted)">No specific extra settings for this section type.</div>';
     }

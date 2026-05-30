@@ -221,6 +221,46 @@ foreach ($sections as $section):
 </section>
 <?php break;
 
+        // ═══════════════════════════════════════
+        // TESTIMONIALS CAROUSEL
+        // ═══════════════════════════════════════
+        case 'testimonials':
+            $reviewsText = $sett['reviews'] ?? '';
+            $reviewsList = array_filter(array_map('trim', explode("\n", $reviewsText)));
+            if (empty($reviewsList)) break;
+?>
+<section class="lume-section container">
+    <?php if (!empty($section['title'])): ?>
+    <div class="lume-section--center">
+        <h2 class="lume-section__title lume-reveal"><?= h($section['title']) ?></h2>
+        <?php if (!empty($section['subtitle'])): ?>
+        <p class="lume-section__subtitle lume-reveal"><?= h($section['subtitle']) ?></p>
+        <?php endif; ?>
+    </div>
+    <?php endif; ?>
+    
+    <div class="lume-testimonials lume-reveal" style="margin-top: <?= empty($section['title']) ? '0' : '48px' ?>;">
+        <div class="lume-testimonials__track">
+            <?php foreach ($reviewsList as $rev): 
+                $parts = array_map('trim', explode('|', $rev));
+                if (count($parts) < 2) continue;
+                $text = $parts[0];
+                $author = $parts[1];
+                $stars = isset($parts[2]) ? (int)$parts[2] : 5;
+            ?>
+            <div class="lume-testimonial-card">
+                <div class="lume-testimonial-card__stars">
+                    <?= str_repeat('★', $stars) ?><?= str_repeat('☆', 5 - $stars) ?>
+                </div>
+                <p class="lume-testimonial-card__text">"<?= h($text) ?>"</p>
+                <p class="lume-testimonial-card__author">— <?= h($author) ?></p>
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</section>
+<?php break;
+
     endswitch;
 endforeach;
 ?>
