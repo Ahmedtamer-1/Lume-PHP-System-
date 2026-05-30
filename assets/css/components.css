@@ -92,7 +92,7 @@
     font-size: 1rem;
     font-weight: 400;
     margin: 0;
-    text-transform: lowercase;
+    text-transform: capitalize;
     flex: 1;
     padding-right: 16px;
     line-height: 1.4;
