@@ -119,17 +119,18 @@
 }
 .price-original {
     color: var(--muted);
-    text-decoration: line-through;
     margin-bottom: 2px;
     opacity: 0.7;
 }
 .price-original .lume-price-val {
     font-size: .75rem;
     font-weight: 400;
+    text-decoration: line-through;
 }
 .price-original .lume-price-cur {
     font-size: .55rem;
     font-weight: 400;
+    text-decoration: line-through;
 }
 
 .lume-price-val {
@@ -246,8 +247,40 @@ select.lume-form__input{appearance:none;background-image:url("data:image/svg+xml
 .lume-btn{display:inline-block;padding:14px 36px;border:1px solid var(--cream);color:var(--cream);background:transparent;font-size:.75rem;text-transform:uppercase;letter-spacing:.15em;transition:all .3s;text-align:center}
 .lume-btn:hover{background:var(--terracotta);border-color:var(--terracotta)}
 .lume-btn--full{width:100%}
-.lume-btn--solid{background:var(--terracotta);border-color:var(--terracotta)}
-.lume-btn--solid:hover{background:transparent}
+.lume-btn--solid {
+    background: transparent;
+    border-color: var(--gold);
+    color: var(--gold);
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    font-weight: 600;
+}
+.lume-btn--solid::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 0%;
+    background: var(--gold);
+    transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: -1;
+}
+.lume-btn--solid:not(:disabled):hover::before {
+    height: 100%;
+}
+.lume-btn--solid:not(:disabled):hover {
+    color: var(--bg);
+    border-color: var(--gold);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(200,184,154,0.25);
+}
+.lume-btn:disabled {
+    background: rgba(136,136,128,0.1);
+    border-color: rgba(136,136,128,0.2);
+    color: var(--muted);
+}
 
 /* PRODUCT SINGLE */
 .lume-product-single{display:grid;grid-template-columns:1fr 1fr;gap:64px;padding:80px 0 80px}
