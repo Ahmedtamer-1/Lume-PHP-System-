@@ -158,6 +158,14 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 <body>
 
 <!-- SPLASH SCREEN -->
+<style>
+html.hide-splash #lume-splash { display: none !important; }
+</style>
+<script>
+if (sessionStorage.getItem('lumeSplashShown')) {
+    document.documentElement.classList.add('hide-splash');
+}
+</script>
 <div id="lume-splash" style="position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;transition:opacity 0.6s ease, visibility 0.6s ease;">
     <div style="text-align:center; animation: splashPulse 2s infinite ease-in-out;">
         <?php if ($siteLogo): ?>
@@ -179,16 +187,23 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 }
 </style>
 <script>
-window.addEventListener('load', function() {
-    // Give it a minimum show time of 400ms so it doesn't just flash on fast connections
-    setTimeout(function() {
-        var splash = document.getElementById('lume-splash');
-        if(splash) {
-            splash.classList.add('splash-hidden');
-            setTimeout(function() { splash.remove(); }, 600);
-        }
-    }, 400);
-});
+if (!sessionStorage.getItem('lumeSplashShown')) {
+    window.addEventListener('load', function() {
+        // Give it a minimum show time of 1000ms (1 second) for the animation
+        setTimeout(function() {
+            var splash = document.getElementById('lume-splash');
+            if(splash) {
+                splash.classList.add('splash-hidden');
+                setTimeout(function() { splash.remove(); }, 600);
+            }
+            sessionStorage.setItem('lumeSplashShown', 'true');
+        }, 1000);
+    });
+} else {
+    // If already shown, remove it from DOM immediately so it doesn't block interactions
+    var splash = document.getElementById('lume-splash');
+    if(splash) splash.remove();
+}
 </script>
 
 <!-- Film Grain Overlay -->

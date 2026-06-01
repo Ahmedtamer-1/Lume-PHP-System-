@@ -326,46 +326,74 @@ function deleteMedia() {
     });
 }
 
-// ── Upload ──
+// ── Upload Queue ──
+let uploadQueue = [];
+let totalUploads = 0;
+let currentUploadIndex = 0;
+
 function uploadFiles(files) {
     if (!files.length) return;
-    performUpload(files);
+    
+    const wasEmpty = uploadQueue.length === 0;
+    for (let i = 0; i < files.length; i++) {
+        uploadQueue.push(files[i]);
+    }
+    
+    if (wasEmpty) {
+        totalUploads = uploadQueue.length;
+        currentUploadIndex = 0;
+        document.getElementById('media-upload-progress').style.display = 'block';
+        processNextUpload();
+    } else {
+        totalUploads += files.length;
+    }
 }
 
-function performUpload(files) {
-    const fd = new FormData();
-    fd.append('action', 'upload');
-    for (let i = 0; i < files.length; i++) {
-        fd.append('files[]', files[i]);
-    }
-
+function processNextUpload() {
     const progress = document.getElementById('media-upload-progress');
     const fill     = document.getElementById('upload-progress-fill');
     const text     = document.getElementById('upload-progress-text');
-    progress.style.display = 'block';
-    fill.style.width = '10%';
-    text.textContent = 'Uploading ' + files.length + ' file(s)…';
+
+    if (uploadQueue.length === 0) {
+        fill.style.width = '100%';
+        text.textContent = 'All uploads complete!';
+        setTimeout(() => { 
+            progress.style.display = 'none'; 
+            fill.style.width = '0'; 
+            loadMedia();
+        }, 2000);
+        return;
+    }
+
+    const file = uploadQueue.shift();
+    currentUploadIndex++;
+
+    const fd = new FormData();
+    fd.append('action', 'upload');
+    fd.append('files[]', file);
 
     const xhr = new XMLHttpRequest();
     xhr.open('POST', BASE + '/api/media.php');
     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    
     xhr.upload.onprogress = e => {
         if (e.lengthComputable) {
-            const pct = Math.round((e.loaded / e.total) * 100);
-            fill.style.width = pct + '%';
-            text.textContent = 'Uploading… ' + pct + '%';
+            const fileProgress = e.loaded / e.total;
+            const overallProgress = ((currentUploadIndex - 1 + fileProgress) / totalUploads) * 100;
+            fill.style.width = overallProgress + '%';
+            text.textContent = `Uploading file ${currentUploadIndex} of ${totalUploads} (${file.name})… ${Math.round(fileProgress * 100)}%`;
         }
     };
+    
     xhr.onload = () => {
-        fill.style.width = '100%';
-        text.textContent = 'Upload complete!';
-        setTimeout(() => { progress.style.display = 'none'; fill.style.width = '0'; }, 2000);
-        loadMedia();
+        processNextUpload();
     };
+    
     xhr.onerror = () => {
-        text.textContent = 'Upload failed.';
-        setTimeout(() => progress.style.display = 'none', 3000);
+        console.error('Upload failed for', file.name);
+        processNextUpload();
     };
+    
     xhr.send(fd);
 }
 
