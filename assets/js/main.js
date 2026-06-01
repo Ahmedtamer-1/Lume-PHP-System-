@@ -162,12 +162,12 @@ function initReveal(){
   const cards=document.querySelectorAll('.lume-product-card');
   cards.forEach(el=>el.classList.add('js-hidden'));
   const obs=new IntersectionObserver((entries)=>{
-    entries.forEach(e=>{if(e.isIntersecting){e.target.classList.remove('js-hidden');e.target.classList.add('visible');obs.unobserve(e.target);}});
+    entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target);}});
   },{threshold:0.1,rootMargin:'0px 0px -40px 0px'});
   els.forEach(el=>obs.observe(el));
   const cardObs=new IntersectionObserver((entries)=>{
     const visible=entries.filter(e=>e.isIntersecting);
-    visible.forEach((e,i)=>{setTimeout(()=>{e.target.classList.remove('js-hidden');e.target.classList.add('visible');cardObs.unobserve(e.target);},i*120);});
+    visible.forEach((e,i)=>{setTimeout(()=>{e.target.classList.add('visible');cardObs.unobserve(e.target);},i*120);});
   },{threshold:0.08,rootMargin:'0px 0px -20px 0px'});
   cards.forEach(el=>cardObs.observe(el));
 }
