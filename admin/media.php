@@ -120,35 +120,90 @@ let allMedia = [];
 let selectedMediaIds = [];
 let currentMediaId = null;
 let searchTimer;
-
+let currentPage = 1;
+let totalPages = 1;
+let isLoading = false;
+let currentSearch = '';
 
 // ── Load media ──
-function loadMedia(search = '') {
-    const url = BASE + '/api/media.php?page=1' + (search ? '&search=' + encodeURIComponent(search) : '');
+function loadMedia(search = '', page = 1, append = false) {
+    if (isLoading) return;
+    isLoading = true;
+    currentSearch = search;
+    
+    const url = BASE + '/api/media.php?page=' + page + (search ? '&search=' + encodeURIComponent(search) : '');
+    
+    if (!append) {
+        document.getElementById('media-grid').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--a-muted)">Loading...</div>';
+    } else {
+        const loader = document.createElement('div');
+        loader.id = 'media-loader';
+        loader.style.cssText = 'grid-column:1/-1;text-align:center;padding:20px;color:var(--a-muted)';
+        loader.innerText = 'Loading more...';
+        document.getElementById('media-grid').appendChild(loader);
+    }
+    
     fetch(url, {headers:{'X-Requested-With':'XMLHttpRequest'}})
     .then(r => r.json()).then(data => {
+        isLoading = false;
         if (!data.success) return;
-        allMedia = data.items;
+        
+        const loader = document.getElementById('media-loader');
+        if (loader) loader.remove();
+
+        currentPage = data.page;
+        totalPages = data.pages;
+
+        if (append) {
+            allMedia = allMedia.concat(data.items);
+        } else {
+            allMedia = data.items;
+        }
+
         document.getElementById('media-count').textContent = data.total + ' items';
-        renderGrid();
-    });
+        renderGrid(append, data.items);
+    }).catch(() => { isLoading = false; });
 }
 
-function renderGrid() {
+function renderGrid(append = false, newItems = []) {
     const grid = document.getElementById('media-grid');
     if (!allMedia.length) {
         grid.innerHTML = '<div class="admin-empty" style="grid-column:1/-1"><div class="admin-empty__icon">🖼️</div><p class="admin-empty__text">No media files yet. Upload your first one!</p></div>';
         return;
     }
-    grid.innerHTML = allMedia.map(m => `
+    
+    const itemsToRender = append ? newItems : allMedia;
+    const html = itemsToRender.map(m => {
+        // Use thumb.php for much faster loading
+        const thumbUrl = BASE + '/thumb.php?src=' + encodeURIComponent(m.filepath) + '&w=300';
+        return `
         <div class="media-grid__item ${selectedMediaIds.includes(m.id) ? 'selected' : ''}" data-id="${m.id}" onclick="openMediaDetail(${m.id})">
             <div class="media-picker__check ${selectedMediaIds.includes(m.id) ? 'checked' : ''}" onclick="toggleSelectMedia(event, ${m.id})">✓</div>
-            <img src="${m.url}" alt="${m.alt_text || m.filename}" loading="lazy">
+            <img src="${thumbUrl}" alt="${m.alt_text || m.filename}" loading="lazy">
             <div class="media-grid__item__name">${m.filename}</div>
         </div>
-    `).join('');
+        `;
+    }).join('');
+
+    if (append) {
+        grid.insertAdjacentHTML('beforeend', html);
+    } else {
+        grid.innerHTML = html;
+    }
     updateBulkActionBar();
 }
+
+// ── Infinite Scroll Observer ──
+const observer = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting && currentPage < totalPages && !isLoading) {
+        loadMedia(currentSearch, currentPage + 1, true);
+    }
+}, { rootMargin: '100px' });
+
+// Add a sentry element at the bottom of the page to trigger the observer
+const sentry = document.createElement('div');
+document.body.appendChild(sentry);
+observer.observe(sentry);
 
 function toggleSelectMedia(e, id) {
     e.stopPropagation();

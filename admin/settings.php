@@ -671,26 +671,59 @@ document.querySelectorAll('input[data-color-key]').forEach(picker => {
 
 // Media Picker
 let pickerTargetField = null;
+let pickerCurrentPage = 1;
+let pickerTotalPages = 1;
+let pickerIsLoading = false;
 
 function openSettingsMediaPicker(field) {
     pickerTargetField = field;
+    pickerCurrentPage = 1;
+    pickerTotalPages = 1;
+    
     const grid = document.getElementById('picker-grid');
     grid.innerHTML = '<div style="text-align:center;padding:24px;color:var(--a-muted);grid-column:1/-1">Loading…</div>';
     document.getElementById('media-picker-modal').style.display = 'flex';
 
-    fetch('<?= SITE_URL ?>/api/media.php?page=1', {headers:{'X-Requested-With':'XMLHttpRequest'}})
-    .then(r => r.json()).then(data => {
-        if (!data.items || !data.items.length) {
-            grid.innerHTML = '<div style="text-align:center;padding:24px;color:var(--a-muted);grid-column:1/-1">No media uploaded yet.</div>';
-            return;
+    grid.onscroll = null;
+    loadSettingsMediaPickerPage(1);
+    
+    grid.onscroll = function() {
+        if (grid.scrollTop + grid.clientHeight >= grid.scrollHeight - 100 && !pickerIsLoading && pickerCurrentPage < pickerTotalPages) {
+            loadSettingsMediaPickerPage(pickerCurrentPage + 1);
         }
-        grid.innerHTML = data.items.map(m => `
+    };
+}
+
+function loadSettingsMediaPickerPage(page) {
+    pickerIsLoading = true;
+    fetch('<?= SITE_URL ?>/api/media.php?page=' + page, {headers:{'X-Requested-With':'XMLHttpRequest'}})
+    .then(r => r.json()).then(data => {
+        pickerIsLoading = false;
+        const grid = document.getElementById('picker-grid');
+        
+        if (page === 1) {
+            if (!data.items || !data.items.length) {
+                grid.innerHTML = '<div style="text-align:center;padding:24px;color:var(--a-muted);grid-column:1/-1">No media uploaded yet.</div>';
+                return;
+            }
+            grid.innerHTML = '';
+        }
+        
+        pickerCurrentPage = data.page;
+        pickerTotalPages = data.pages;
+        
+        const html = data.items.map(m => {
+            const thumbUrl = '<?= SITE_URL ?>/thumb.php?src=' + encodeURIComponent(m.filepath) + '&w=200';
+            return `
             <div class="media-grid__item" onclick="pickSettingsMedia('${m.filepath}')">
-                <img src="${m.url}" alt="${m.filename}" loading="lazy">
+                <img src="${thumbUrl}" alt="${m.filename}" loading="lazy">
                 <div class="media-grid__item__name">${m.filename}</div>
             </div>
-        `).join('');
-    });
+            `;
+        }).join('');
+        
+        grid.insertAdjacentHTML('beforeend', html);
+    }).catch(() => { pickerIsLoading = false; });
 }
 
 function pickSettingsMedia(filepath) {

@@ -95,29 +95,95 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
             $skipped  = 0;
             $rowNumber = 1;
             $_SESSION['skip_log'] = [];
+            $map = array_flip($header);
+            $isShopify = isset($map['Handle']) && isset($map['Title']);
+            $currentOptions = []; // Store Option Names for the current Handle
 
             while (($row = fgetcsv($handle)) !== false) {
                 $rowNumber++;
-                if (count($row) < 5) { 
-                    $skipped++; 
-                    $_SESSION['skip_log'][] = "Row $rowNumber skipped: Less than 5 columns (found " . count($row) . ").";
-                    continue; 
-                }
 
-                $name       = trim($row[0] ?? '');
-                $slug       = trim($row[1] ?? '');
-                $category   = trim($row[2] ?? '');
-                $price      = (float)($row[3] ?? 0);
-                $salePrice  = trim($row[4] ?? '') !== '' ? (float)$row[4] : null;
-                $sku        = trim($row[5] ?? '');
-                $stock      = (int)($row[6] ?? 0);
-                $isFeatured = (int)($row[7] ?? 0);
-                $description= trim($row[8] ?? '');
-                $vSize      = trim($row[9] ?? '');
-                $vColor     = trim($row[10] ?? '');
-                $vColorHex  = trim($row[11] ?? '');
-                $vPriceOver = trim($row[12] ?? '') !== '' ? (float)trim($row[12]) : null;
-                $vImage     = trim($row[13] ?? '');
+                if ($isShopify) {
+                    $get = function($col) use ($row, $map) {
+                        return isset($map[$col], $row[$map[$col]]) ? trim($row[$map[$col]]) : '';
+                    };
+
+                    $handleVal = $get('Handle');
+                    $title = $get('Title');
+                    
+                    if (!$handleVal) {
+                        $skipped++;
+                        continue;
+                    }
+
+                    // Update option names if this is a main row
+                    if ($title) {
+                        $currentOptions = [];
+                        for ($i=1; $i<=3; $i++) {
+                            $optName = $get("Option$i Name");
+                            if ($optName) $currentOptions[$i] = strtolower($optName);
+                        }
+                    }
+
+                    $name = $title;
+                    $slug = $handleVal;
+                    $category = $get('Product Category');
+                    $price = $get('Variant Compare At Price');
+                    $salePrice = $get('Variant Price');
+                    
+                    if (!$price && $salePrice) {
+                        $price = $salePrice;
+                        $salePrice = null;
+                    }
+
+                    $price = (float)$price;
+                    $salePrice = $salePrice ? (float)$salePrice : null;
+                    
+                    $sku = $get('Variant SKU');
+                    if (strpos($sku, "'") === 0) $sku = substr($sku, 1); // remove leading quote from excel
+
+                    $stock = (int)$get('Variant Inventory Qty');
+                    $isFeatured = 0;
+                    $description = $get('Body (HTML)');
+                    
+                    $vSize = '';
+                    $vColor = '';
+                    for ($i=1; $i<=3; $i++) {
+                        $optName = $currentOptions[$i] ?? '';
+                        $optVal = $get("Option$i Value");
+                        if (strpos($optName, 'size') !== false) $vSize = $optVal;
+                        elseif (strpos($optName, 'color') !== false) $vColor = $optVal;
+                    }
+                    
+                    $vColorHex = '';
+                    $vPriceOver = $salePrice ? $salePrice : ($price ? $price : null);
+                    // Image: if main row, 'Image Src' is product image. Variant image is 'Variant Image'.
+                    $vImage = $get('Variant Image') ?: ($title ? '' : $get('Image Src'));
+                    $productImage = $title ? $get('Image Src') : '';
+
+                } else {
+                    // Default Format
+                    if (count($row) < 5) { 
+                        $skipped++; 
+                        $_SESSION['skip_log'][] = "Row $rowNumber skipped: Less than 5 columns.";
+                        continue; 
+                    }
+
+                    $name       = trim($row[0] ?? '');
+                    $slug       = trim($row[1] ?? '');
+                    $category   = trim($row[2] ?? '');
+                    $price      = (float)($row[3] ?? 0);
+                    $salePrice  = trim($row[4] ?? '') !== '' ? (float)$row[4] : null;
+                    $sku        = trim($row[5] ?? '');
+                    $stock      = (int)($row[6] ?? 0);
+                    $isFeatured = (int)($row[7] ?? 0);
+                    $description= trim($row[8] ?? '');
+                    $vSize      = trim($row[9] ?? '');
+                    $vColor     = trim($row[10] ?? '');
+                    $vColorHex  = trim($row[11] ?? '');
+                    $vPriceOver = trim($row[12] ?? '') !== '' ? (float)trim($row[12]) : null;
+                    $vImage     = trim($row[13] ?? '');
+                    $productImage = trim($row[13] ?? ''); // In old format it was the same column? Wait no, let's just let it be empty if it's a variant row.
+                }
 
                 if (!$name && !$slug) { 
                     $skipped++; 
@@ -145,16 +211,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                         // Find or skip category
                         $catId = null;
                         if ($category) {
+                            // Extract just the last part of category if it's breadcrumbs (Shopify)
+                            $catParts = explode('>', $category);
+                            $cleanCat = trim(end($catParts));
+                            
                             $catStmt = db()->prepare('SELECT id FROM categories WHERE name = ? OR slug = ?');
-                            $catStmt->execute([$category, $category]);
+                            $catStmt->execute([$cleanCat, $cleanCat]);
                             $catRow = $catStmt->fetch();
                             $catId = $catRow ? $catRow['id'] : null;
+                            
+                            // Optionally create category if missing
+                            if (!$catId && $cleanCat) {
+                                $catSlug = strtolower(preg_replace('/[^a-z0-9]+/i', '-', $cleanCat));
+                                db()->prepare('INSERT INTO categories (name, slug) VALUES (?,?)')->execute([$cleanCat, $catSlug]);
+                                $catId = db()->lastInsertId();
+                            }
                         }
 
                         db()->prepare(
-                            'INSERT INTO products (category_id, name, slug, description, price, sale_price, sku, stock, is_featured, is_active)
-                             VALUES (?,?,?,?,?,?,?,?,?,1)'
-                        )->execute([$catId, $name, $slug, $description, $price, $salePrice, $sku, $stock, $isFeatured]);
+                            'INSERT INTO products (category_id, name, slug, description, price, sale_price, sku, stock, is_featured, is_active, image)
+                             VALUES (?,?,?,?,?,?,?,?,?,1,?)'
+                        )->execute([$catId, $name, $slug, $description, $price, $salePrice, $sku, $stock, $isFeatured, $productImage]);
                         $productId = db()->lastInsertId();
                         $imported++;
                     }
@@ -173,10 +250,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                 }
 
                 // If variant info is present, insert variant
-                if ($productId && ($vSize || $vColor || $sku)) {
+                if ($productId && ($vSize || $vColor || ($sku && !$name))) {
                     try {
-                        // Use <=> for null-safe equality check if values can be null, but let's just use the exact strings.
-                        // Ensure we insert strings, not nulls, if the DB expects them.
                         $vSizeVal = $vSize !== '' ? $vSize : null;
                         $vColorVal = $vColor !== '' ? $vColor : null;
                         
@@ -191,7 +266,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                         // Mark product as having variants
                         db()->prepare('UPDATE products SET has_variants = 1 WHERE id = ?')->execute([$productId]);
                     } catch (Exception $e) {
-                        // Ignore individual variant insertion errors so the import continues
                         error_log("Variant insertion error for product $productId: " . $e->getMessage());
                     }
                 }

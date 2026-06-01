@@ -436,6 +436,14 @@ function product_price(array $product): string
     return '<div class="price">' . money((float) $product['price']) . '</div>';
 }
 
+function thumb_url(?string $path, int $width = 400): string
+{
+    if (empty($path)) return SITE_URL . '/assets/images/placeholder.jpg';
+    if (strpos($path, 'http') === 0) return $path;
+    // Don't thumbnail SVGs or very specific things if needed, but for now apply to all
+    return SITE_URL . '/thumb.php?src=' . urlencode(ltrim($path, '/')) . '&w=' . $width;
+}
+
 function asset_url(?string $path): string
 {
     if (empty($path)) return SITE_URL . '/assets/images/placeholder.jpg';
@@ -443,10 +451,10 @@ function asset_url(?string $path): string
     return SITE_URL . '/' . ltrim($path, '/');
 }
 
-function product_image(array $product): string
+function product_image(array $product, int $width = 600): string
 {
     $img = !empty($product['image']) ? h($product['image']) : '';
-    return asset_url($img);
+    return thumb_url($img, $width);
 }
 
 // ════════════════════════════════════════════════════════

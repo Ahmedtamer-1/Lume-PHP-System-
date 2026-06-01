@@ -622,12 +622,15 @@ function openMediaPicker(mode){
     mediaPickerCallback=mode;
     multiSelectMode = isMultiMode(mode);
     selectedMediaPaths = [];
+    pickerCurrentPage = 1;
+    pickerTotalPages = 1;
     document.getElementById('media-picker-overlay').style.display='flex';
     
     // Update title and show/hide multi-select controls
     const title = document.getElementById('media-picker-title');
     const countEl = document.getElementById('media-selected-count');
     const doneBtn = document.getElementById('media-done-btn');
+    const grid = document.getElementById('media-picker-grid');
     
     if(multiSelectMode) {
         if(title) title.textContent = 'Select Images (click multiple)';
@@ -639,7 +642,14 @@ function openMediaPicker(mode){
         if(doneBtn) doneBtn.style.display = 'none';
     }
     
-    loadMedia();
+    grid.onscroll = null;
+    loadMedia(1, false);
+    
+    grid.onscroll = function() {
+        if (grid.scrollTop + grid.clientHeight >= grid.scrollHeight - 100 && !pickerIsLoading && pickerCurrentPage < pickerTotalPages) {
+            loadMedia(pickerCurrentPage + 1, true);
+        }
+    };
 }
 
 function closeMediaPicker(){
@@ -650,13 +660,27 @@ function closeMediaPicker(){
     selectedMediaPaths=[];
 }
 
-function loadMedia(){
-    fetch(MEDIA_API+'?page=1',{headers:{'X-Requested-With':'XMLHttpRequest'}})
+let pickerCurrentPage = 1;
+let pickerTotalPages = 1;
+let pickerIsLoading = false;
+
+function loadMedia(page = 1, append = false){
+    if (pickerIsLoading) return;
+    pickerIsLoading = true;
+    fetch(MEDIA_API+'?page=' + page,{headers:{'X-Requested-With':'XMLHttpRequest'}})
     .then(r=>r.json()).then(d=>{
+        pickerIsLoading = false;
         if(!d.success)return;
-        allMedia=d.items;
-        renderMediaGrid('');
-    });
+        pickerCurrentPage = d.page;
+        pickerTotalPages = d.pages;
+        if (append) {
+            allMedia = allMedia.concat(d.items);
+        } else {
+            allMedia = d.items;
+        }
+        const search = document.getElementById('media-search-input')?.value?.trim().toLowerCase() || '';
+        renderMediaGrid(search);
+    }).catch(() => { pickerIsLoading = false; });
 }
 
 function renderMediaGrid(search){
@@ -666,10 +690,11 @@ function renderMediaGrid(search){
     if(!items.length){grid.innerHTML='<p style="color:var(--a-muted);grid-column:1/-1;text-align:center;padding:30px">No media found.</p>';return;}
     
     grid.innerHTML=items.map(m=>{
+        const thumbUrl = BASE + '/thumb.php?src=' + encodeURIComponent(m.filepath) + '&w=200';
         const isSelected = selectedMediaPaths.some(s => s.filepath === m.filepath);
         const checkmark = multiSelectMode ? `<div class="media-picker__check ${isSelected?'checked':''}" data-fp="${esc(m.filepath)}">✓</div>` : '';
         return `<div class="media-picker__item ${isSelected?'selected':''}" onclick="handleMediaClick('${esc(m.filepath)}','${esc(m.url)}')">
-            <img src="${m.url}" alt="${esc(m.filename)}" loading="lazy">
+            <img src="${thumbUrl}" alt="${esc(m.filename)}" loading="lazy">
             <span>${esc(m.filename)}</span>
             ${checkmark}
         </div>`;
