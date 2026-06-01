@@ -204,7 +204,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                 $skipMsg = "<br><small>Skip Details (first 10):<br>- " . implode("<br>- ", array_slice($_SESSION['skip_log'], 0, 10)) . "</small>";
             }
             $success = "Imported {$imported} products" . ($skipped ? ", skipped {$skipped} rows" : '') . '.' . $skipMsg;
-        } else {   }
+        }
+    }
 }
 
 require_once __DIR__ . '/includes/header.php';
