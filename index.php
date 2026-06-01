@@ -37,7 +37,7 @@ foreach ($sections as $section):
         // HERO
         // ═══════════════════════════════════════
         case 'hero':
-            $bgImage = $sett['bg_image'] ?? $section['image'] ?? 'assets/images/hero-bg.png';
+            $bgImage = !empty($section['image']) ? $section['image'] : ($sett['bg_image'] ?? 'assets/images/hero-bg.png');
             $showParticles = isset($sett['show_particles']) ? filter_var($sett['show_particles'], FILTER_VALIDATE_BOOLEAN) : true;
             $textColor = $sett['text_color'] ?? '#ffffff';
             $btnColor = $sett['button_color'] ?? '#ffffff';
@@ -108,7 +108,7 @@ foreach ($sections as $section):
         // ═══════════════════════════════════════
         case 'brand_story':
             $eyebrow  = $sett['eyebrow'] ?? 'Our Story';
-            $storyImg = $sett['image'] ?? $section['image'] ?? 'assets/images/hero-bg.png';
+            $storyImg = !empty($section['image']) ? $section['image'] : ($sett['image'] ?? 'assets/images/hero-bg.png');
 ?>
 <section class="lume-section container" id="story" style="<?= $padStyle ?>">
     <div class="lume-about-intro">
@@ -133,7 +133,7 @@ foreach ($sections as $section):
         // IMAGE BANNER
         // ═══════════════════════════════════════
         case 'image_banner':
-            $bannerImg = $section['image'] ?: ($sett['image'] ?? 'assets/images/hero-bg.png');
+            $bannerImg = !empty($section['image']) ? $section['image'] : ($sett['image'] ?? 'assets/images/hero-bg.png');
 ?>
 <section class="lume-section" style="padding:0; <?= $padStyle ?>">
     <div style="position:relative;aspect-ratio:21/9;overflow:hidden;background:#111">

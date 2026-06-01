@@ -32,6 +32,7 @@ $settingKeys = [
     // Footer sections
     'show_marquee', 'marquee_text',
     'show_newsletter', 'newsletter_title', 'newsletter_eyebrow', 'newsletter_subtitle',
+    'footer_brand_text',
     // Email / SMTP
     'email_enabled',
     'email_from_name', 'email_from_address',
@@ -278,6 +279,15 @@ require_once __DIR__ . '/includes/header.php';
                     <label>Subtitle</label>
                     <input type="text" name="newsletter_subtitle" value="<?= h($s('newsletter_subtitle', 'Early access. Exclusive drops. Members-only offers.')) ?>">
                 </div>
+            </div>
+        </div>
+
+        <div style="margin-top:24px;padding:16px;border:1px solid var(--a-border);border-radius:var(--a-radius)">
+            <h3 style="font-size:0.85rem;margin-bottom:12px;font-weight:600">Brand Info</h3>
+            <div class="admin-form__group">
+                <label>Footer Brand Text</label>
+                <textarea name="footer_brand_text" rows="3"><?= h($s('footer_brand_text', 'A luxury fashion brand born in Egypt. Each piece is a ritual — a moment of light in your everyday.')) ?></textarea>
+                <span class="admin-form__hint">Short blurb that appears below the logo in the footer.</span>
             </div>
         </div>
     </div>

@@ -52,7 +52,7 @@ $marqueeText    = setting('marquee_text', '');
                 <p class="lume-logo-text lume-footer__brand-logo"><?= h(setting('site_name', SITE_NAME)) ?></p>
             <?php endif; ?>
             <p class="lume-footer__brand-text">
-                A luxury fashion brand born in Egypt. Each piece is a ritual — a moment of light in your everyday.
+                <?= nl2br(h(setting('footer_brand_text', 'A luxury fashion brand born in Egypt. Each piece is a ritual — a moment of light in your everyday.'))) ?>
             </p>
             <div class="lume-footer__social">
                 <?php $ig = setting('instagram_url'); if ($ig): ?>
