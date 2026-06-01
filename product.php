@@ -175,12 +175,12 @@ $sizeChart = $product['size_chart'] ?? null;
             <div class="lume-product-single__desc"><?= nl2br(h($product['description'] ?? '')) ?></div>
 
             <?php if (!empty($product['material']) || !empty($product['gem'])): ?>
-            <div class="lume-product-single__details" style="margin-bottom:32px; font-size:.85rem; color:var(--muted);">
+            <div class="lume-product-single__details" style="margin-bottom:32px; font-size:.85rem; border-top:1px solid var(--border); padding-top:20px;">
                 <?php if (!empty($product['material'])): ?>
-                <p style="margin-bottom:8px"><strong>Material:</strong> <?= h($product['material']) ?></p>
+                <p style="margin-bottom:8px; color:var(--cream);"><span style="color:var(--gold); text-transform:uppercase; letter-spacing:.1em; font-size:.7rem; margin-right:8px;">Material</span><?= h($product['material']) ?></p>
                 <?php endif; ?>
                 <?php if (!empty($product['gem'])): ?>
-                <p style="margin-bottom:0"><strong>Gem:</strong> <?= h($product['gem']) ?></p>
+                <p style="margin-bottom:0; color:var(--cream);"><span style="color:var(--gold); text-transform:uppercase; letter-spacing:.1em; font-size:.7rem; margin-right:8px;">Gem</span><?= h($product['gem']) ?></p>
                 <?php endif; ?>
             </div>
             <?php endif; ?>
