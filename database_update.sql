@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS `ad_spend` (
   `campaign_name` varchar(100) DEFAULT NULL,
   `amount` decimal(10,2) NOT NULL,
   `date_logged` date NOT NULL,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
