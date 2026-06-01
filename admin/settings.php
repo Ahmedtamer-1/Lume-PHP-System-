@@ -66,6 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $newName = $field . '_' . time() . '.' . $ext;
                 $dest    = ROOT_PATH . '/assets/images/' . $newName;
                 if (move_uploaded_file($file['tmp_name'], $dest)) {
+                    optimize_image_in_place($dest, 1200, 85);
                     $url = 'assets/images/' . $newName;
                     db()->prepare('INSERT INTO settings (key_name, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value)')
                          ->execute([$field, $url]);

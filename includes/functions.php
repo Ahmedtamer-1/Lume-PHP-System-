@@ -630,6 +630,79 @@ function cart_restore_from_order(int $orderId): void
 // ════════════════════════════════════════════════════════
 // MEDIA LIBRARY
 // ════════════════════════════════════════════════════════
+
+/**
+ * Resize and compress an image file in-place using GD library.
+ * Automatically called during uploads to save disk space and improve load times.
+ */
+function optimize_image_in_place(string $filepath, int $maxWidth = 1600, int $quality = 85): bool
+{
+    if (!file_exists($filepath) || !function_exists('getimagesize')) {
+        return false;
+    }
+
+    $info = @getimagesize($filepath);
+    if (!$info) return false;
+
+    list($width, $height, $type) = $info;
+    
+    // Only optimize JPEGs, PNGs, and WEBPs. Skip SVG and GIF.
+    if (!in_array($type, [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_WEBP])) {
+        return false;
+    }
+
+    $newWidth = $width;
+    $newHeight = $height;
+
+    if ($width > $maxWidth) {
+        $newWidth = $maxWidth;
+        $newHeight = (int)($height * ($maxWidth / $width));
+    }
+
+    $srcImg = null;
+    switch ($type) {
+        case IMAGETYPE_JPEG: $srcImg = @imagecreatefromjpeg($filepath); break;
+        case IMAGETYPE_PNG:  $srcImg = @imagecreatefrompng($filepath); break;
+        case IMAGETYPE_WEBP: $srcImg = @imagecreatefromwebp($filepath); break;
+    }
+
+    if (!$srcImg) return false;
+
+    $dstImg = imagecreatetruecolor($newWidth, $newHeight);
+
+    if ($type === IMAGETYPE_PNG || $type === IMAGETYPE_WEBP) {
+        imagealphablending($dstImg, false);
+        imagesavealpha($dstImg, true);
+        $transparent = imagecolorallocatealpha($dstImg, 255, 255, 255, 127);
+        imagefilledrectangle($dstImg, 0, 0, $newWidth, $newHeight, $transparent);
+    } else {
+        $white = imagecolorallocate($dstImg, 255, 255, 255);
+        imagefill($dstImg, 0, 0, $white);
+    }
+
+    imagecopyresampled($dstImg, $srcImg, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+
+    $success = false;
+    switch ($type) {
+        case IMAGETYPE_JPEG:
+            $success = imagejpeg($dstImg, $filepath, $quality);
+            break;
+        case IMAGETYPE_PNG:
+            $pngQuality = round((100 - $quality) / 10);
+            $pngQuality = max(0, min(9, $pngQuality));
+            $success = imagepng($dstImg, $filepath, $pngQuality);
+            break;
+        case IMAGETYPE_WEBP:
+            $success = imagewebp($dstImg, $filepath, $quality);
+            break;
+    }
+
+    imagedestroy($srcImg);
+    imagedestroy($dstImg);
+
+    return $success;
+}
+
 function media_upload(array $file, ?int $userId = null): ?array
 {
     if ($file['error'] !== UPLOAD_ERR_OK)
@@ -659,6 +732,8 @@ function media_upload(array $file, ?int $userId = null): ?array
 
     if (!move_uploaded_file($file['tmp_name'], $dest))
         return null;
+        
+    optimize_image_in_place($dest);
     $size = filesize($dest);
 
     // Get dimensions for images

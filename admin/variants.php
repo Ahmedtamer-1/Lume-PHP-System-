@@ -66,11 +66,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $imagePath = $_POST['existing_image_path'] !== '' ? $_POST['existing_image_path'] : null;
             }
 
-            if (!empty($_FILES['image_file']['tmp_name']) && $_FILES['image_file']['error'] === UPLOAD_ERR_OK) {
+            if (!empty($_FILES['image_file']['tmp_name'])) {
                 $ext = pathinfo($_FILES['image_file']['name'], PATHINFO_EXTENSION);
-                $newName = 'variant_' . time() . '_' . uniqid() . '.' . $ext;
+                $newName = 'var_' . time() . '.' . $ext;
                 $dest = ROOT_PATH . '/assets/images/products/' . $newName;
                 if (move_uploaded_file($_FILES['image_file']['tmp_name'], $dest)) {
+                    optimize_image_in_place($dest);
                     $imagePath = 'assets/images/products/' . $newName;
                 }
             }
