@@ -186,9 +186,8 @@
 .lume-filter-btn:hover::after,.lume-filter-btn.active::after{width:100%;left:0}
 .lume-filter-btn:hover,.lume-filter-btn.active{border-color:var(--terracotta);color:var(--cream);background:rgba(196,113,74,.1)}
 
-/* LAYOUT TOGGLE (mobile only) */
-.lume-layout-toggle{display:none;gap:8px;justify-content:center;margin-bottom:16px}
-.lume-layout-toggle .lume-filter-btn{display:flex;align-items:center;justify-content:center;padding:8px 14px}
+
+
 
 
 /* MARQUEE */
@@ -416,8 +415,6 @@ select.lume-form__input{appearance:none;background-image:url("data:image/svg+xml
 .lume-header__logo .lume-logo-text{font-size:1.2rem}
 .lume-section{padding:60px 0}
 .lume-products{grid-template-columns:repeat(2,minmax(0,1fr));gap:0}
-.lume-products.grid-1{grid-template-columns:1fr}
-.lume-layout-toggle{display:flex}
 .lume-footer__grid{grid-template-columns:1fr}
 .lume-cart-table__hide-mobile{display:none}
 .lume-cart-summary{margin-left:0}

@@ -100,20 +100,7 @@ foreach ($products as $p) {
         <?php endforeach; ?>
     </div>
 
-    <!-- Grid layout toggle (mobile only) -->
-    <div class="lume-layout-toggle">
-        <button id="toggle-grid-1" class="lume-filter-btn" title="1 per row" aria-label="Single column">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                <rect x="3" y="3" width="18" height="18" rx="2"/>
-            </svg>
-        </button>
-        <button id="toggle-grid-2" class="lume-filter-btn active" title="2 per row" aria-label="Double column">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                <rect x="3" y="3" width="7" height="18" rx="1"/>
-                <rect x="14" y="3" width="7" height="18" rx="1"/>
-            </svg>
-        </button>
-    </div>
+
 
     <?php if (empty($products)): ?>
     <p style="text-align:center;color:var(--muted);padding:60px 0;font-size:.9rem">No products found.</p>
@@ -165,24 +152,6 @@ foreach ($products as $p) {
 
 </section>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    var btn1 = document.getElementById('toggle-grid-1');
-    var btn2 = document.getElementById('toggle-grid-2');
-    var grid = document.getElementById('product-grid');
-    if (!btn1 || !btn2 || !grid) return;
 
-    btn1.addEventListener('click', function () {
-        grid.classList.add('grid-1');
-        btn1.classList.add('active');
-        btn2.classList.remove('active');
-    });
-    btn2.addEventListener('click', function () {
-        grid.classList.remove('grid-1');
-        btn2.classList.add('active');
-        btn1.classList.remove('active');
-    });
-});
-</script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
