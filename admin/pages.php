@@ -10,7 +10,7 @@ $success = '';
 $error   = '';
 
 $pageSettings = [
-    'page_about_hero_image', 'page_about_eyebrow', 'page_about_title', 'page_about_text',
+    'page_about_header_title', 'page_about_hero_image', 'page_about_eyebrow', 'page_about_title', 'page_about_text',
     'page_about_values_eyebrow', 'page_about_values_title',
     'page_about_value_1_title', 'page_about_value_1_text',
     'page_about_value_2_title', 'page_about_value_2_text',
@@ -91,6 +91,12 @@ require_once __DIR__ . '/includes/header.php';
         <div class="admin-settings-section" style="margin-bottom:32px;padding:24px;background:var(--a-surface);border:1px solid var(--a-border);border-radius:var(--a-radius)">
             <h2 style="font-size:1rem;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--a-border)">Intro Section</h2>
             
+            <div class="admin-form__group">
+                <label>Page Header Title</label>
+                <input type="text" name="page_about_header_title" value="<?= h($s('page_about_header_title', 'Our Story')) ?>">
+                <span class="admin-form__hint" style="color:var(--a-accent)">The top banner title of the page.</span>
+            </div>
+
             <div class="admin-form__group">
                 <label>Hero Image</label>
                 <div class="admin-img-upload">

@@ -7,7 +7,7 @@ require_once __DIR__ . '/includes/header.php';
 
 <section class="lume-page-header">
     <div class="container">
-        <h1 class="lume-page-header__title">Our Story</h1>
+        <h1 class="lume-page-header__title"><?= h(setting('page_about_header_title', 'Our Story')) ?></h1>
         <p class="lume-page-header__breadcrumb"><a href="<?= SITE_URL ?>/">Home</a> / About</p>
     </div>
 </section>
