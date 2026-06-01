@@ -90,7 +90,7 @@ foreach ($products as $p) {
 <section class="lume-section container" id="shop-grid">
 
     <!-- Category filters -->
-    <div class="lume-filters lume-reveal">
+    <div class="lume-filters">
         <a href="<?= SITE_URL ?>/shop.php" class="lume-filter-btn <?= !$categorySlug ? 'active' : '' ?>">All</a>
         <?php foreach ($categories as $cat): ?>
         <a href="<?= SITE_URL ?>/shop.php?category=<?= h($cat['slug']) ?>"

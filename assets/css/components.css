@@ -357,10 +357,11 @@ select.lume-form__input{appearance:none;background-image:url("data:image/svg+xml
 
 /* REVEAL ANIMATIONS */
 .lume-reveal,.lume-reveal-left,.lume-reveal-right,.lume-reveal-scale{transition:opacity .8s cubic-bezier(.25,.46,.45,.94),transform .8s cubic-bezier(.25,.46,.45,.94)}
-.lume-reveal.js-hidden{opacity:0;transform:translateY(40px)}
-.lume-reveal-left.js-hidden{opacity:0;transform:translateX(-40px)}
-.lume-reveal-right.js-hidden{opacity:0;transform:translateX(40px)}
-.lume-reveal-scale.js-hidden{opacity:0;transform:scale(.9)}
+.lume-reveal.js-hidden{opacity:0;transform:translateY(40px);pointer-events:none}
+.lume-reveal-left.js-hidden{opacity:0;transform:translateX(-40px);pointer-events:none}
+.lume-reveal-right.js-hidden{opacity:0;transform:translateX(40px);pointer-events:none}
+.lume-reveal-scale.js-hidden{opacity:0;transform:scale(.9);pointer-events:none}
+.lume-product-card.js-hidden{pointer-events:none}
 .lume-reveal.visible,.lume-reveal-left.visible,.lume-reveal-right.visible,.lume-reveal-scale.visible{opacity:1;transform:translate(0,0) scale(1)}
 
 /* ── Page Transition Curtain ── */
