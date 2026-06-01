@@ -157,6 +157,40 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 </head>
 <body>
 
+<!-- SPLASH SCREEN -->
+<div id="lume-splash" style="position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;transition:opacity 0.6s ease, visibility 0.6s ease;">
+    <div style="text-align:center; animation: splashPulse 2s infinite ease-in-out;">
+        <?php if ($siteLogo): ?>
+            <img src="<?= h(asset_url($siteLogo)) ?>" alt="Loading..." style="max-height:80px;width:auto">
+        <?php else: ?>
+            <span class="lume-logo-text" style="font-size:2.5rem;color:var(--gold)"><?= h(setting('site_name', SITE_NAME)) ?></span>
+        <?php endif; ?>
+    </div>
+</div>
+<style>
+@keyframes splashPulse {
+    0% { opacity: 0.5; transform: scale(0.95); }
+    50% { opacity: 1; transform: scale(1.02); }
+    100% { opacity: 0.5; transform: scale(0.95); }
+}
+.splash-hidden {
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+</style>
+<script>
+window.addEventListener('load', function() {
+    // Give it a minimum show time of 400ms so it doesn't just flash on fast connections
+    setTimeout(function() {
+        var splash = document.getElementById('lume-splash');
+        if(splash) {
+            splash.classList.add('splash-hidden');
+            setTimeout(function() { splash.remove(); }, 600);
+        }
+    }, 400);
+});
+</script>
+
 <!-- Film Grain Overlay -->
 <div class="lume-grain-overlay" aria-hidden="true"></div>
 
