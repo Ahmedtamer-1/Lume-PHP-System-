@@ -418,7 +418,12 @@ select.lume-form__input{appearance:none;background-image:url("data:image/svg+xml
 .lume-newsletter__form{flex-direction:column}
 .lume-newsletter__input{border-right:1px solid var(--bg);border-bottom:none}
 }
-@media(max-width:480px){.lume-products{grid-template-columns:1fr}}
+@media(max-width:480px){
+    .lume-products.grid-1{grid-template-columns:1fr}
+}
+@media(max-width:768px){
+    .lume-products.grid-1{grid-template-columns:1fr}
+}
 
 /* SOCIAL CAROUSEL */
 .lume-social-carousel {

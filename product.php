@@ -174,6 +174,16 @@ $sizeChart = $product['size_chart'] ?? null;
 
             <div class="lume-product-single__desc"><?= nl2br(h($product['description'] ?? '')) ?></div>
 
+            <?php if (!empty($product['material']) || !empty($product['gem'])): ?>
+            <div class="lume-product-single__details" style="margin-bottom:32px; font-size:.85rem; color:var(--muted);">
+                <?php if (!empty($product['material'])): ?>
+                <p style="margin-bottom:8px"><strong style="color:var(--text, #111);">Material:</strong> <?= h($product['material']) ?></p>
+                <?php endif; ?>
+                <?php if (!empty($product['gem'])): ?>
+                <p style="margin-bottom:0"><strong style="color:var(--text, #111);">Gem:</strong> <?= h($product['gem']) ?></p>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
             <?php if ($hasVariants && !empty($colors)): ?>
             <!-- Color Selector -->
             <div class="lume-variant-section">

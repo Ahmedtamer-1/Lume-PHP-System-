@@ -64,3 +64,8 @@ CREATE TABLE IF NOT EXISTS `ad_spend` (
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 7. Add material and gem columns to products
+ALTER TABLE `products`
+  ADD COLUMN IF NOT EXISTS `material` varchar(255) DEFAULT NULL AFTER `size_chart`,
+  ADD COLUMN IF NOT EXISTS `gem` varchar(255) DEFAULT NULL AFTER `material`;

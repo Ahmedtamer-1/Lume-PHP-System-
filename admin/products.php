@@ -91,6 +91,16 @@ require_once __DIR__ . '/includes/header.php';
                 <label>Description</label>
                 <textarea name="description"></textarea>
             </div>
+            <div class="admin-form__row">
+                <div class="admin-form__group">
+                    <label>Material <span class="admin-form__hint">(Optional)</span></label>
+                    <input type="text" name="material" placeholder="e.g. 18k Gold">
+                </div>
+                <div class="admin-form__group">
+                    <label>Gem <span class="admin-form__hint">(Optional)</span></label>
+                    <input type="text" name="gem" placeholder="e.g. Diamond">
+                </div>
+            </div>
 
             <!-- SEO Fields -->
             <div style="margin:8px 0;padding:16px;background:var(--a-bg);border:1px solid var(--a-border);border-radius:4px">

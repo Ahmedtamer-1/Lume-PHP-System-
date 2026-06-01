@@ -203,6 +203,8 @@ function showProductForm(product){
         f.querySelector('[name=slug]').value=product.slug||'';
         f.querySelector('[name=category_id]').value=product.category_id||'';
         f.querySelector('[name=description]').value=product.description||'';
+        f.querySelector('[name=material]').value=product.material||'';
+        f.querySelector('[name=gem]').value=product.gem||'';
         f.querySelector('[name=meta_title]').value=product.meta_title||'';
         f.querySelector('[name=meta_desc]').value=product.meta_desc||'';
         f.querySelector('[name=price]').value=product.price||'';

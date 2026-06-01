@@ -89,6 +89,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'save_product') {
     $isActive    = isset($_POST['is_active']) ? 1 : 0;
     $hasVariants = isset($_POST['has_variants']) ? 1 : 0;
     $sizeChart   = trim($_POST['size_chart'] ?? '') ?: null;
+    $material    = trim($_POST['material'] ?? '') ?: null;
+    $gem         = trim($_POST['gem'] ?? '') ?: null;
 
     if (!$slug && $name) {
         $slug = strtolower(preg_replace('/[^a-z0-9]+/i', '-', $name));
@@ -146,17 +148,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'save_product') {
             }
             db()->prepare(
                 'UPDATE products SET category_id=?, name=?, slug=?, description=?, meta_title=?, meta_desc=?, price=?, sale_price=?, cost_price=?,
-                 sku=?, stock=?, is_featured=?, is_active=?, has_variants=?, image=?, gallery=?, size_chart=? WHERE id=?'
+                 sku=?, stock=?, is_featured=?, is_active=?, has_variants=?, image=?, gallery=?, size_chart=?, material=?, gem=? WHERE id=?'
             )->execute([$categoryId, $name, $slug, $description, $metaTitle, $metaDesc, $price, $salePrice, $costPrice,
-                        $sku, $stock, $isFeatured, $isActive, $hasVariants, $imagePath, $galleryEncoded, $sizeChart, $id]);
+                        $sku, $stock, $isFeatured, $isActive, $hasVariants, $imagePath, $galleryEncoded, $sizeChart, $material, $gem, $id]);
             log_activity('update_product', 'product', $id);
             echo json_encode(['success' => true, 'message' => 'Product updated!', 'product_id' => $id]);
         } else {
             db()->prepare(
-                'INSERT INTO products (category_id, name, slug, description, meta_title, meta_desc, price, sale_price, cost_price, sku, stock, is_featured, is_active, has_variants, image, gallery, size_chart)
-                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
+                'INSERT INTO products (category_id, name, slug, description, meta_title, meta_desc, price, sale_price, cost_price, sku, stock, is_featured, is_active, has_variants, image, gallery, size_chart, material, gem)
+                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
             )->execute([$categoryId, $name, $slug, $description, $metaTitle, $metaDesc, $price, $salePrice, $costPrice,
-                        $sku, $stock, $isFeatured, $isActive, $hasVariants, $imagePath, $galleryEncoded, $sizeChart]);
+                        $sku, $stock, $isFeatured, $isActive, $hasVariants, $imagePath, $galleryEncoded, $sizeChart, $material, $gem]);
             $newId = (int)db()->lastInsertId();
             log_activity('create_product', 'product', $newId);
             echo json_encode(['success' => true, 'message' => 'Product added!', 'product_id' => $newId]);

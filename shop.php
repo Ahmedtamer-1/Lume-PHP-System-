@@ -14,7 +14,7 @@ $categories = get_categories();
 $products = get_products([
     'category_slug' => $categorySlug,
     'search' => $search,
-    'limit' => 24,
+    'limit' => 10000,
 ]);
 $productIds = array_column($products, 'id');
 $productColors = get_product_color_swatches($productIds);
@@ -112,11 +112,27 @@ foreach ($products as $p) {
 </section>
 
 <section class="lume-section container" id="shop-grid">
-    <div class="lume-filters lume-reveal">
-        <a href="<?= SITE_URL ?>/shop.php" class="lume-filter-btn <?= !$categorySlug ? 'active' : '' ?>">All</a>
-        <?php foreach ($categories as $cat): ?>
-        <a href="<?= SITE_URL ?>/shop.php?category=<?= h($cat['slug']) ?>" class="lume-filter-btn <?= $categorySlug === $cat['slug'] ? 'active' : '' ?>"><?= h($cat['name']) ?></a>
-        <?php endforeach; ?>
+    <div class="shop-controls" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap: 16px; margin-bottom: 32px;">
+        <div class="lume-filters lume-reveal" style="margin-bottom:0;">
+            <a href="<?= SITE_URL ?>/shop.php" class="lume-filter-btn <?= !$categorySlug ? 'active' : '' ?>">All</a>
+            <?php foreach ($categories as $cat): ?>
+            <a href="<?= SITE_URL ?>/shop.php?category=<?= h($cat['slug']) ?>" class="lume-filter-btn <?= $categorySlug === $cat['slug'] ? 'active' : '' ?>"><?= h($cat['name']) ?></a>
+            <?php endforeach; ?>
+        </div>
+        
+        <style>
+            @media(min-width: 769px) { .lume-layout-toggle { display: none !important; } }
+            .lume-layout-toggle button { cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 6px 12px; }
+            .lume-layout-toggle button svg { width: 16px; height: 16px; }
+        </style>
+        <div class="lume-layout-toggle lume-reveal" style="display: flex; gap: 8px;">
+            <button id="toggle-grid-1" class="lume-filter-btn" title="1 Product per row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
+            </button>
+            <button id="toggle-grid-2" class="lume-filter-btn active" title="2 Products per row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"></rect><rect x="14" y="3" width="7" height="18" rx="1"></rect></svg>
+            </button>
+        </div>
     </div>
 
     <?php if (empty($products)): ?>
@@ -169,5 +185,26 @@ foreach ($products as $p) {
     </div>
     <?php endif; ?>
 </section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btn1 = document.getElementById('toggle-grid-1');
+    const btn2 = document.getElementById('toggle-grid-2');
+    const productGrid = document.querySelector('.lume-products');
+
+    if(btn1 && btn2 && productGrid) {
+        btn1.addEventListener('click', function() {
+            productGrid.classList.add('grid-1');
+            btn1.classList.add('active');
+            btn2.classList.remove('active');
+        });
+        btn2.addEventListener('click', function() {
+            productGrid.classList.remove('grid-1');
+            btn2.classList.add('active');
+            btn1.classList.remove('active');
+        });
+    }
+});
+</script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
