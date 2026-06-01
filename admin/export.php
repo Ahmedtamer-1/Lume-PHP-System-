@@ -93,9 +93,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
             $header = fgetcsv($handle); // Skip header row
             $imported = 0;
             $skipped  = 0;
+            $rowNumber = 1;
+            $_SESSION['skip_log'] = [];
 
             while (($row = fgetcsv($handle)) !== false) {
-                if (count($row) < 5) { $skipped++; continue; }
+                $rowNumber++;
+                if (count($row) < 5) { 
+                    $skipped++; 
+                    $_SESSION['skip_log'][] = "Row $rowNumber skipped: Less than 5 columns (found " . count($row) . ").";
+                    continue; 
+                }
 
                 $name       = trim($row[0] ?? '');
                 $slug       = trim($row[1] ?? '');
@@ -106,47 +113,104 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                 $stock      = (int)($row[6] ?? 0);
                 $isFeatured = (int)($row[7] ?? 0);
                 $description= trim($row[8] ?? '');
+                $vSize      = trim($row[9] ?? '');
+                $vColor     = trim($row[10] ?? '');
+                $vColorHex  = trim($row[11] ?? '');
+                $vPriceOver = trim($row[12] ?? '') !== '' ? (float)trim($row[12]) : null;
+                $vImage     = trim($row[13] ?? '');
 
-                if (!$name || $price <= 0) { $skipped++; continue; }
+                if (!$name && !$slug) { 
+                    $skipped++; 
+                    $_SESSION['skip_log'][] = "Row $rowNumber skipped: Name and slug are both empty.";
+                    continue; 
+                }
 
                 // Auto-slug
-                if (!$slug) {
+                if ($name && !$slug) {
                     $slug = strtolower(preg_replace('/[^a-z0-9]+/i', '-', $name));
                     $slug = trim($slug, '-');
                 }
 
-                // Find or skip category
-                $catId = null;
-                if ($category) {
-                    $catStmt = db()->prepare('SELECT id FROM categories WHERE name = ? OR slug = ?');
-                    $catStmt->execute([$category, $category]);
-                    $catRow = $catStmt->fetch();
-                    $catId = $catRow ? $catRow['id'] : null;
+                $productId = null;
+
+                if ($name) {
+                    // Check duplicate slug
+                    $exists = db()->prepare('SELECT id FROM products WHERE slug = ?');
+                    $exists->execute([$slug]);
+                    $existing = $exists->fetch();
+
+                    if ($existing) {
+                        $productId = $existing['id'];
+                    } else {
+                        // Find or skip category
+                        $catId = null;
+                        if ($category) {
+                            $catStmt = db()->prepare('SELECT id FROM categories WHERE name = ? OR slug = ?');
+                            $catStmt->execute([$category, $category]);
+                            $catRow = $catStmt->fetch();
+                            $catId = $catRow ? $catRow['id'] : null;
+                        }
+
+                        db()->prepare(
+                            'INSERT INTO products (category_id, name, slug, description, price, sale_price, sku, stock, is_featured, is_active)
+                             VALUES (?,?,?,?,?,?,?,?,?,1)'
+                        )->execute([$catId, $name, $slug, $description, $price, $salePrice, $sku, $stock, $isFeatured]);
+                        $productId = db()->lastInsertId();
+                        $imported++;
+                    }
+                } else {
+                    // Name is empty, find product by slug
+                    $stmt = db()->prepare('SELECT id FROM products WHERE slug = ?');
+                    $stmt->execute([$slug]);
+                    $prod = $stmt->fetch();
+                    if ($prod) {
+                        $productId = $prod['id'];
+                    } else {
+                        $skipped++; 
+                        $_SESSION['skip_log'][] = "Row $rowNumber skipped: Variant row for slug '{$slug}' but parent product not found in database.";
+                        continue; // Product not found
+                    }
                 }
 
-                // Check duplicate slug
-                $exists = db()->prepare('SELECT id FROM products WHERE slug = ?');
-                $exists->execute([$slug]);
-                if ($exists->fetch()) {
-                    $slug .= '-' . bin2hex(random_bytes(2));
+                // If variant info is present, insert variant
+                if ($productId && ($vSize || $vColor || $sku)) {
+                    try {
+                        // Use <=> for null-safe equality check if values can be null, but let's just use the exact strings.
+                        // Ensure we insert strings, not nulls, if the DB expects them.
+                        $vSizeVal = $vSize !== '' ? $vSize : null;
+                        $vColorVal = $vColor !== '' ? $vColor : null;
+                        
+                        $vExists = db()->prepare('SELECT id FROM product_variants WHERE product_id = ? AND size <=> ? AND color_name <=> ?');
+                        $vExists->execute([$productId, $vSizeVal, $vColorVal]);
+                        if (!$vExists->fetch()) {
+                            db()->prepare(
+                                'INSERT INTO product_variants (product_id, size, color_name, color_hex, sku, price_override, stock, sort_order, is_active, image) VALUES (?,?,?,?,?,?,?,0,1,?)'
+                            )->execute([$productId, $vSizeVal, $vColorVal, $vColorHex !== '' ? $vColorHex : null, $sku !== '' ? $sku : null, $vPriceOver, $stock, $vImage !== '' ? $vImage : null]);
+                        }
+                        
+                        // Mark product as having variants
+                        db()->prepare('UPDATE products SET has_variants = 1 WHERE id = ?')->execute([$productId]);
+                    } catch (Exception $e) {
+                        // Ignore individual variant insertion errors so the import continues
+                        error_log("Variant insertion error for product $productId: " . $e->getMessage());
+                    }
                 }
-
-                db()->prepare(
-                    'INSERT INTO products (category_id, name, slug, description, price, sale_price, sku, stock, is_featured, is_active)
-                     VALUES (?,?,?,?,?,?,?,?,?,1)'
-                )->execute([$catId, $name, $slug, $description, $price, $salePrice, $sku, $stock, $isFeatured]);
-                $imported++;
             }
             fclose($handle);
-            $success = "Imported {$imported} products" . ($skipped ? ", skipped {$skipped} rows" : '') . '.';
-        }
-    }
+            
+            $skipMsg = '';
+            if (!empty($_SESSION['skip_log'])) {
+                // Show first 10 skip reasons
+                $skipMsg = "<br><small>Skip Details (first 10):<br>- " . implode("<br>- ", array_slice($_SESSION['skip_log'], 0, 10)) . "</small>";
+            }
+            $success = "Imported {$imported} products" . ($skipped ? ", skipped {$skipped} rows" : '') . '.' . $skipMsg;
+        } else {   }
 }
 
 require_once __DIR__ . '/includes/header.php';
 ?>
 
-<?php if ($success): ?><div class="admin-alert admin-alert--success"><?= h($success) ?></div><?php endif; ?>
+<?php if ($success): ?><div class="admin-alert admin-alert--success"><?= $success ?></div><?php endif; ?>
 <?php if ($error): ?><div class="admin-alert admin-alert--error"><?= h($error) ?></div><?php endif; ?>
 
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
@@ -194,7 +258,7 @@ require_once __DIR__ . '/includes/header.php';
         <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--a-border)">
             <p style="font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--a-gold);margin-bottom:8px">CSV Format</p>
             <p style="font-size:.78rem;color:var(--a-muted);line-height:1.6">
-                Columns: <code style="background:var(--a-bg);padding:2px 6px;border-radius:3px;font-size:.72rem">Name, Slug, Category, Price, Sale Price, SKU, Stock, Featured (0/1), Description</code>
+                Columns: <code style="background:var(--a-bg);padding:2px 6px;border-radius:3px;font-size:.72rem">Name, Slug, Category, Price, Sale Price, SKU, Stock, Featured (0/1), Description, Variant Size, Variant Color, Variant Color Hex, Variant Price Override, Variant Image</code>
             </p>
             <p style="font-size:.72rem;color:var(--a-muted);margin-top:8px">First row should be headers (it's skipped). Category should match an existing category name or slug.</p>
         </div>
