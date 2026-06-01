@@ -230,6 +230,11 @@ function showProductForm(product){
         // Size chart
         sizeChartPath=product.size_chart||'';
         renderSizeChartPreview();
+        // Material & gem
+        const matInput = f.querySelector('[name=material]');
+        const gemInput = f.querySelector('[name=gem]');
+        if(matInput) matInput.value = product.material||'';
+        if(gemInput) gemInput.value = product.gem||'';
     } else {
         document.getElementById('form-title').textContent='Add Product';
         f.querySelector('[name=id]').value='0';

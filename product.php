@@ -256,6 +256,23 @@ $sizeChart = $product['size_chart'] ?? null;
             <?php endif; ?>
             <p class="lume-product-single__sku" id="variant-sku" style="display:none"></p>
 
+            <?php if (!empty($product['material']) || !empty($product['gem'])): ?>
+            <div class="lume-product-single__details">
+                <?php if (!empty($product['material'])): ?>
+                <div class="lume-product-detail">
+                    <span class="lume-product-detail__label">Material</span>
+                    <span class="lume-product-detail__value"><?= h($product['material']) ?></span>
+                </div>
+                <?php endif; ?>
+                <?php if (!empty($product['gem'])): ?>
+                <div class="lume-product-detail">
+                    <span class="lume-product-detail__label">Gem / Stone</span>
+                    <span class="lume-product-detail__value"><?= h($product['gem']) ?></span>
+                </div>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
+
         </div><!-- /.lume-product-single__info -->
     </div>
 </section>

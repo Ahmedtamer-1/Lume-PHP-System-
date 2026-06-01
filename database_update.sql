@@ -29,7 +29,9 @@ ALTER TABLE `products`
   ADD COLUMN IF NOT EXISTS `cost_price` decimal(10,2) DEFAULT NULL AFTER `price`,
   ADD COLUMN IF NOT EXISTS `has_variants` tinyint(1) NOT NULL DEFAULT 0 AFTER `is_active`,
   ADD COLUMN IF NOT EXISTS `color_galleries` text DEFAULT NULL AFTER `updated_at`,
-  ADD COLUMN IF NOT EXISTS `size_chart` varchar(500) DEFAULT NULL AFTER `color_galleries`;
+  ADD COLUMN IF NOT EXISTS `size_chart` varchar(500) DEFAULT NULL AFTER `color_galleries`,
+  ADD COLUMN IF NOT EXISTS `material` varchar(255) DEFAULT NULL AFTER `size_chart`,
+  ADD COLUMN IF NOT EXISTS `gem` varchar(255) DEFAULT NULL AFTER `material`;
 
 
 -- 3. Add new columns to order_items table

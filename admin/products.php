@@ -163,6 +163,21 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
             </div>
 
+            <!-- Material & Gem Details -->
+            <div style="margin:8px 0;padding:16px;background:var(--a-bg);border:1px solid var(--a-border);border-radius:4px">
+                <p style="font-size:.72rem;font-weight:600;color:var(--a-accent);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px">💎 Product Details</p>
+                <div class="admin-form__row">
+                    <div class="admin-form__group">
+                        <label>Material <span style="font-weight:400;color:var(--a-muted)">(leave empty to hide)</span></label>
+                        <input type="text" name="material" placeholder="e.g. 18K Gold, Sterling Silver">
+                    </div>
+                    <div class="admin-form__group">
+                        <label>Gem / Stone <span style="font-weight:400;color:var(--a-muted)">(leave empty to hide)</span></label>
+                        <input type="text" name="gem" placeholder="e.g. Diamond, Ruby, Emerald">
+                    </div>
+                </div>
+            </div>
+
             <div style="display:flex;gap:24px;flex-wrap:wrap">
                 <div class="admin-form__check">
                     <input type="checkbox" name="is_featured" id="is_featured">

@@ -317,6 +317,10 @@ select.lume-form__input{appearance:none;background-image:url("data:image/svg+xml
 .lume-qty-btn:hover{border-color:var(--terracotta)}
 .lume-qty-val{font-size:1rem;min-width:32px;text-align:center}
 .lume-product-single__sku{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:24px}
+.lume-product-single__details{display:flex;flex-direction:column;gap:8px;margin-top:20px;padding:16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px}
+.lume-product-detail{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.lume-product-detail__label{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);flex-shrink:0}
+.lume-product-detail__value{font-size:.85rem;color:var(--text);font-weight:500;text-align:right}
 .lume-product-single__stock{font-size:.75rem;margin-top:8px}.lume-product-single__stock.in-stock{color:#2d7a4f}.lume-product-single__stock.out-of-stock{color:#c44a4a}
 
 /* CART PAGE */
