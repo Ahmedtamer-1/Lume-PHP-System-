@@ -12,8 +12,9 @@ require_once __DIR__ . '/includes/header.php';
 
 
 <div class="admin-toolbar">
-    <div class="admin-toolbar__left">
+    <div class="admin-toolbar__left" style="display:flex;align-items:center;gap:12px">
         <span style="font-size:.85rem;color:var(--a-muted)" id="media-count">Loading…</span>
+        <button class="admin-btn admin-btn--sm" id="btn-select-all" onclick="toggleSelectAll()" style="display:none">Select All</button>
     </div>
     <div class="admin-toolbar__right">
         <button class="admin-btn admin-btn--primary" id="btn-upload-media" onclick="document.getElementById('media-upload-input').click()">
@@ -216,14 +217,42 @@ function toggleSelectMedia(e, id) {
     renderGrid();
 }
 
+function toggleSelectAll() {
+    if (allMedia.length === 0) return;
+    
+    // Check if all currently loaded media are selected
+    const allLoadedIds = allMedia.map(m => m.id);
+    const allSelected = allLoadedIds.length > 0 && allLoadedIds.every(id => selectedMediaIds.includes(id));
+    
+    if (allSelected) {
+        selectedMediaIds = [];
+    } else {
+        // Only select the ones currently loaded in view
+        selectedMediaIds = [...allLoadedIds];
+    }
+    renderGrid();
+}
+
 function updateBulkActionBar() {
     const bar = document.getElementById('bulk-action-bar');
     const count = document.getElementById('bulk-count');
+    const selectAllBtn = document.getElementById('btn-select-all');
+    
     if (selectedMediaIds.length > 0) {
         bar.style.display = 'flex';
         count.innerText = selectedMediaIds.length + ' selected';
     } else {
         bar.style.display = 'none';
+    }
+    
+    // Update Select All button
+    if (allMedia.length > 0) {
+        selectAllBtn.style.display = 'block';
+        const allLoadedIds = allMedia.map(m => m.id);
+        const allSelected = allLoadedIds.length > 0 && allLoadedIds.every(id => selectedMediaIds.includes(id));
+        selectAllBtn.textContent = allSelected ? 'Deselect All' : 'Select All';
+    } else {
+        selectAllBtn.style.display = 'none';
     }
 }
 
