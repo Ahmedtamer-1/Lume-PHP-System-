@@ -98,10 +98,10 @@ require_once __DIR__ . '/includes/header.php';
 .media-upload-progress__fill{height:100%;background:var(--a-accent);width:0;transition:width .3s;border-radius:2px}
 .media-upload-progress__text{font-size:.72rem;color:var(--a-muted);margin-top:4px;display:block}
 .media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
-.media-grid__item{position:relative;aspect-ratio:1/1;overflow:hidden;border-radius:var(--a-radius);border:2px solid transparent;cursor:pointer;transition:all .2s;background:var(--a-surface)}
+.media-grid__item{position:relative;padding-top:100%;overflow:hidden;border-radius:var(--a-radius);border:2px solid transparent;cursor:pointer;transition:all .2s;background:var(--a-surface)}
 .media-grid__item:hover{border-color:var(--a-accent);transform:translateY(-2px)}
 .media-grid__item.selected{border-color:var(--a-accent);box-shadow:0 0 12px rgba(200,149,108,.3)}
-.media-grid__item img{width:100%;height:100%;object-fit:cover;display:block}
+.media-grid__item img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;display:block}
 .media-grid__item__name{position:absolute;bottom:0;left:0;right:0;padding:6px 8px;background:linear-gradient(transparent,rgba(0,0,0,.8));font-size:.6rem;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .media-picker__check{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.5);border:2px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:.6rem;color:transparent;transition:all .2s;z-index:2}
 .media-picker__check.checked{background:var(--a-accent,#c8956c);border-color:var(--a-accent,#c8956c);color:#fff}

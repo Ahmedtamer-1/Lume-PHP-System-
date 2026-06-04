@@ -14,7 +14,7 @@ $categories = get_categories();
 $products = get_products([
     'category_slug' => $categorySlug,
     'search' => $search,
-    'limit' => 24,
+    'limit' => 9999,
 ]);
 $productIds = array_column($products, 'id');
 $productColors = get_product_color_swatches($productIds);
