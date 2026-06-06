@@ -128,6 +128,25 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     }
     </style>
 
+    <?php
+    // Fetch active custom theme
+    $activeThemeCss = '';
+    try {
+        $activeThemeStmt = db()->query("SELECT css_content FROM store_themes WHERE is_active = 1 LIMIT 1");
+        if ($activeTheme = $activeThemeStmt->fetch()) {
+            $activeThemeCss = $activeTheme['css_content'];
+        }
+    } catch (Exception $e) {
+        // Ignore if table doesn't exist yet
+    }
+    ?>
+    <?php if ($activeThemeCss): ?>
+    <!-- Active Custom Theme -->
+    <style>
+<?= $activeThemeCss ?>
+    </style>
+    <?php endif; ?>
+
     <?php if ($pixelId): ?>
     <!-- Meta Pixel -->
     <script>

@@ -63,6 +63,10 @@ require_once __DIR__ . '/includes/header.php';
             <input type="hidden" name="id" value="0">
             <input type="hidden" name="existing_image" value="">
 
+            <!-- Basic Info Card -->
+            <div class="card" style="margin-bottom: 24px;">
+                <h3 style="font-size:14px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Basic Info</h3>
+
             <div class="admin-form__group">
                 <label>Product Name *</label>
                 <input type="text" name="name" required>
@@ -92,9 +96,11 @@ require_once __DIR__ . '/includes/header.php';
                 <textarea name="description"></textarea>
             </div>
 
-            <!-- SEO Fields -->
-            <div style="margin:8px 0;padding:16px;background:var(--a-bg);border:1px solid var(--a-border);border-radius:4px">
-                <p style="font-size:.72rem;font-weight:600;color:var(--a-accent);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px">🔍 SEO / Meta Tags</p>
+            </div>
+
+            <!-- SEO / Meta Card -->
+            <div class="card" style="margin-bottom: 24px;">
+                <h3 style="font-size:14px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">SEO / Meta Tags</h3>
                 <div class="admin-form__group">
                     <label>Meta Title <span style="font-weight:400;color:var(--a-muted)">(leave empty to auto-generate)</span></label>
                     <input type="text" name="meta_title" maxlength="200" placeholder="Product Name — Brand">
@@ -107,7 +113,10 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
             </div>
 
-            <div class="admin-form__row-3">
+            <!-- Pricing & Inventory Card -->
+            <div class="card" style="margin-bottom: 24px;">
+                <h3 style="font-size:14px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Pricing & Inventory</h3>
+                <div class="admin-form__row-3">
                 <div class="admin-form__group">
                     <label>Price (EGP) *</label>
                     <input type="number" name="price" step="0.01" min="0" required>
@@ -126,8 +135,15 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
             </div>
 
-            <!-- Main Image via Media Library -->
-            <div class="admin-form__group">
+            <!-- Media Card -->
+            <div class="card" id="media-upload-card" style="margin-bottom: 24px;">
+                <h3 style="font-size:14px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Media</h3>
+                
+                <div id="product-media-dropzone" class="media-dropzone" style="border: 2px dashed var(--border); border-radius: var(--radius); padding: 30px; text-align: center; margin-bottom: 20px; cursor: pointer; transition: all 0.3s;">
+                    <p style="color: var(--text-muted); pointer-events: none;">Drag & drop images here to upload to media library</p>
+                </div>
+
+                <div class="admin-form__group">
                 <label>Product Image</label>
                 <div style="display:flex;align-items:flex-start;gap:16px">
                     <div id="main-img-preview" style="width:90px;height:90px;border-radius:6px;border:1px solid var(--a-border);background:var(--a-bg,#111);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;color:var(--a-muted);font-size:.72rem;text-align:center">No image</div>
@@ -163,9 +179,12 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
             </div>
 
-            <!-- Material & Gem Details -->
-            <div style="margin:8px 0;padding:16px;background:var(--a-bg);border:1px solid var(--a-border);border-radius:4px">
-                <p style="font-size:.72rem;font-weight:600;color:var(--a-accent);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px">💎 Product Details</p>
+                </div>
+            </div>
+
+            <!-- Product Details Card -->
+            <div class="card" style="margin-bottom: 24px;">
+                <h3 style="font-size:14px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Product Details</h3>
                 <div class="admin-form__row">
                     <div class="admin-form__group">
                         <label>Material <span style="font-weight:400;color:var(--a-muted)">(leave empty to hide)</span></label>
@@ -193,9 +212,12 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
             </div>
 
-            <div style="display:flex;gap:12px;margin-top:12px">
-                <button type="submit" class="admin-btn admin-btn--primary">Save Product</button>
-                <button type="button" class="admin-btn" onclick="showListView()">Cancel</button>
+            </div>
+
+            <!-- Sticky Action Bar -->
+            <div style="position: sticky; bottom: 0; background: var(--bg-surface); padding: 16px; border-top: 1px solid var(--border); z-index: 100; margin-left: -32px; margin-right: -32px; display: flex; gap: 12px; justify-content: flex-end; box-shadow: 0 -4px 12px rgba(0,0,0,0.05);">
+                <button type="button" class="btn-primary" style="background:transparent; border:1px solid var(--border); color:var(--text-primary);" onclick="showListView()">Cancel</button>
+                <button type="submit" class="btn-primary">Save Product</button>
             </div>
         </form>
     </div>
@@ -217,20 +239,20 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 
     <!-- Define Product Colors -->
-    <div style="margin-bottom:24px;padding:20px;background:var(--a-surface,#1a1a1a);border:1px solid var(--a-border);border-radius:6px">
-        <h3 style="font-size:.9rem;color:var(--a-text,#eee);margin:0 0 6px 0">🎨 Define Product Colors</h3>
-        <p style="font-size:.72rem;color:var(--a-muted);margin-bottom:14px">Define colors first, then add size variants for each color below.</p>
+    <div class="card" style="margin-bottom:24px;">
+        <h3 style="font-size:14px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">🎨 Define Product Colors</h3>
+        <p style="font-size:.72rem;color:var(--text-muted);margin-bottom:14px">Define colors first, then add size variants for each color below.</p>
         <div id="product-colors-list" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px"><span style="color:var(--a-muted);font-size:.75rem">No colors defined yet</span></div>
         <div style="display:flex;gap:8px;align-items:center">
-            <input type="text" id="new-color-name" placeholder="Color name (e.g. Black)" style="padding:8px 12px;background:var(--a-bg,#111);border:1px solid var(--a-border);border-radius:4px;color:var(--a-text,#eee);font-size:.82rem;width:180px">
-            <input type="color" id="new-color-hex" value="#888888" style="height:34px;width:40px;padding:2px;border:1px solid var(--a-border);border-radius:4px;cursor:pointer">
-            <button type="button" class="admin-btn admin-btn--sm admin-btn--primary" onclick="addNewColor()">+ Add Color</button>
+            <input type="text" id="new-color-name" placeholder="Color name (e.g. Black)" style="padding:8px 12px;background:var(--bg-surface2);border:1px solid var(--border);border-radius:4px;color:var(--text-primary);font-size:.82rem;width:180px">
+            <input type="color" id="new-color-hex" value="#888888" style="height:34px;width:40px;padding:2px;border:1px solid var(--border);border-radius:4px;cursor:pointer">
+            <button type="button" class="btn-primary" style="min-height:34px;" onclick="addNewColor()">+ Add Color</button>
         </div>
     </div>
 
     <!-- Variant Form -->
-    <div class="admin-variant-form">
-        <h3 class="admin-variant-form__title" id="variant-form-title">+ Add Variant</h3>
+    <div class="card admin-variant-form">
+        <h3 class="admin-variant-form__title" id="variant-form-title" style="font-size:14px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">+ Add Variant</h3>
         <form id="variant-form">
             <input type="hidden" name="media_image_path" value="">
             <input type="hidden" name="color_name" value="">
@@ -293,13 +315,13 @@ require_once __DIR__ . '/includes/header.php';
         </form>
     </div>
 
-    <!-- Color Galleries Section -->
-    <div style="margin-top:32px;padding-top:24px;border-top:1px solid var(--a-border)">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-            <h3 style="font-size:.95rem;color:var(--a-text,#eee);margin:0">🎨 Color Image Galleries</h3>
+    <!-- Color Galleries -->
+    <div class="card" style="margin-top:24px;">
+        <h3 style="font-size:14px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">🖼️ Color Galleries</h3>
+        <p style="font-size:.72rem;color:var(--text-muted);margin-bottom:16px">Assign specific images to each color variant. These will show on the storefront when the color is selected.</p>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
             <button class="admin-btn admin-btn--sm admin-btn--primary" onclick="saveColorGalleries()">💾 Save Galleries</button>
         </div>
-        <p style="font-size:.72rem;color:var(--a-muted);margin-bottom:16px">Add multiple images per color. These images will be shown when a customer selects that color on the product page.</p>
         <div id="color-galleries-container">
             <p style="color:var(--a-muted);font-size:.8rem">Add variants with colors first, then manage their galleries here.</p>
         </div>

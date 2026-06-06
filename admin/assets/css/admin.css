@@ -991,7 +991,8 @@ tr.low-stock td { /* subtle row background handled inline */ }
   background: var(--bg-surface);
   border: 0.5px solid var(--border);
   border-radius: var(--radius);
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .admin-responsive-table { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
@@ -1009,6 +1010,9 @@ tr.low-stock td { /* subtle row background handled inline */ }
   white-space: nowrap;
   cursor: pointer;
   user-select: none;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 .admin-table th:hover { color: var(--text-primary); }
 .admin-table th.sort-asc::after  { content: ' ↑'; opacity: .6; }
@@ -1850,6 +1854,16 @@ tr.low-stock td { /* subtle row background handled inline */ }
 
   .admin-content { padding: 18px 14px; }
 
+  /* Touch targets minimum 44px */
+  .admin-btn, 
+  .admin-form__group input, 
+  .admin-form__group select, 
+  .admin-filter-tab,
+  .admin-nav-link {
+    min-height: 44px;
+  }
+  .admin-btn { justify-content: center; }
+
   .admin-stats { grid-template-columns: 1fr 1fr; gap: 10px; }
   .radial-dials { grid-template-columns: 1fr 1fr; gap: 10px; }
   .admin-stat-card { padding: 14px; }
@@ -1900,4 +1914,54 @@ tr.low-stock td { /* subtle row background handled inline */ }
   .admin-table { min-width: 480px; }
   .admin-login-box { padding: 24px 16px; }
   .admin-variant-form__row { grid-template-columns: 1fr; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   UTILITY CLASSES
+   ══════════════════════════════════════════════════════════════ */
+.card {
+  background: var(--bg-surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  min-height: 44px; /* Default to touch friendly */
+}
+.btn-primary:hover {
+  background: var(--accent-hover);
+}
+.badge-status {
+  display: inline-flex;
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 500;
+  border-radius: 12px;
+  text-transform: uppercase;
+  background: var(--bg-surface2);
+  color: var(--text-primary);
+}
+.flex-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }

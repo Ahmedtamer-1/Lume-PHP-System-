@@ -37,6 +37,46 @@ document.addEventListener('DOMContentLoaded', () => {
             renderProductList();
         });
     });
+
+    // ── Media Drag and Drop Upload ──
+    const pdDropzone = document.getElementById('product-media-dropzone');
+    if (pdDropzone) {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => pdDropzone.addEventListener(e, ev => ev.preventDefault()));
+        ['dragenter', 'dragover'].forEach(e => pdDropzone.addEventListener(e, () => pdDropzone.style.borderColor = 'var(--accent)'));
+        ['dragleave', 'drop'].forEach(e => pdDropzone.addEventListener(e, () => pdDropzone.style.borderColor = 'var(--border)'));
+        
+        pdDropzone.addEventListener('drop', e => {
+            const files = e.dataTransfer.files;
+            if (!files.length) return;
+            pdDropzone.innerHTML = '<p style="color:var(--accent)">Uploading...</p>';
+            
+            const fd = new FormData();
+            fd.append('action', 'upload');
+            for (let i = 0; i < files.length; i++) fd.append('files[]', files[i]);
+            
+            fetch(MEDIA_API, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(r => r.json())
+            .then(d => {
+                pdDropzone.innerHTML = '<p style="color:var(--text-muted)">Drag & drop images here to upload</p>';
+                if (d.success) {
+                    window.adminToast('Upload complete. Select it from the library.', 'success');
+                    // Reload media to ensure latest is shown
+                    allMedia = [];
+                    loadMedia(1, false);
+                    openMediaPicker('gallery'); // Automatically open picker
+                } else {
+                    window.adminToast('Upload failed', 'error');
+                }
+            }).catch(() => {
+                pdDropzone.innerHTML = '<p style="color:var(--text-muted)">Drag & drop images here to upload</p>';
+                window.adminToast('Upload failed', 'error');
+            });
+        });
+        
+        pdDropzone.addEventListener('click', () => {
+            openMediaPicker('gallery');
+        });
+    }
 });
 
 // ══════════════════════════════════════

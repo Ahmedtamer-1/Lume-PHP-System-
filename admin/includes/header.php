@@ -106,6 +106,10 @@ $totalNotifs = $unreadMessages + $pendingOrders;
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
                 <span>Settings</span>
             </a>
+            <a href="<?= SITE_URL ?>/admin/themes.php" class="admin-nav-link <?= $adminPage === 'themes' ? 'active' : '' ?>">
+                <svg viewBox="0 0 24 24"><path d="M12 2.69l5.66 4.2c.83.61 1.34 1.58 1.34 2.61v8c0 1.66-1.34 3-3 3H8c-1.66 0-3-1.34-3-3v-8c0-1.03.51-2 1.34-2.61L12 2.69zM12 2.69V21"/></svg>
+                <span>Theme Manager</span>
+            </a>
             <a href="<?= SITE_URL ?>/admin/export.php" class="admin-nav-link <?= $adminPage === 'export' ? 'active' : '' ?>">
                 <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 <span>Export / Import</span>
