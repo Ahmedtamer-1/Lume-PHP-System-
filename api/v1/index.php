@@ -73,9 +73,11 @@ $id = $parts[1] ?? null;
 
 // Route Map
 $routes = [
-    'products' => 'routes/products.php',
-    'cart'     => 'routes/cart.php',
-    'theme'    => 'routes/theme.php'
+    'products'   => 'routes/products.php',
+    'cart'       => 'routes/cart.php',
+    'theme'      => 'routes/theme.php',
+    'categories' => 'routes/categories.php',
+    'auth'       => 'routes/auth.php'
 ];
 
 if (array_key_exists($resource, $routes)) {

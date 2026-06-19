@@ -41,7 +41,17 @@ const LumeAPI = {
                 // Update text elements marked with data-setting
                 document.querySelectorAll('[data-setting]').forEach(el => {
                     const key = el.getAttribute('data-setting');
-                    if (s[key]) {
+                    
+                    if (key === 'site_name' && s.site_logo && el.classList.contains('lume-logo-text')) {
+                        // Replace text span with Image Logo
+                        const img = document.createElement('img');
+                        img.src = '/' + s.site_logo;
+                        img.alt = s.site_name || 'Logo';
+                        img.style.maxHeight = '40px';
+                        img.style.width = 'auto';
+                        img.setAttribute('data-setting', 'site_name'); // Keep it tagged
+                        el.replaceWith(img);
+                    } else if (s[key]) {
                         if (el.tagName === 'IMG') {
                             el.src = '/' + s[key];
                         } else {
@@ -58,9 +68,49 @@ const LumeAPI = {
         return null;
     },
 
-    async getProducts() {
+    async fetchAuthStatus() {
         try {
-            const res = await fetch(`${this.baseUrl}/products`);
+            const res = await fetch(`${this.baseUrl}/auth`);
+            const json = await res.json();
+            if (json.status === 200) {
+                const data = json.data;
+                const dropdown = document.getElementById('lume-account-dropdown');
+                if (!dropdown) return;
+                
+                let html = '';
+                if (data.logged_in) {
+                    html += `<span class="lume-dropdown-label">Hi, ${data.first_name || 'User'}</span>`;
+                    if (data.role === 'admin') {
+                        html += `<a href="/admin/" role="menuitem">Admin Panel</a>`;
+                    }
+                    html += `<a href="/account.php" role="menuitem">My Account</a>`;
+                    html += `<a href="/account.php?action=orders" role="menuitem">My Orders</a>`;
+                    html += `<a href="/account.php?action=logout" role="menuitem">Logout</a>`;
+                } else {
+                    html += `<a href="/account.php" role="menuitem">Login / Register</a>`;
+                }
+                dropdown.innerHTML = html;
+            }
+        } catch (e) {
+            console.error('Failed to fetch auth status:', e);
+        }
+    },
+
+    async getCategories() {
+        try {
+            const res = await fetch(`${this.baseUrl}/categories`);
+            const json = await res.json();
+            return json.status === 200 ? json.data : [];
+        } catch (e) {
+            console.error(e);
+            return [];
+        }
+    },
+
+    async getProducts(categorySlug = null) {
+        try {
+            const url = categorySlug ? `${this.baseUrl}/products?category=${categorySlug}` : `${this.baseUrl}/products`;
+            const res = await fetch(url);
             const json = await res.json();
             return json.status === 200 ? json.data : [];
         } catch (e) {
@@ -97,4 +147,5 @@ const LumeAPI = {
 // Initialize theme on load
 document.addEventListener('DOMContentLoaded', () => {
     LumeAPI.fetchTheme();
+    LumeAPI.fetchAuthStatus();
 });

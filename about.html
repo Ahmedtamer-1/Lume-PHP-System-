@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <meta name="description" content="Discover Adorna — a luxury fashion brand.">
+    <meta name="description" content="Browse our full collection of luxury clothing, accessories, and fashion essentials.">
     
-    <title data-setting="site_name">Loading...</title>
+    <title data-setting="site_name">Shop — Loading...</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,22 +17,6 @@
 </head>
 <body>
 
-<!-- SPLASH SCREEN -->
-<div id="lume-splash" style="position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;transition:opacity 0.6s ease, visibility 0.6s ease;">
-    <div style="text-align:center; animation: splashPulse 2s infinite ease-in-out;">
-        <span class="lume-logo-text" data-setting="site_name" style="font-size:2.5rem;color:var(--gold)">Loading...</span>
-    </div>
-</div>
-<style>
-@keyframes splashPulse { 0% { opacity: 0.5; transform: scale(0.95); } 50% { opacity: 1; transform: scale(1.02); } 100% { opacity: 0.5; transform: scale(0.95); } }
-.splash-hidden { opacity: 0 !important; visibility: hidden !important; }
-html.hide-splash #lume-splash { display: none !important; }
-</style>
-<script>
-if (sessionStorage.getItem('lumeSplashShown')) { document.documentElement.classList.add('hide-splash'); }
-else { window.addEventListener('load', () => setTimeout(() => { let s=document.getElementById('lume-splash'); if(s){s.classList.add('splash-hidden'); setTimeout(()=>s.remove(), 600);} sessionStorage.setItem('lumeSplashShown', 'true');}, 1000)); }
-</script>
-
 <div class="lume-grain-overlay" aria-hidden="true"></div>
 
 <!-- HEADER -->
@@ -41,8 +25,8 @@ else { window.addEventListener('load', () => setTimeout(() => { let s=document.g
         <button class="lume-header__hamburger" id="lume-hamburger">
             <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
-        <a href="/" class="lume-header__nav-link is-active">Home</a>
-        <a href="/shop" class="lume-header__nav-link">Shop</a>
+        <a href="/" class="lume-header__nav-link">Home</a>
+        <a href="/shop" class="lume-header__nav-link is-active">Shop</a>
         <a href="/track-order" class="lume-header__nav-link">Track Order</a>
         <a href="/about" class="lume-header__nav-link">About</a>
         <a href="/contact" class="lume-header__nav-link">Contact</a>
@@ -115,7 +99,53 @@ else { window.addEventListener('load', () => setTimeout(() => { let s=document.g
 <div class="lume-drawer-overlay" id="lume-drawer-overlay"></div>
 
 <main id="main-content">
-    <div id="homepage-sections-container"></div>
+    <section class="lume-page-header">
+        <div class="container">
+            <h1 class="lume-page-header__title" data-setting="page_about_header_title">Our Story</h1>
+            <p class="lume-page-header__breadcrumb"><a href="/">Home</a> / About</p>
+        </div>
+    </section>
+
+    <section class="container">
+        <div class="lume-about-intro">
+            <div class="lume-about-intro__img lume-reveal-left">
+                <img data-setting="page_about_hero_image" src="/assets/images/placeholder.jpg" alt="Our story" loading="lazy">
+            </div>
+            <div class="lume-about-intro__text lume-reveal-right">
+                <p class="lume-section__eyebrow" data-setting="page_about_eyebrow">The Beginning</p>
+                <h2 data-setting="page_about_title">Born from Light</h2>
+                <div class="lume-legal__body" style="color:var(--muted);font-size:.9rem;line-height:1.8;margin-bottom:16px;white-space:pre-wrap;" data-setting="page_about_text">
+LUMEEGY was born from a simple belief — that style is a ritual, not a routine. Rooted in the spirit of Egyptian elegance, each piece is crafted to bring a moment of luxury into your everyday.
+
+We source the finest fabrics and craft each piece with meticulous attention to detail. The result is a collection that honours heritage while delivering timeless, modern style.
+
+Every texture, every scent, every detail is intentional. Because we believe the way you care for yourself says everything about who you are.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="lume-section lume-section--center container lume-reveal">
+        <p class="lume-section__eyebrow" data-setting="page_about_values_eyebrow">Our Values</p>
+        <h2 class="lume-section__title" data-setting="page_about_values_title">What We Stand For</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:40px;margin-top:48px;text-align:center">
+            <div>
+                <div style="font-size:2rem;margin-bottom:12px">✦</div>
+                <h3 style="font-family:var(--font-serif);font-size:1.1rem;text-transform:uppercase;margin-bottom:8px" data-setting="page_about_value_1_title">Heritage</h3>
+                <p style="font-size:.85rem;color:var(--muted);line-height:1.7" data-setting="page_about_value_1_text">Inspired by 5,000 years of Egyptian elegance, reimagined for the modern world.</p>
+            </div>
+            <div>
+                <div style="font-size:2rem;margin-bottom:12px">✦</div>
+                <h3 style="font-family:var(--font-serif);font-size:1.1rem;text-transform:uppercase;margin-bottom:8px" data-setting="page_about_value_2_title">Luxury</h3>
+                <p style="font-size:.85rem;color:var(--muted);line-height:1.7" data-setting="page_about_value_2_text">Premium fabrics and tailoring that feel as extraordinary as they look.</p>
+            </div>
+            <div>
+                <div style="font-size:2rem;margin-bottom:12px">✦</div>
+                <h3 style="font-family:var(--font-serif);font-size:1.1rem;text-transform:uppercase;margin-bottom:8px" data-setting="page_about_value_3_title">Intention</h3>
+                <p style="font-size:.85rem;color:var(--muted);line-height:1.7" data-setting="page_about_value_3_text">Every product is designed to transform your routine into a mindful, sensory ritual.</p>
+            </div>
+        </div>
+    </section>
 </main>
 
 <!-- MARQUEE -->
@@ -145,6 +175,5 @@ else { window.addEventListener('load', () => setTimeout(() => { let s=document.g
 
 <script src="/assets/js/main.js"></script>
 <script src="/assets/js/api-client.js"></script>
-<script src="/assets/js/index.js"></script>
 </body>
 </html>
