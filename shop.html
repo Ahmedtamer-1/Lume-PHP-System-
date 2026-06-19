@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="description" content="Browse our full collection of luxury clothing, accessories, and fashion essentials.">
+    
     <title data-setting="site_name">Shop — Loading...</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,55 +16,130 @@
     <link rel="stylesheet" href="/assets/css/variants.css">
 </head>
 <body>
-    <header class="lume-header" id="lume-header">
-        <nav class="lume-header__nav-left">
-            <a href="/" class="lume-header__nav-link">Home</a>
-            <a href="/shop" class="lume-header__nav-link is-active">Shop</a>
-        </nav>
-        <div class="lume-header__logo">
-            <a href="/">
-                <span class="lume-logo-text" data-setting="site_name">Loading...</span>
-            </a>
-        </div>
-        <nav class="lume-header__nav-right">
-            <button class="lume-header__icon-btn" id="btn-cart">
-                <svg viewBox="0 0 24 24" aria-hidden="true" style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2">
-                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-                    <line x1="3" y1="6" x2="21" y2="6"/>
-                    <path d="M16 10a4 4 0 0 1-8 0"/>
-                </svg>
-                <span class="lume-cart-count" id="cart-count-badge" style="display:none">0</span>
+
+<div class="lume-grain-overlay" aria-hidden="true"></div>
+
+<!-- HEADER -->
+<header class="lume-header" id="lume-header">
+    <nav class="lume-header__nav-left">
+        <button class="lume-header__hamburger" id="lume-hamburger">
+            <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <a href="/" class="lume-header__nav-link">Home</a>
+        <a href="/shop.html" class="lume-header__nav-link is-active">Shop</a>
+        <a href="/track-order.php" class="lume-header__nav-link">Track Order</a>
+        <a href="/about.php" class="lume-header__nav-link">About</a>
+        <a href="/contact.php" class="lume-header__nav-link">Contact</a>
+    </nav>
+    <div class="lume-header__logo">
+        <a href="/">
+            <span class="lume-logo-text" data-setting="site_name">Loading...</span>
+        </a>
+    </div>
+    <nav class="lume-header__nav-right">
+        <button class="lume-header__icon-btn" id="btn-search">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
+        <div style="position:relative;">
+            <button class="lume-header__icon-btn" id="btn-account">
+                <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             </button>
-        </nav>
-    </header>
-
-    <main id="main-content">
-        <section class="lume-page-header">
-            <div class="container">
-                <h1 class="lume-page-header__title">Shop</h1>
-                <p class="lume-page-header__breadcrumb">
-                    <a href="/">Home</a> / Shop
-                </p>
-            </div>
-        </section>
-
-        <section class="lume-section container">
-            <div class="lume-products" id="shop-grid-container">
-                <!-- Products will be injected here by shop.js -->
-            </div>
-        </section>
-    </main>
-
-    <footer class="lume-footer">
-        <div class="lume-footer__grid">
-            <div class="lume-footer__col">
-                <p class="lume-logo-text lume-footer__brand-logo" data-setting="site_name">Loading...</p>
-                <p class="lume-footer__brand-text" data-setting="footer_brand_text"></p>
+            <div class="lume-account-dropdown" id="lume-account-dropdown">
+                <a href="/account.php">Login / Register</a>
+                <a href="/account.php?action=orders">My Orders</a>
+                <a href="/admin/">Admin Panel</a>
             </div>
         </div>
-    </footer>
+        <button class="lume-header__icon-btn" id="btn-cart">
+            <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            <span class="lume-cart-count" id="cart-count-badge" style="display:none">0</span>
+        </button>
+    </nav>
+</header>
 
-    <script src="/assets/js/api-client.js"></script>
-    <script src="/assets/js/shop.js"></script>
+<!-- MOBILE MENU -->
+<div class="lume-mobile-menu" id="lume-mobile-menu">
+    <div class="lume-mobile-menu__overlay" id="mobile-menu-overlay"></div>
+    <nav class="lume-mobile-menu__panel">
+        <div class="lume-mobile-menu__head">
+            <span class="lume-logo-text" data-setting="site_name">Loading...</span>
+            <button class="lume-mobile-menu__close" id="mobile-menu-close">✕</button>
+        </div>
+        <a href="/" class="lume-mobile-menu__link">Home</a>
+        <a href="/shop.html" class="lume-mobile-menu__link">Shop</a>
+        <a href="/track-order.php" class="lume-mobile-menu__link">Track Order</a>
+        <a href="/about.php" class="lume-mobile-menu__link">About</a>
+        <a href="/contact.php" class="lume-mobile-menu__link">Contact</a>
+    </nav>
+</div>
+
+<!-- SEARCH -->
+<div class="lume-search-overlay" id="lume-search-overlay">
+    <div class="lume-search-container">
+        <div class="lume-search-input-wrap">
+            <input type="search" class="lume-search-input" id="lume-search-input" placeholder="Search products...">
+            <button class="lume-search-close" id="search-close">✕</button>
+        </div>
+        <div class="lume-search-results" id="lume-search-results"></div>
+    </div>
+</div>
+
+<!-- CART DRAWER -->
+<aside class="lume-cart-drawer" id="lume-cart-drawer">
+    <div class="lume-cart-drawer-header">
+        <span class="lume-cart-drawer-title">Your Bag</span>
+        <button class="lume-cart-drawer-close" id="cart-close">✕</button>
+    </div>
+    <div class="lume-cart-drawer-items" id="cart-drawer-items"></div>
+    <div class="lume-cart-drawer-footer" id="cart-drawer-footer" style="display:none;">
+        <div class="lume-cart-total"><span>Total</span><span id="cart-drawer-total">EGP 0.00</span></div>
+        <a href="/checkout.php" class="lume-cart-checkout-btn">Proceed to Checkout</a>
+    </div>
+</aside>
+<div class="lume-drawer-overlay" id="lume-drawer-overlay"></div>
+
+<main id="main-content">
+    <section class="lume-page-header">
+        <div class="container">
+            <h1 class="lume-page-header__title">Shop</h1>
+            <p class="lume-page-header__breadcrumb"><a href="/">Home</a> / Shop</p>
+        </div>
+    </section>
+
+    <section class="lume-section container">
+        <div class="lume-products" id="shop-grid-container">
+            <!-- Products will be injected here by shop.js -->
+        </div>
+    </section>
+</main>
+
+<!-- MARQUEE -->
+<div class="lume-marquee"><div class="lume-marquee__track">
+    <span class="lume-marquee__text" data-setting="site_tagline"></span><span class="lume-marquee__text">✦</span>
+    <span class="lume-marquee__text">Luxury Fashion</span><span class="lume-marquee__text">✦</span>
+    <span class="lume-marquee__text">Crafted in Egypt</span><span class="lume-marquee__text">✦</span>
+</div></div>
+
+<!-- FOOTER -->
+<footer class="lume-footer">
+    <div class="lume-footer__grid">
+        <div class="lume-footer__col">
+            <p class="lume-logo-text lume-footer__brand-logo" data-setting="site_name">Loading...</p>
+            <p class="lume-footer__brand-text" data-setting="footer_brand_text"></p>
+        </div>
+        <div class="lume-footer__col">
+            <h3 class="lume-footer__col-title">Shop</h3>
+            <a href="/shop.html" class="lume-footer__link">All Products</a>
+        </div>
+        <div class="lume-footer__col">
+            <h3 class="lume-footer__col-title">Help</h3>
+            <a href="/contact.php" class="lume-footer__link">Contact Us</a>
+        </div>
+    </div>
+</footer>
+
+<script src="/assets/js/main.js"></script>
+<script src="/assets/js/api-client.js"></script>
+<script src="/assets/js/shop.js"></script>
 </body>
 </html>
