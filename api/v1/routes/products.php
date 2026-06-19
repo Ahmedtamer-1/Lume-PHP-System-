@@ -16,8 +16,8 @@ if ($method === 'GET') {
             echo json_encode(['status' => 404, 'error' => 'Product not found']);
         }
     } else {
-        $categorySlug = $_GET['category'] ?? null;
-        $products = $productModel->getAll($categorySlug);
+        $categoryId = $_GET['category'] ?? null;
+        $products = $productModel->getAll($categoryId);
         
         // Transform images
         foreach ($products as &$p) {

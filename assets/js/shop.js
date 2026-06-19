@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const renderFilters = () => {
         let html = `<button class="lume-filter-btn ${!currentCategory ? 'active' : ''}" data-cat="">All</button>`;
         categories.forEach(c => {
-            html += `<button class="lume-filter-btn ${currentCategory === c.slug ? 'active' : ''}" data-cat="${c.slug}">${c.name}</button>`;
+            html += `<button class="lume-filter-btn ${currentCategory === c.id.toString() ? 'active' : ''}" data-cat="${c.id}">${c.name}</button>`;
         });
         filtersDiv.innerHTML = html;
 

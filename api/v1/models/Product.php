@@ -6,15 +6,15 @@ class Product {
         $this->db = $db;
     }
 
-    public function getAll($categorySlug = null) {
-        $query = "SELECT p.*, c.name as category_name, c.slug as category_slug 
+    public function getAll($categoryId = null) {
+        $query = "SELECT p.*, c.name as category_name 
                   FROM products p 
                   LEFT JOIN categories c ON p.category_id = c.id ";
         
         $params = [];
-        if ($categorySlug) {
-            $query .= " WHERE c.slug = :slug ";
-            $params[':slug'] = $categorySlug;
+        if ($categoryId) {
+            $query .= " WHERE p.category_id = :cat_id ";
+            $params[':cat_id'] = $categoryId;
         }
         
         $query .= " ORDER BY p.created_at DESC";

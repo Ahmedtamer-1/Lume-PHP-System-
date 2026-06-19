@@ -5,9 +5,14 @@ $method = $_SERVER['REQUEST_METHOD'];
 if ($method === 'GET') {
     try {
         // Fetch active theme CSS
-        $themeQuery = db()->query("SELECT css_content FROM store_themes WHERE is_active = 1 LIMIT 1");
-        $activeTheme = $themeQuery->fetch(PDO::FETCH_ASSOC);
-        $themeCss = $activeTheme ? $activeTheme['css_content'] : '';
+        $themeCss = '';
+        try {
+            $themeQuery = db()->query("SELECT css_content FROM store_themes WHERE is_active = 1 LIMIT 1");
+            $activeTheme = $themeQuery->fetch(PDO::FETCH_ASSOC);
+            $themeCss = $activeTheme ? $activeTheme['css_content'] : '';
+        } catch (Exception $e) {
+            // Ignore if store_themes doesn't exist
+        }
 
         // Fetch general settings
         $settingsQuery = db()->query("SELECT key_name, value FROM settings");

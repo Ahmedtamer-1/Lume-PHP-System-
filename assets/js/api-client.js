@@ -107,9 +107,9 @@ const LumeAPI = {
         }
     },
 
-    async getProducts(categorySlug = null) {
+    async getProducts(categoryId = null) {
         try {
-            const url = categorySlug ? `${this.baseUrl}/products?category=${categorySlug}` : `${this.baseUrl}/products`;
+            const url = categoryId ? `${this.baseUrl}/products?category=${categoryId}` : `${this.baseUrl}/products`;
             const res = await fetch(url);
             const json = await res.json();
             return json.status === 200 ? json.data : [];
