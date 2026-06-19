@@ -1,5 +1,19 @@
 RewriteEngine On
 
+# ── Clean URL Rewrites ──
+DirectoryIndex index.html index.php
+
+# Serve .html files without the extension
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{DOCUMENT_ROOT}/$1.html -f
+RewriteRule ^(.*)$ $1.html [L]
+
+# ── API v1 Front Controller ──
+# Route all /api/v1/* requests to the API front controller
+RewriteCond %{REQUEST_URI} ^/api/v1(/.*)?$ [NC]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ /api/v1/index.php [QSA,L]
 # Force HTTPS (uncomment in production with real SSL)
 # RewriteCond %{HTTPS} off
 # RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]

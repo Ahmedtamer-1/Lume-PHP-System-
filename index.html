@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title data-setting="site_name">Loading...</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,700;0,900;1,400&family=Red+Hat+Display:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="/assets/css/base.css">
+    <link rel="stylesheet" href="/assets/css/components.css">
+</head>
+<body>
+    <header class="lume-header" id="lume-header">
+        <nav class="lume-header__nav-left">
+            <a href="/" class="lume-header__nav-link is-active">Home</a>
+            <a href="/shop" class="lume-header__nav-link">Shop</a>
+        </nav>
+        <div class="lume-header__logo">
+            <a href="/">
+                <span class="lume-logo-text" data-setting="site_name">Loading...</span>
+            </a>
+        </div>
+        <nav class="lume-header__nav-right">
+            <button class="lume-header__icon-btn" id="btn-cart">
+                <svg viewBox="0 0 24 24" aria-hidden="true" style="width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2">
+                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                    <line x1="3" y1="6" x2="21" y2="6"/>
+                    <path d="M16 10a4 4 0 0 1-8 0"/>
+                </svg>
+                <span class="lume-cart-count" id="cart-count-badge" style="display:none">0</span>
+            </button>
+        </nav>
+    </header>
+
+    <main id="main-content">
+        <div id="homepage-sections-container">
+            <!-- Dynamic sections will be injected here -->
+        </div>
+    </main>
+
+    <footer class="lume-footer">
+        <div class="lume-footer__grid">
+            <div class="lume-footer__col">
+                <p class="lume-logo-text lume-footer__brand-logo" data-setting="site_name">Loading...</p>
+                <p class="lume-footer__brand-text" data-setting="footer_brand_text"></p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/assets/js/api-client.js"></script>
+    <script src="/assets/js/index.js"></script>
+</body>
+</html>
