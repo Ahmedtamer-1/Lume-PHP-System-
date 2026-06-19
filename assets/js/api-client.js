@@ -16,11 +16,22 @@ const LumeAPI = {
             if (json.status === 200) {
                 this.settings = json.data.settings;
                 
-                // Inject custom CSS
+                // Cache CSS for fast load (prevents FOUC)
+                if (json.data.css) {
+                    localStorage.setItem('lume_theme_css', json.data.css);
+                }
+
+                // Inject custom CSS if not already injected by head script
                 if (json.data.css && !this.cssInjected) {
-                    const style = document.createElement('style');
-                    style.innerHTML = json.data.css;
-                    document.head.appendChild(style);
+                    let style = document.getElementById('lume-dynamic-theme');
+                    if (!style) {
+                        style = document.createElement('style');
+                        style.id = 'lume-dynamic-theme';
+                        document.head.appendChild(style);
+                    }
+                    if (style.innerHTML !== json.data.css) {
+                        style.innerHTML = json.data.css;
+                    }
                     this.cssInjected = true;
                 }
 
