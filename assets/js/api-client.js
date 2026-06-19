@@ -35,28 +35,32 @@ const LumeAPI = {
                     this.cssInjected = true;
                 }
 
-                // Apply CSS variables dynamically
-                const s = this.settings;
-                const root = document.documentElement;
-                if (s.theme_color_bg) {
-                    root.style.setProperty('--bg', s.theme_color_bg);
-                    root.style.setProperty('--bg-card', s.theme_color_bg_card || s.theme_color_bg);
+                // Apply CSS variables dynamically ONLY IF no active theme CSS is found
+                if (!json.data.css) {
+                    const s = this.settings;
+                    const root = document.documentElement;
+                    if (s.theme_color_bg) {
+                        root.style.setProperty('--bg', s.theme_color_bg);
+                        root.style.setProperty('--bg-card', s.theme_color_bg_card || s.theme_color_bg);
+                    }
+                    if (s.theme_color_cream) root.style.setProperty('--cream', s.theme_color_cream);
+                    if (s.theme_color_gold) root.style.setProperty('--gold', s.theme_color_gold);
+                    if (s.theme_color_accent) root.style.setProperty('--terracotta', s.theme_color_accent);
+                    if (s.theme_color_muted) root.style.setProperty('--muted', s.theme_color_muted);
+                    if (s.theme_font_heading) root.style.setProperty('--font-serif', `"${s.theme_font_heading}", serif`);
+                    if (s.theme_font_body) root.style.setProperty('--font-sans', `"${s.theme_font_body}", sans-serif`);
                 }
-                if (s.theme_color_cream) root.style.setProperty('--cream', s.theme_color_cream);
-                if (s.theme_color_gold) root.style.setProperty('--gold', s.theme_color_gold);
-                if (s.theme_color_accent) root.style.setProperty('--terracotta', s.theme_color_accent);
-                if (s.theme_color_muted) root.style.setProperty('--muted', s.theme_color_muted);
-                if (s.theme_font_heading) root.style.setProperty('--font-serif', `"${s.theme_font_heading}", serif`);
-                if (s.theme_font_body) root.style.setProperty('--font-sans', `"${s.theme_font_body}", sans-serif`);
 
                 // Update text elements marked with data-setting
+                const getImageUrl = (path) => path.startsWith('/') || path.startsWith('http') ? path : '/' + path;
+                const s = this.settings;
                 document.querySelectorAll('[data-setting]').forEach(el => {
                     const key = el.getAttribute('data-setting');
                     
                     if (key === 'site_name' && s.site_logo && el.classList.contains('lume-logo-text')) {
                         // Replace text span with Image Logo
                         const img = document.createElement('img');
-                        img.src = '/' + s.site_logo;
+                        img.src = getImageUrl(s.site_logo);
                         img.alt = s.site_name || 'Logo';
                         img.style.maxHeight = '40px';
                         img.style.width = 'auto';
@@ -64,7 +68,7 @@ const LumeAPI = {
                         el.replaceWith(img);
                     } else if (s[key]) {
                         if (el.tagName === 'IMG') {
-                            el.src = '/' + s[key];
+                            el.src = getImageUrl(s[key]);
                         } else {
                             el.textContent = s[key];
                         }

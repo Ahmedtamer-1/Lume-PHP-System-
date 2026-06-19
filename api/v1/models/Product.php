@@ -49,4 +49,23 @@ class Product {
             return $stmt->fetch(PDO::FETCH_ASSOC);
         }
     }
+
+    public function getBySlug($slug) {
+        try {
+            $query = "SELECT p.*, c.name as category_name 
+                      FROM products p 
+                      LEFT JOIN categories c ON p.category_id = c.id 
+                      WHERE p.slug = :slug LIMIT 1";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':slug', $slug, PDO::PARAM_STR);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            $query = "SELECT * FROM products WHERE slug = :slug LIMIT 1";
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':slug', $slug, PDO::PARAM_STR);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        }
+    }
 }
