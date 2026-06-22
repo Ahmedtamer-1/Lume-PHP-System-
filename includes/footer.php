@@ -4,6 +4,8 @@
  * The marquee section can be toggled via settings.
  */
 
+require_once __DIR__ . '/../api/v1/models/CategoryModel.php';
+
 // Check settings for showing/hiding footer sections
 $showMarquee    = setting('show_marquee', '1') === '1';
 $marqueeText    = setting('marquee_text', '');
@@ -75,7 +77,7 @@ $marqueeText    = setting('marquee_text', '');
 
         <div class="lume-footer__col">
             <h3 class="lume-footer__col-title">Shop</h3>
-            <?php foreach (get_categories() as $cat): ?>
+            <?php foreach (CategoryModel::getCategories() as $cat): ?>
             <a href="<?= SITE_URL ?>/shop.php?category=<?= h($cat['slug']) ?>" class="lume-footer__link"><?= h($cat['name']) ?></a>
             <?php endforeach; ?>
             <a href="<?= SITE_URL ?>/shop.php" class="lume-footer__link">All Products</a>

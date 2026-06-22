@@ -45,7 +45,7 @@ if(searchInput){
     const q=searchInput.value.trim();
     if(q.length<2){searchResults.innerHTML='';return;}
     searchTimer=setTimeout(()=>{
-      fetch(BASE+'/api/search.php?q='+encodeURIComponent(q),{headers:{'X-Requested-With':'XMLHttpRequest'}})
+      fetch(BASE+'/api/v1/search?q='+encodeURIComponent(q),{headers:{'X-Requested-With':'XMLHttpRequest'}})
       .then(r=>r.json()).then(data=>{
         if(!data.results||data.results.length===0){
           searchResults.innerHTML='<div class="lume-search-empty">No results found</div>';return;
@@ -96,7 +96,7 @@ cartClose&&cartClose.addEventListener('click',closeCart);
 drawerOverlay&&drawerOverlay.addEventListener('click',closeCart);
 
 function loadCart(){
-  fetch(BASE+'/api/cart.php?action=get',{headers:{'X-Requested-With':'XMLHttpRequest'}})
+  fetch(BASE+'/api/v1/cart?action=get',{headers:{'X-Requested-With':'XMLHttpRequest'}})
   .then(r=>r.json()).then(data=>{
     if(!data.items||data.items.length===0){
       cartItems.innerHTML='<div class="lume-search-empty">Your bag is empty</div>';
@@ -127,7 +127,7 @@ window.addToCart=function(productId,qty,variantId,pixelData){
   qty=qty||1;
   const fd=new FormData();fd.append('action','add');fd.append('product_id',productId);fd.append('quantity',qty);fd.append('csrf',CSRF);
   if(variantId)fd.append('variant_id',variantId);
-  fetch(BASE+'/api/cart.php',{method:'POST',body:fd,headers:{'X-Requested-With':'XMLHttpRequest'}})
+  fetch(BASE+'/api/v1/cart',{method:'POST',body:fd,headers:{'X-Requested-With':'XMLHttpRequest'}})
   .then(r=>r.json()).then(data=>{
     if(data.success){
       if(window.showToast)showToast('✓ Added to bag');
@@ -151,7 +151,7 @@ window.addToCart=function(productId,qty,variantId,pixelData){
 };
 window.removeCartItem=function(cartId){
   const fd=new FormData();fd.append('action','remove');fd.append('cart_id',cartId);fd.append('csrf',CSRF);
-  fetch(BASE+'/api/cart.php',{method:'POST',body:fd,headers:{'X-Requested-With':'XMLHttpRequest'}})
+  fetch(BASE+'/api/v1/cart',{method:'POST',body:fd,headers:{'X-Requested-With':'XMLHttpRequest'}})
   .then(r=>r.json()).then(()=>loadCart()).catch(()=>{});
 };
 
@@ -220,7 +220,7 @@ if(contactForm){
   contactForm.addEventListener('submit',(e)=>{
     e.preventDefault();
     const fd=new FormData(contactForm);const msg=document.getElementById('contact-msg');
-    fetch(BASE+'/api/contact.php',{method:'POST',body:fd,headers:{'X-Requested-With':'XMLHttpRequest'}})
+    fetch(BASE+'/api/v1/contact',{method:'POST',body:fd,headers:{'X-Requested-With':'XMLHttpRequest'}})
     .then(r=>r.json()).then(data=>{
       if(msg){msg.textContent=data.message;msg.className='lume-alert '+(data.success?'lume-alert--success':'lume-alert--error');}
       if(data.success)contactForm.reset();

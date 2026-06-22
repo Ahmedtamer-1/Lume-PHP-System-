@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/includes/functions.php';
+require_once __DIR__ . '/api/v1/models/ContentModel.php';
+require_once __DIR__ . '/api/v1/models/ProductModel.php';
 $pageTitle = setting('site_name', SITE_NAME) . ' — ' . setting('site_tagline', SITE_TAGLINE);
 $pageDescription = setting('default_meta_description', 'Discover ' . setting('site_name', SITE_NAME) . ' — a luxury fashion brand.');
 require_once __DIR__ . '/includes/header.php';
@@ -7,13 +9,13 @@ require_once __DIR__ . '/includes/header.php';
 // Load dynamic homepage sections from DB
 $sections = [];
 try {
-    $sections = get_homepage_sections(true);
+    $sections = ContentModel::getHomepageSections();
 } catch (Exception $e) {
     // Fallback: table may not exist yet
     $sections = [];
 }
 
-$featured = get_featured_products(4);
+$featured = ProductModel::getProducts(['limit' => 4]);
 
 // If no sections in DB, render defaults
 if (empty($sections)) {
@@ -68,7 +70,7 @@ foreach ($sections as $section):
         case 'featured_products':
             $eyebrow = $sett['eyebrow'] ?? 'Curated for You';
             $count   = (int)($sett['product_count'] ?? 4);
-            $featured = get_featured_products($count);
+            $featured = ProductModel::getProducts(['limit' => $count]);
 ?>
 <section class="lume-section lume-section--center container" id="featured" style="<?= $padStyle ?>">
     <p class="lume-section__eyebrow lume-reveal"><?= h($eyebrow) ?></p>

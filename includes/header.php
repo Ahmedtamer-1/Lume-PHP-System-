@@ -6,6 +6,7 @@
  * Expects $pageTitle and $pageDescription to be set before including.
  */
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../api/v1/models/CartModel.php';
 
 // Check maintenance mode first
 if (setting('maintenance_mode') === '1'
@@ -34,7 +35,7 @@ $ogImage         = $ogImage         ?? (setting('og_image') ? SITE_URL . '/' . s
 $ogType          = $ogType          ?? 'website';
 $canonicalUrl    = $canonicalUrl    ?? (SITE_URL . strtok($_SERVER['REQUEST_URI'], '?'));
 
-$cartCount       = cart_count();
+$cartCount       = CartModel::getSummary()['count'];
 $currentUser     = current_user();
 $csrfToken       = csrf_token();
 $pixelId         = setting('meta_pixel_id') ?: META_PIXEL_ID;

@@ -1,9 +1,12 @@
 <?php
 require_once __DIR__ . '/includes/functions.php';
+require_once __DIR__ . '/api/v1/models/CartModel.php';
 $pageTitle = 'Your Bag — ' . setting('site_name', SITE_NAME);
 require_once __DIR__ . '/includes/header.php';
-$items = cart_items();
-$subtotal = cart_total();
+
+$items = CartModel::getItems();
+$summary = CartModel::getSummary();
+$subtotal = $summary['total'];
 $shipping = $subtotal >= FREE_SHIPPING_OVER ? 0 : FLAT_SHIPPING_RATE;
 $total = $subtotal + $shipping;
 ?>
@@ -60,9 +63,9 @@ $total = $subtotal + $shipping;
                 </td>
                 <td class="lume-cart-table__hide-mobile"><?= money($price) ?></td>
                 <td>
-                    <form method="post" action="<?= SITE_URL ?>/api/cart.php" style="display:flex;align-items:center;gap:6px">
+                    <form method="post" action="<?= SITE_URL ?>/api/v1/cart" style="display:flex;align-items:center;gap:6px">
                         <input type="hidden" name="action" value="update">
-                        <input type="hidden" name="cart_id" value="<?= (int)$item['id'] ?>">
+                        <input type="hidden" name="cart_id" value="<?= (int)$item['cart_id'] ?>">
                         <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
                         <?php $max = !empty($item['has_variants']) ? (int)$item['variant_stock'] : (int)$item['stock']; ?>
                         <input type="number" name="quantity" value="<?= (int)$item['quantity'] ?>" min="1" max="<?= $max ?>"
@@ -73,9 +76,9 @@ $total = $subtotal + $shipping;
                 </td>
                 <td><?= money($lineTotal) ?></td>
                 <td>
-                    <form method="post" action="<?= SITE_URL ?>/api/cart.php">
+                    <form method="post" action="<?= SITE_URL ?>/api/v1/cart">
                         <input type="hidden" name="action" value="remove">
-                        <input type="hidden" name="cart_id" value="<?= (int)$item['id'] ?>">
+                        <input type="hidden" name="cart_id" value="<?= (int)$item['cart_id'] ?>">
                         <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
                         <button type="submit" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.7rem;text-transform:uppercase;letter-spacing:.1em">✕</button>
                     </form>

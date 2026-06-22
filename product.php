@@ -1,7 +1,8 @@
 <?php
 $slug = $_GET['slug'] ?? '';
 require_once __DIR__ . '/includes/functions.php';
-$product = get_product_by_slug($slug);
+require_once __DIR__ . '/api/v1/models/ProductModel.php';
+$product = ProductModel::getProductBySlug($slug);
 if (!$product) {
     http_response_code(404);
     $pageTitle = 'Product Not Found';
@@ -29,7 +30,7 @@ $canonicalUrl    = SITE_URL . '/product.php?slug=' . urlencode($product['slug'])
 require_once __DIR__ . '/includes/header.php';
 
 $hasVariants       = !empty($product['has_variants']);
-$variants          = $hasVariants ? get_product_variants((int)$product['id']) : [];
+$variants          = $hasVariants ? ProductModel::getVariants((int)$product['id']) : [];
 $showStock         = setting('show_stock_indicator', '1') === '1';
 $lowThreshold      = (int)setting('stock_low_threshold', '5');
 

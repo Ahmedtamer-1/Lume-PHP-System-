@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/includes/functions.php';
+require_once __DIR__ . '/api/v1/models/UserModel.php';
 lume_session_start();
 $action = $_GET['action'] ?? ($_POST['action'] ?? 'login');
 $error = ''; $success = '';
@@ -42,18 +43,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'login') {
         if (is_rate_limited($email)) {
             $error = 'Too many login attempts. Please wait 15 minutes.';
         } else {
-            $stmt  = db()->prepare('SELECT id, password_hash FROM users WHERE email = ?');
-            $stmt->execute([$email]);
-            $row = $stmt->fetch();
-            if ($row && password_verify($pass, $row['password_hash'])) {
-                clear_login_attempts($email);
-                record_login_attempt($email, true);
-                login_user((int)$row['id']);
+            $result = UserModel::login($email, $pass);
+            if ($result['success']) {
                 $redir = $_GET['redirect'] ?? '/account.php';
                 redirect($redir);
             } else {
-                record_login_attempt($email, false);
-                $error = 'Invalid email or password.';
+                $error = $result['message'];
             }
         }
     }
@@ -74,15 +69,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'register') {
         elseif (strlen($pass) < 6) { $error = 'Password must be at least 6 characters.'; }
         elseif ($pass !== $pass2) { $error = 'Passwords do not match.'; }
         else {
-            $exists = db()->prepare('SELECT id FROM users WHERE email = ?');
-            $exists->execute([$email]);
-            if ($exists->fetch()) { $error = 'An account with this email already exists.'; }
-            else {
-                $hash = password_hash($pass, PASSWORD_BCRYPT);
-                db()->prepare('INSERT INTO users (first_name, last_name, email, password_hash) VALUES (?,?,?,?)')
-                    ->execute([$fn, $ln, $email, $hash]);
-                login_user((int)db()->lastInsertId());
+            $result = UserModel::register($fn, $ln, $email, $pass);
+            if ($result['success']) {
                 redirect('/account.php');
+            } else {
+                $error = $result['message'];
             }
         }
     }

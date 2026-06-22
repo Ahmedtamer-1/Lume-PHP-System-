@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/includes/functions.php';
+require_once __DIR__ . '/api/v1/models/UserModel.php';
 lume_session_start();
 
 $clientId = defined('GOOGLE_CLIENT_ID') ? GOOGLE_CLIENT_ID : '';
@@ -68,49 +69,8 @@ if (isset($_GET['code'])) {
         redirect('/account.php?error=' . urlencode('Failed to retrieve user information from Google.'));
     }
 
-    $googleId = $userInfo['id'];
-    $email = $userInfo['email'];
-    $firstName = $userInfo['given_name'] ?? 'Google';
-    $lastName = $userInfo['family_name'] ?? 'User';
-
-    // 3. Check if user exists by google_id
-    $stmt = db()->prepare('SELECT id FROM users WHERE google_id = ?');
-    $stmt->execute([$googleId]);
-    $user = $stmt->fetch();
-
-    if ($user) {
-        // User exists via google_id, log them in
-        login_user((int)$user['id']);
+    $result = UserModel::googleLogin($userInfo);
+    if ($result['success']) {
         redirect('/account.php');
     } else {
-        // Check if user exists by email
-        $stmt = db()->prepare('SELECT id FROM users WHERE email = ?');
-        $stmt->execute([$email]);
-        $userByEmail = $stmt->fetch();
-
-        if ($userByEmail) {
-            // User exists by email, update their google_id to link accounts
-            $update = db()->prepare('UPDATE users SET google_id = ? WHERE id = ?');
-            $update->execute([$googleId, $userByEmail['id']]);
-            login_user((int)$userByEmail['id']);
-            redirect('/account.php');
-        } else {
-            // Create a new user
-            $dummyPassword = bin2hex(random_bytes(16)); // Random secure password since they use Google
-            $hash = password_hash($dummyPassword, PASSWORD_BCRYPT);
-            
-            // Try to insert new user
-            try {
-                $insert = db()->prepare('INSERT INTO users (first_name, last_name, email, password_hash, google_id) VALUES (?, ?, ?, ?, ?)');
-                $insert->execute([$firstName, $lastName, $email, $hash, $googleId]);
-                login_user((int)db()->lastInsertId());
-                redirect('/account.php');
-            } catch (Exception $e) {
-                redirect('/account.php?error=' . urlencode('Failed to create account.'));
-            }
-        }
-    }
-}
-
-// Fallback if accessed directly without code
 redirect('/account.php');

@@ -1,5 +1,8 @@
 <?php
 require_once __DIR__ . '/includes/functions.php';
+require_once __DIR__ . '/api/v1/models/ProductModel.php';
+require_once __DIR__ . '/api/v1/models/CategoryModel.php';
+
 $categorySlug = $_GET['category'] ?? null;
 $search = $_GET['q'] ?? null;
 $siteName = setting('site_name', SITE_NAME);
@@ -10,25 +13,20 @@ $pageKeywords = 'shop, ' . $siteName . ', fashion, clothing, accessories';
 $canonicalUrl = SITE_URL . '/shop.php' . ($categorySlug ? '?category=' . urlencode($categorySlug) : '');
 require_once __DIR__ . '/includes/header.php';
 
-$categories = get_categories();
-$products = get_products([
+$categories = CategoryModel::getCategories();
+$products = ProductModel::getProducts([
     'category_slug' => $categorySlug,
     'search' => $search,
     'limit' => 24,
 ]);
 $productIds = array_column($products, 'id');
-$productColors = get_product_color_swatches($productIds);
+$productColors = ProductModel::getProductColorSwatches($productIds);
 
 // Track which products have variants (need variant selection before adding to cart)
 $variantProducts = [];
-if (!empty($productIds)) {
-    $placeholders = implode(',', array_fill(0, count($productIds), '?'));
-    $stmt = db()->prepare("SELECT id, has_variants FROM products WHERE id IN ($placeholders)");
-    $stmt->execute($productIds);
-    foreach ($stmt->fetchAll() as $row) {
-        if (!empty($row['has_variants'])) {
-            $variantProducts[(int)$row['id']] = true;
-        }
+foreach ($products as $row) {
+    if (!empty($row['has_variants'])) {
+        $variantProducts[(int)$row['id']] = true;
     }
 }
 

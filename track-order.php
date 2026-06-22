@@ -3,6 +3,7 @@
  * LUMEEGY — Track Order Page
  */
 require_once __DIR__ . '/includes/functions.php';
+require_once __DIR__ . '/api/v1/models/OrderModel.php';
 lume_session_start();
 
 $pageTitle = 'Track Order — ' . setting('site_name', SITE_NAME);
@@ -16,14 +17,7 @@ if (!empty($_GET) && ($orderNumber || $email)) {
     if (!$orderNumber || !$email) {
         $error = 'Please provide both your order number and email address.';
     } else {
-        $stmt = db()->prepare('
-            SELECT o.*, u.email as user_email 
-            FROM orders o 
-            LEFT JOIN users u ON u.id = o.user_id 
-            WHERE o.order_number = ?
-        ');
-        $stmt->execute([$orderNumber]);
-        $order = $stmt->fetch();
+        $order = OrderModel::getOrderByNumber($orderNumber);
 
         if (!$order) {
             $error = 'Order not found. Please check your order number and try again.';
@@ -70,9 +64,7 @@ require_once __DIR__ . '/includes/header.php';
         </form>
     </div>
     <?php else: 
-        $items = db()->prepare('SELECT * FROM order_items WHERE order_id = ?');
-        $items->execute([$order['id']]);
-        $orderItems = $items->fetchAll();
+        $orderItems = $order['items'];
     ?>
     
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:32px">

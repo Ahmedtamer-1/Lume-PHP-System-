@@ -6,6 +6,8 @@
  */
 ob_start(); // Buffer all output so headers can always be sent safely
 require_once __DIR__ . '/includes/functions.php';
+require_once __DIR__ . '/api/v1/models/CartModel.php';
+require_once __DIR__ . '/api/v1/models/OrderModel.php';
 lume_session_start();
 
 // ══════════════════════════════════════════════
@@ -23,11 +25,12 @@ if (!empty($_GET['success']) && !empty($_SESSION['order_success'])) {
 
 // If NOT showing success, check cart
 if (!$showSuccess) {
-    $items = cart_items();
+    $items = CartModel::getItems();
     if (empty($items)) {
         redirect('/cart.php');
     }
-    $subtotal = cart_total();
+    $summary = CartModel::getSummary();
+    $subtotal = $summary['total'];
 }
 
 $user  = current_user();
@@ -116,7 +119,7 @@ if (!$showSuccess && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
 
                     // Insert the order
-                    $orderId = create_order([
+                    $orderId = OrderModel::createOrder([
                         'user_id'        => $user['id'] ?? null,
                         'guest_email'    => $user ? null : $email,
                         'subtotal'       => $subtotal,
@@ -140,7 +143,7 @@ if (!$showSuccess && $_SERVER['REQUEST_METHOD'] === 'POST') {
                         // without completing payment, then tries to checkout again.
                         $stalePendingId = $_SESSION['paymob_pending_order'] ?? null;
                         if ($stalePendingId) {
-                            cancel_order((int)$stalePendingId);
+                            OrderModel::cancelOrder((int)$stalePendingId);
                             unset($_SESSION['paymob_pending_order']);
                         }
 
@@ -160,7 +163,7 @@ if (!$showSuccess && $_SERVER['REQUEST_METHOD'] === 'POST') {
                             $iframeUrl = paymob_generate_iframe_url($orderId, $total * 100, $billingData);
                             
                             // Clear cart since order is generated and user is leaving to pay
-                            cart_clear();
+                            CartModel::clear();
                             $_SESSION['paymob_pending_order'] = $orderId;
                             
                             redirect($iframeUrl);
@@ -168,13 +171,13 @@ if (!$showSuccess && $_SERVER['REQUEST_METHOD'] === 'POST') {
                             error_log('Paymob Error: ' . $e->getMessage());
                             // Paymob initiation failed — cancel the just-created order
                             // and restore stock so the user isn't left with a locked order
-                            cancel_order($orderId);
+                            OrderModel::cancelOrder($orderId);
                             $error = "Payment initiation failed: " . $e->getMessage() . " Please try again.";
 
                         }
 
                     } else {
-                        cart_clear();
+                        CartModel::clear();
                         // COD order confirmed — send confirmation email
                         require_once __DIR__ . '/includes/mailer.php';
                         send_order_email('confirmation', $orderId);
