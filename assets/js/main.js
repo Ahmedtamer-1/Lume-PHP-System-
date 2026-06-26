@@ -36,9 +36,17 @@ const btnSearch = document.getElementById('btn-search');
 let searchTimer;
 function openSearch(){searchOverlay&&searchOverlay.classList.add('active');searchInput&&searchInput.focus();}
 function closeSearch(){searchOverlay&&searchOverlay.classList.remove('active');if(searchInput)searchInput.value='';if(searchResults)searchResults.innerHTML='';}
+// Attach listeners immediately (script is at end of body, DOM is ready)
 btnSearch&&btnSearch.addEventListener('click',openSearch);
 searchCloseBtn&&searchCloseBtn.addEventListener('click',closeSearch);
 searchOverlay&&searchOverlay.addEventListener('click',(e)=>{if(e.target===searchOverlay)closeSearch();});
+// Also re-bind on DOMContentLoaded as a safety-net for any edge case
+document.addEventListener('DOMContentLoaded',function(){
+  const bs=document.getElementById('btn-search');
+  if(bs&&!bs.dataset.lumebound){bs.dataset.lumebound='1';bs.addEventListener('click',openSearch);}
+  const sc=document.getElementById('search-close');
+  if(sc&&!sc.dataset.lumebound){sc.dataset.lumebound='1';sc.addEventListener('click',closeSearch);}
+});
 if(searchInput){
   searchInput.addEventListener('input',()=>{
     clearTimeout(searchTimer);
@@ -67,8 +75,13 @@ if(searchInput){
 // ─── Account dropdown ───
 const btnAccount = document.getElementById('btn-account');
 const accountDD = document.getElementById('lume-account-dropdown');
-btnAccount&&btnAccount.addEventListener('click',(e)=>{e.stopPropagation();accountDD&&accountDD.classList.toggle('active');});
+function toggleAccountDD(e){e.stopPropagation();accountDD&&accountDD.classList.toggle('active');}
+btnAccount&&btnAccount.addEventListener('click',toggleAccountDD);
 document.addEventListener('click',()=>{accountDD&&accountDD.classList.remove('active');});
+document.addEventListener('DOMContentLoaded',function(){
+  const ba=document.getElementById('btn-account');
+  if(ba&&!ba.dataset.lumebound){ba.dataset.lumebound='1';ba.addEventListener('click',toggleAccountDD);}
+});
 
 // ─── Cart drawer ───
 const cartDrawer = document.getElementById('lume-cart-drawer');
@@ -94,6 +107,12 @@ function closeCart(){
 btnCart&&btnCart.addEventListener('click',openCart);
 cartClose&&cartClose.addEventListener('click',closeCart);
 drawerOverlay&&drawerOverlay.addEventListener('click',closeCart);
+document.addEventListener('DOMContentLoaded',function(){
+  const bc=document.getElementById('btn-cart');
+  if(bc&&!bc.dataset.lumebound){bc.dataset.lumebound='1';bc.addEventListener('click',openCart);}
+  const cc=document.getElementById('cart-close');
+  if(cc&&!cc.dataset.lumebound){cc.dataset.lumebound='1';cc.addEventListener('click',closeCart);}
+});
 
 function loadCart(){
   fetch(BASE+'/api/cart.php?action=get',{headers:{'X-Requested-With':'XMLHttpRequest'}})
@@ -186,10 +205,14 @@ document.addEventListener('DOMContentLoaded',initReveal);
 // ─── Page transition ───
 (function(){
   const curtain=document.createElement('div');curtain.className='lume-curtain';
+  // Set pointer-events:none inline so buttons are never blocked,
+  // even if components.css hasn't fully applied yet.
+  curtain.style.pointerEvents='none';
   document.body.prepend(curtain);
-  curtain.addEventListener('animationend',()=>curtain.remove());
-  // Safety net: force-remove curtain after 1.5s even if animation stalls
-  setTimeout(()=>{if(curtain.parentNode){curtain.classList.add('lume-curtain--done');setTimeout(()=>curtain.remove(),100);}},1500);
+  function removeCurtain(){if(curtain.parentNode)curtain.remove();}
+  curtain.addEventListener('animationend',removeCurtain);
+  // Safety net: hard-remove after 800ms regardless of animation state
+  setTimeout(removeCurtain,800);
 })();
 
 // ─── Toast ───

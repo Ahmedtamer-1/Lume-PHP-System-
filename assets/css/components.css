@@ -45,7 +45,10 @@
     background: transparent;
     border-right: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
-    overflow: hidden;
+    /* Use flex column so __body always renders BELOW the image,
+       regardless of how many cards are in the last row. */
+    display: flex;
+    flex-direction: column;
     transition: background .3s ease;
 }
 .lume-product-card:hover {
@@ -55,8 +58,10 @@
     display: block;
     position: relative;
     aspect-ratio: 3/4;
+    /* overflow:hidden stays here so the scale(1.05) hover is clipped correctly */
     overflow: hidden;
     background: var(--bg-card);
+    flex-shrink: 0;
 }
 .lume-product-card__img {
     width: 100%;
