@@ -201,8 +201,8 @@ if ($page < $totalPages) {
     <div class="lume-filters lume-reveal">
         <a href="<?= SITE_URL ?>/shop.php" class="lume-filter-btn <?= !$categorySlug ? 'active' : '' ?>">All</a>
         <?php foreach ($categories as $cat): ?>
-        <a href="<?= SITE_URL ?>/shop.php?category=<?= h($cat['slug']) ?>" class="lume-filter-btn <?= $categorySlug === $cat['slug'] ? 'active' : '' ?>">
-            <?= h($cat['name']) ?> <span style="font-size: 0.85em; opacity: 0.7;">(<?= (int)$cat['p_count'] ?>)</span>
+        <a href="<?= SITE_URL ?>/shop.php?category=<?= h($cat['slug'] ?? '') ?>" class="lume-filter-btn <?= $categorySlug === $cat['slug'] ? 'active' : '' ?>">
+            <?= h($cat['name'] ?? '') ?> <span style="font-size: 0.85em; opacity: 0.7;">(<?= (int)$cat['p_count'] ?>)</span>
         </a>
         <?php endforeach; ?>
     </div>
@@ -244,9 +244,9 @@ if ($page < $totalPages) {
             <?php foreach ($products as $p): ?>
             <?php $pid = (int)$p['id']; ?>
             <div class="lume-product-card lume-reveal" data-pid="<?= $pid ?>" style="display: flex; flex-direction: column;">
-                <a href="<?= SITE_URL ?>/product.php?slug=<?= h($p['slug']) ?>" class="lume-product-card__img-wrap" style="overflow: hidden;">
+                <a href="<?= SITE_URL ?>/product.php?slug=<?= h($p['slug'] ?? '') ?>" class="lume-product-card__img-wrap" style="overflow: hidden;">
                     <img src="<?= asset_url(h($displayImages[$pid] ?? product_image($p))) ?>" 
-                         alt="<?= h($p['name']) ?>" 
+                         alt="<?= h($p['name'] ?? '') ?>" 
                          class="lume-product-card__img" 
                          loading="lazy"
                          <?php if (!empty($hoverImages[$pid])): ?>
@@ -259,10 +259,10 @@ if ($page < $totalPages) {
                     <div class="lume-product-card__swatches">
                         <?php foreach ($productColors[$pid] as $cn => $cData): ?>
                         <span class="lume-product-card__swatch-dot" 
-                              style="background:<?= h($cData['hex']) ?>" 
-                              title="<?= h($cn) ?>"
+                              style="background:<?= h($cData['hex'] ?? '') ?>" 
+                              title="<?= h($cn ?? '') ?>"
                               <?php if (!empty($cData['image'])): ?>
-                              data-image="<?= asset_url(h($cData['image'])) ?>"
+                              data-image="<?= asset_url(h($cData['image'] ?? '')) ?>"
                               <?php endif; ?>></span>
                         <?php endforeach; ?>
                     </div>
@@ -270,12 +270,12 @@ if ($page < $totalPages) {
                 </a>
                 <div class="lume-product-card__body">
                     <p class="lume-product-card__cat"><?= h($p['category_name'] ?? '') ?></p>
-                    <h3 class="lume-product-card__name"><a href="<?= SITE_URL ?>/product.php?slug=<?= h($p['slug']) ?>"><?= h($p['name']) ?></a></h3>
+                    <h3 class="lume-product-card__name"><a href="<?= SITE_URL ?>/product.php?slug=<?= h($p['slug'] ?? '') ?>"><?= h($p['name'] ?? '') ?></a></h3>
                     <div class="lume-product-card__price"><?= product_price($p) ?></div>
                     
                     <div class="lume-product-card__actions">
                         <?php if (!empty($variantProducts[$pid])): ?>
-                        <a href="<?= SITE_URL ?>/product.php?slug=<?= h($p['slug']) ?>" class="btn-add-cart" style="display:block;text-align:center;text-decoration:none">Select Options</a>
+                        <a href="<?= SITE_URL ?>/product.php?slug=<?= h($p['slug'] ?? '') ?>" class="btn-add-cart" style="display:block;text-align:center;text-decoration:none">Select Options</a>
                         <?php else: ?>
                         <button class="btn-add-cart" onclick="addToCart(<?= (int)$p['id'] ?>)">Add to Bag</button>
                         <?php endif; ?>
