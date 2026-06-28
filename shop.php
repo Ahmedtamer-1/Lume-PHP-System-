@@ -85,11 +85,11 @@ $productColors = get_product_color_swatches($productIds);
 
 // Fetch categories for filter bar with count
 $catStmt = db()->query("
-    SELECT c.*, COUNT(p.id) as p_count 
+    SELECT MIN(c.id) as id, c.name, c.slug, COUNT(p.id) as p_count 
     FROM categories c 
     LEFT JOIN products p ON p.category_id = c.id AND p.is_active = 1 
-    GROUP BY c.id 
-    ORDER BY c.sort_order ASC, c.name ASC
+    GROUP BY c.name, c.slug 
+    ORDER BY MIN(c.sort_order) ASC, c.name ASC
 ");
 $categories = $catStmt->fetchAll();
 
@@ -269,17 +269,8 @@ if ($page < $totalPages) {
                     <?php endif; ?>
                 </a>
                 <div class="lume-product-card__body">
-                    <p class="lume-product-card__cat"><?= h($p['category_name'] ?? '') ?></p>
                     <h3 class="lume-product-card__name"><a href="<?= SITE_URL ?>/product.php?slug=<?= h($p['slug'] ?? '') ?>"><?= h($p['name'] ?? '') ?></a></h3>
                     <div class="lume-product-card__price"><?= product_price($p) ?></div>
-                    
-                    <div class="lume-product-card__actions">
-                        <?php if (!empty($variantProducts[$pid])): ?>
-                        <a href="<?= SITE_URL ?>/product.php?slug=<?= h($p['slug'] ?? '') ?>" class="btn-add-cart" style="display:block;text-align:center;text-decoration:none">Select Options</a>
-                        <?php else: ?>
-                        <button class="btn-add-cart" onclick="addToCart(<?= (int)$p['id'] ?>)">Add to Bag</button>
-                        <?php endif; ?>
-                    </div>
                 </div>
             </div>
             <?php endforeach; ?>
