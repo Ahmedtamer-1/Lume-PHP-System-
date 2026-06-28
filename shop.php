@@ -85,13 +85,21 @@ $productColors = get_product_color_swatches($productIds);
 
 // Fetch categories for filter bar with count
 $catStmt = db()->query("
-    SELECT MIN(c.id) as id, c.name, c.slug, COUNT(p.id) as p_count 
+    SELECT c.id, c.name, c.slug, c.sort_order, COUNT(p.id) as p_count 
     FROM categories c 
     LEFT JOIN products p ON p.category_id = c.id AND p.is_active = 1 
-    GROUP BY c.name, c.slug 
-    ORDER BY MIN(c.sort_order) ASC, c.name ASC
+    GROUP BY c.id, c.name, c.slug, c.sort_order
+    ORDER BY c.sort_order ASC, c.name ASC
 ");
-$categories = $catStmt->fetchAll();
+$rawCategories = $catStmt->fetchAll();
+$categories = [];
+$seenCats = [];
+foreach ($rawCategories as $cat) {
+    if (!isset($seenCats[$cat['name']])) {
+        $categories[] = $cat;
+        $seenCats[$cat['name']] = true;
+    }
+}
 
 // ─── Image resolution helper ───
 $displayImages = [];
