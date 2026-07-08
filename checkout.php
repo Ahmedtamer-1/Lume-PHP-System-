@@ -38,7 +38,7 @@ $freeShippingOver = (float)setting('free_shipping_over', '2000');
 $codEnabled       = setting('cod_enabled', '1') === '1';
 $codLabel         = setting('cod_label', 'Cash on Delivery');
 $codFee           = (float)setting('cod_extra_fee', '0');
-$phoneLabel       = setting('phone_display_name', 'Phone Number');
+$phoneLabel       = 'Phone Number'; // Hardcoded due to incorrect setting
 
 // Fetch active shipping zones
 $zones = db()->query('SELECT id, name, cost FROM shipping_zones WHERE is_active = 1 ORDER BY sort_order ASC, name ASC')->fetchAll();
@@ -313,18 +313,14 @@ endif;
                 <!-- Payment Method -->
                 <h2 style="font-family:var(--font-serif);font-size:1.4rem;text-transform:uppercase;margin:32px 0 16px">Payment Method</h2>
                 <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px">
-                    <label style="display:flex;align-items:center;gap:10px;padding:16px;border:1px solid var(--border);border-radius:4px;cursor:pointer" id="label-online">
-                        <input type="radio" name="payment_method" value="online" checked style="accent-color:var(--terracotta);width:18px;height:18px">
-                        <span>Online Payment (Credit / Debit)</span>
-                    </label>
                     <?php if ($codEnabled): ?>
                     <label style="display:flex;align-items:center;gap:10px;padding:16px;border:1px solid var(--border);border-radius:4px;cursor:pointer" id="label-cod">
-                        <input type="radio" name="payment_method" value="cod" style="accent-color:var(--terracotta);width:18px;height:18px">
+                        <input type="radio" name="payment_method" value="cod" checked style="accent-color:var(--terracotta);width:18px;height:18px">
                         <span><?= h($codLabel) ?> <?= $codFee > 0 ? '(+ '.money($codFee).')' : '' ?></span>
                     </label>
                     <?php endif; ?>
                     <label style="display:flex;align-items:center;gap:10px;padding:16px;border:1px solid var(--border);border-radius:4px;cursor:pointer" id="label-instapay">
-                        <input type="radio" name="payment_method" value="instapay" style="accent-color:var(--terracotta);width:18px;height:18px">
+                        <input type="radio" name="payment_method" value="instapay" <?= !$codEnabled ? 'checked' : '' ?> style="accent-color:var(--terracotta);width:18px;height:18px">
                         <span>InstaPay (Manual Transfer)</span>
                     </label>
                 </div>
