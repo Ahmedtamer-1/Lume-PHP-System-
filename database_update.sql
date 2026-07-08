@@ -64,5 +64,10 @@ CREATE TABLE IF NOT EXISTS `ad_spend` (
   `amount` decimal(10,2) NOT NULL,
   `date_logged` date NOT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- 7. InstaPay additions
+ALTER TABLE `orders`
+  MODIFY COLUMN `status` ENUM('pending','pending_payment','payment_uploaded','paid','processing','shipped','delivered','cancelled','refunded') NOT NULL DEFAULT 'pending',
+  ADD COLUMN IF NOT EXISTS `instapay_receipt` VARCHAR(255) DEFAULT NULL AFTER `payment_ref`;

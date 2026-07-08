@@ -89,13 +89,19 @@ $generalImages = [];
 if ($firstColor && !empty($colorImageArrays[$firstColor])) {
     $generalImages = $colorImageArrays[$firstColor];
 } else {
-    // No colors: fall back to product's main image + gallery
+    // No colors: use product's gallery images. 
+    // The cover image is strictly for thumbnails/listings, UNLESS there are no gallery images at all.
     $mainSrc = product_image($product);
-    $generalImages[] = $mainSrc;
     $extraImages = json_decode($product['gallery'] ?? 'null', true) ?: [];
-    foreach ($extraImages as $img) {
-        if ($img && $img !== $mainSrc) {
-            $generalImages[] = $img;
+    
+    if (empty($extraImages)) {
+        // Fallback to cover image only if gallery is completely empty to prevent broken UI
+        $generalImages[] = $mainSrc;
+    } else {
+        foreach ($extraImages as $img) {
+            if ($img && $img !== $mainSrc) {
+                $generalImages[] = $img;
+            }
         }
     }
 }

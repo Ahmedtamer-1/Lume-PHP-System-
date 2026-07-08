@@ -112,6 +112,7 @@ function _mailer_render_template(string $type, array $order): array
 
     $subjects = [
         'confirmation' => "Your order $orderNum is confirmed — $siteName",
+        'paid'         => "Payment received for order $orderNum — $siteName",
         'shipped'      => "Your order $orderNum has been shipped! — $siteName",
         'cancelled'    => "Your order $orderNum has been cancelled — $siteName",
     ];

@@ -61,7 +61,7 @@ if(!defined('DB_CHARSET')) define('DB_CHARSET', 'utf8mb4');
 
 // ── Meta Pixel ───────────────────────────────────────────────
 // Paste your Pixel ID from Meta Events Manager
-if(!defined('META_PIXEL_ID')) define('META_PIXEL_ID', '');        // e.g. '1234567890123456'
+if(!defined('META_PIXEL_ID')) define('META_PIXEL_ID', '1106454421738962');        // e.g. '1234567890123456'
 
 // ── Google OAuth ─────────────────────────────────────────────
 if(!defined('GOOGLE_CLIENT_ID')) define('GOOGLE_CLIENT_ID', '');

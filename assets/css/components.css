@@ -420,7 +420,7 @@ select.lume-form__input{appearance:none;background-image:url("data:image/svg+xml
 .lume-header__logo .lume-logo-text{font-size:1.2rem}
 .lume-section{padding:60px 0}
 .lume-products{grid-template-columns:repeat(2,1fr);gap:0}
-.lume-footer__grid{grid-template-columns:1fr}
+.lume-footer__grid{grid-template-columns:1fr;gap:32px}
 .lume-cart-table__hide-mobile{display:none}
 .lume-cart-summary{margin-left:0}
 .lume-checkout{gap:32px}

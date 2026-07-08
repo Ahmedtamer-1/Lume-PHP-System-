@@ -136,8 +136,6 @@ if (!$showSuccess && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Handle Payment Method
                     if ($paymentMethod === 'online') {
                         // ── Cancel any stale pending online order from a previous attempt ──
-                        // This happens when the user navigated back from the Paymob iframe
-                        // without completing payment, then tries to checkout again.
                         $stalePendingId = $_SESSION['paymob_pending_order'] ?? null;
                         if ($stalePendingId) {
                             cancel_order((int)$stalePendingId);
@@ -166,19 +164,21 @@ if (!$showSuccess && $_SERVER['REQUEST_METHOD'] === 'POST') {
                             redirect($iframeUrl);
                         } catch (Exception $e) {
                             error_log('Paymob Error: ' . $e->getMessage());
-                            // Paymob initiation failed — cancel the just-created order
-                            // and restore stock so the user isn't left with a locked order
                             cancel_order($orderId);
                             $error = "Payment initiation failed: " . $e->getMessage() . " Please try again.";
-
                         }
 
+                    } elseif ($paymentMethod === 'instapay') {
+                        // Update status to pending_payment
+                        db()->prepare("UPDATE orders SET status = 'pending_payment' WHERE id = ?")->execute([$orderId]);
+                        cart_clear();
+                        redirect('/instapay-upload.php?order_id=' . urlencode($orderId));
                     } else {
                         cart_clear();
                         // COD order confirmed — send confirmation email
                         require_once __DIR__ . '/includes/mailer.php';
                         send_order_email('confirmation', $orderId);
-                        // Set session and redirect — NO HTML has been output yet, so this works
+                        // Set session and redirect
                         $_SESSION['order_success'] = $orderId;
                         redirect('/checkout.php?success=1');
                     }
@@ -323,6 +323,10 @@ endif;
                         <span><?= h($codLabel) ?> <?= $codFee > 0 ? '(+ '.money($codFee).')' : '' ?></span>
                     </label>
                     <?php endif; ?>
+                    <label style="display:flex;align-items:center;gap:10px;padding:16px;border:1px solid var(--border);border-radius:4px;cursor:pointer" id="label-instapay">
+                        <input type="radio" name="payment_method" value="instapay" style="accent-color:var(--terracotta);width:18px;height:18px">
+                        <span>InstaPay (Manual Transfer)</span>
+                    </label>
                 </div>
 
                 <button type="submit" class="lume-btn lume-btn--full lume-btn--solid" id="checkout-btn">Place Order — Calculating...</button>

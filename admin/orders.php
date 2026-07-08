@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action']) && !em
         exit;
     } elseif (strpos($action, 'status_') === 0) {
         $status = substr($action, 7);
-        $validStatuses = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'];
+        $validStatuses = ['pending', 'pending_payment', 'payment_uploaded', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'];
         if (in_array($status, $validStatuses)) {
             $params = array_merge([$status], $cleanIds);
             db()->prepare("UPDATE orders SET status = ? WHERE id IN ($idPlaceholders)")->execute($params);
@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action']) && !em
 
 // ── UPDATE STATUS ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'], $_POST['status'])) {
-    $validStatuses = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'];
+    $validStatuses = ['pending', 'pending_payment', 'payment_uploaded', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'];
     $newStatus = $_POST['status'];
     if (in_array($newStatus, $validStatuses)) {
         db()->prepare('UPDATE orders SET status = ? WHERE id = ?')
@@ -57,6 +57,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'], $_POST['s
         // Send shipping notification email when order is marked shipped
         if ($newStatus === 'shipped') {
             send_order_email('shipped', (int) $_POST['order_id']);
+        } elseif ($newStatus === 'paid') {
+            send_order_email('paid', (int) $_POST['order_id']);
         }
         if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
             header('Content-Type: application/json');
@@ -170,6 +172,14 @@ if (isset($_GET['id'])) {
                 <div style="display:flex;justify-content:space-between;padding-top:12px;border-top:0.5px solid var(--border);font-weight:600;font-size:1rem;margin-top:8px">
                     <span>Total</span><span><?= money((float)$order['total']) ?></span>
                 </div>
+                <?php if (!empty($order['instapay_receipt'])): ?>
+                <div style="margin-top:16px;padding-top:12px;border-top:0.5px solid var(--border);">
+                    <h4 style="font-size:0.85rem;color:var(--gold);margin-bottom:8px;">InstaPay Receipt</h4>
+                    <a href="<?= SITE_URL ?>/<?= h($order['instapay_receipt']) ?>" target="_blank">
+                        <img src="<?= SITE_URL ?>/<?= h($order['instapay_receipt']) ?>" alt="Receipt" style="max-width:100%; border:1px solid var(--border); border-radius:4px;">
+                    </a>
+                </div>
+                <?php endif; ?>
             </div>
 
             <!-- Status Update -->
@@ -178,7 +188,7 @@ if (isset($_GET['id'])) {
                 <form method="post" style="display:flex;gap:8px">
                     <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
                     <select name="status" class="admin-form__group" style="flex:1;padding:8px 12px;background:var(--bg-input);border:0.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:.82rem">
-                        <?php foreach (['pending','paid','processing','shipped','delivered','cancelled','refunded'] as $s): ?>
+                        <?php foreach (['pending', 'pending_payment', 'payment_uploaded', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'] as $s): ?>
                         <option value="<?= $s ?>" <?= $order['status'] === $s ? 'selected' : '' ?>><?= ucfirst($s) ?></option>
                         <?php endforeach; ?>
                     </select>
@@ -216,7 +226,7 @@ if ($search) {
     $params[] = $term;
 }
 
-if ($filterStatus && in_array($filterStatus, ['pending','paid','processing','shipped','delivered','cancelled','refunded'])) {
+if ($filterStatus && in_array($filterStatus, ['pending', 'pending_payment', 'payment_uploaded', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'])) {
     $query .= ' AND status = ?';
     $params[] = $filterStatus;
 }
@@ -240,7 +250,7 @@ require_once __DIR__ . '/includes/header.php';
         <span style="font-size:.85rem;color:var(--text-muted)"><?= count($orders) ?> orders</span>
         <div class="admin-filter-tabs">
             <a href="?status_filter=&search=<?= urlencode($search) ?>" class="admin-filter-tab <?= empty($filterStatus) ? 'active' : '' ?>">All</a>
-            <?php foreach(['pending','paid','processing','shipped','delivered','cancelled','refunded'] as $st): ?>
+            <?php foreach(['pending', 'pending_payment', 'payment_uploaded', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'] as $st): ?>
             <a href="?status_filter=<?= $st ?>&search=<?= urlencode($search) ?>" class="admin-filter-tab <?= $filterStatus === $st ? 'active' : '' ?>"><?= ucfirst($st) ?></a>
             <?php endforeach; ?>
         </div>

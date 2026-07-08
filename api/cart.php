@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'update') {
         $cid = (int)($_POST['cart_id'] ?? 0);
-        $qty = (int)($_POST['quantity'] ?? 1);
+        $qty = max(1, (int)($_POST['quantity'] ?? 1));
         
         // Find cart item to check max stock
         $items = cart_items();

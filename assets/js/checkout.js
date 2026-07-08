@@ -16,8 +16,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const rowCod = document.getElementById('row-cod');
     const labelOnline = document.getElementById('label-online');
     const labelCod = document.getElementById('label-cod');
+    const labelInstapay = document.getElementById('label-instapay');
 
-    function formatMoney(amount) {
+    function formatMoneyHtml(amount) {
+        return '<span class="lume-price-val">' + parseFloat(amount).toFixed(2) + '</span><span class="lume-price-cur">' + currency + '</span>';
+    }
+
+    function formatMoneyText(amount) {
         return currency + parseFloat(amount).toFixed(2);
     }
 
@@ -38,6 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Active border styling for radio buttons
         if(labelOnline) labelOnline.style.borderColor = 'var(--border)';
         if(labelCod) labelCod.style.borderColor = 'var(--border)';
+        if(labelInstapay) labelInstapay.style.borderColor = 'var(--border)';
 
         radios.forEach(r => {
             if (r.checked) {
@@ -45,6 +51,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     isCod = true;
                     total += codFee;
                     if(labelCod) labelCod.style.borderColor = 'var(--terracotta)';
+                } else if (r.value === 'instapay') {
+                    if(labelInstapay) labelInstapay.style.borderColor = 'var(--terracotta)';
                 } else {
                     if(labelOnline) labelOnline.style.borderColor = 'var(--terracotta)';
                 }
@@ -53,17 +61,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Update UI
         if (!opt || !opt.value) {
-            txtShipping.innerText = 'Select a city';
+            txtShipping.innerHTML = 'Select a city';
         } else {
-            txtShipping.innerText = shipping === 0 ? 'Free' : formatMoney(shipping);
+            txtShipping.innerHTML = shipping === 0 ? 'Free' : formatMoneyHtml(shipping);
         }
 
         if (rowCod) {
             rowCod.style.display = (isCod && codFee > 0) ? 'flex' : 'none';
         }
 
-        txtTotal.innerText = formatMoney(total);
-        btnSubmit.innerText = 'Place Order — ' + formatMoney(total);
+        txtTotal.innerHTML = formatMoneyHtml(total);
+        btnSubmit.innerText = 'Place Order — ' + formatMoneyText(total);
     }
 
     selectZone.addEventListener('change', updateTotal);
