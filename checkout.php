@@ -355,15 +355,22 @@ endif;
 </section>
 
 <script id="checkout-config" type="application/json">
-<?= json_encode([
+<?php
+$configData = [
     'subtotal'        => $subtotal,
     'freeShippingOver'=> $freeShippingOver,
     'codFee'          => $codFee,
     'currency'        => currency_symbol(),
     'num_items'       => (int)array_sum(array_column($items, 'quantity')),
     'product_ids'     => array_values(array_unique(array_column($items, 'product_id'))),
-]) ?>
+];
+$jsonStr = json_encode($configData, JSON_INVALID_UTF8_SUBSTITUTE);
+if ($jsonStr === false) {
+    $jsonStr = '{"error": "'.json_last_error_msg().'"}';
+}
+echo $jsonStr;
+?>
 </script>
-<script src="<?= SITE_URL ?>/assets/js/checkout.js"></script>
+<script src="<?= SITE_URL ?>/assets/js/checkout.js?v=<?= time() ?>"></script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

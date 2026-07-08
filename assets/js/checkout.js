@@ -27,55 +27,63 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateTotal() {
-        let shipping = 0;
-        const opt = selectZone.options[selectZone.selectedIndex];
-        
-        if (opt && opt.value) {
-            shipping = parseFloat(opt.getAttribute('data-cost')) || 0;
-            if (freeShippingOver > 0 && subtotal >= freeShippingOver) {
-                shipping = 0;
-            }
-        }
-
-        let total = subtotal + shipping;
-        let isCod = false;
-        
-        // Active border styling for radio buttons
-        if(labelOnline) labelOnline.style.borderColor = 'var(--border)';
-        if(labelCod) labelCod.style.borderColor = 'var(--border)';
-        if(labelInstapay) labelInstapay.style.borderColor = 'var(--border)';
-
-        radios.forEach(r => {
-            if (r.checked) {
-                if (r.value === 'cod') {
-                    isCod = true;
-                    total += codFee;
-                    if(labelCod) labelCod.style.borderColor = 'var(--terracotta)';
-                } else if (r.value === 'instapay') {
-                    if(labelInstapay) labelInstapay.style.borderColor = 'var(--terracotta)';
-                } else {
-                    if(labelOnline) labelOnline.style.borderColor = 'var(--terracotta)';
+        try {
+            let shipping = 0;
+            const opt = selectZone.options[selectZone.selectedIndex];
+            
+            if (opt && opt.value) {
+                shipping = parseFloat(opt.getAttribute('data-cost')) || 0;
+                if (freeShippingOver > 0 && subtotal >= freeShippingOver) {
+                    shipping = 0;
                 }
             }
-        });
 
-        // Update UI
-        if (!opt || !opt.value) {
-            txtShipping.innerHTML = 'Select a city';
-        } else {
-            txtShipping.innerHTML = shipping === 0 ? 'Free' : formatMoneyHtml(shipping);
+            let total = subtotal + shipping;
+            let isCod = false;
+            
+            // Active border styling for radio buttons
+            if(labelOnline) labelOnline.style.borderColor = 'var(--border)';
+            if(labelCod) labelCod.style.borderColor = 'var(--border)';
+            if(labelInstapay) labelInstapay.style.borderColor = 'var(--border)';
+
+            radios.forEach(r => {
+                if (r.checked) {
+                    if (r.value === 'cod') {
+                        isCod = true;
+                        total += codFee;
+                        if(labelCod) labelCod.style.borderColor = 'var(--terracotta)';
+                    } else if (r.value === 'instapay') {
+                        if(labelInstapay) labelInstapay.style.borderColor = 'var(--terracotta)';
+                    } else {
+                        if(labelOnline) labelOnline.style.borderColor = 'var(--terracotta)';
+                    }
+                }
+            });
+
+            // Update UI
+            if (!opt || !opt.value) {
+                txtShipping.innerHTML = 'Select a city';
+            } else {
+                txtShipping.innerHTML = shipping === 0 ? 'Free' : formatMoneyHtml(shipping);
+            }
+
+            if (rowCod) {
+                rowCod.style.display = (isCod && codFee > 0) ? 'flex' : 'none';
+            }
+
+            txtTotal.innerHTML = formatMoneyHtml(total);
+            btnSubmit.innerText = 'Place Order — ' + formatMoneyText(total);
+        } catch (e) {
+            btnSubmit.innerText = 'Error: ' + e.message;
         }
-
-        if (rowCod) {
-            rowCod.style.display = (isCod && codFee > 0) ? 'flex' : 'none';
-        }
-
-        txtTotal.innerHTML = formatMoneyHtml(total);
-        btnSubmit.innerText = 'Place Order — ' + formatMoneyText(total);
     }
 
     selectZone.addEventListener('change', updateTotal);
     radios.forEach(r => r.addEventListener('change', updateTotal));
     
-    updateTotal(); // initial run
+    try {
+        updateTotal(); // initial run
+    } catch (e) {
+        btnSubmit.innerText = 'Init Error: ' + e.message;
+    }
 });
