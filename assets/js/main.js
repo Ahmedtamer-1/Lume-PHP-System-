@@ -465,8 +465,32 @@ window.lumePixel={
   const priceEl      = document.getElementById('product-price-display');
   const defaultPrice = priceEl ? priceEl.innerHTML : '';
 
-  // Auto-select first color
   const selected = { size: null, color: galleryData?.firstColor || null };
+
+  const needsSize  = sizeSwatches.length > 0;
+  const needsColor = swatches.length > 0;
+
+  // Auto-select first in-stock variant
+  const inStockVariant = variants.find(v => v.stock > 0);
+  if (inStockVariant) {
+    if (needsColor) selected.color = inStockVariant.color_name;
+    if (needsSize) selected.size = inStockVariant.size;
+
+    if (needsColor && selected.color) {
+      swatches.forEach(s => {
+        if (s.dataset.color === selected.color) s.classList.add('is-active');
+      });
+      const lbl = document.getElementById('selected-color-label');
+      if (lbl) lbl.textContent = selected.color;
+    }
+    if (needsSize && selected.size) {
+      sizeSwatches.forEach(s => {
+        if (s.dataset.size === selected.size) s.classList.add('is-active');
+      });
+      const lbl = document.getElementById('selected-size-label');
+      if (lbl) lbl.textContent = selected.size;
+    }
+  }
 
   function formatPrice(amount) {
     return '<span class="price">' + CURRENCY + parseFloat(amount).toFixed(2) + '</span>';
@@ -475,31 +499,42 @@ window.lumePixel={
   function stockHtml(stock) {
     if(!config.showStock) return '';
     if(stock <= 0) return '&#10005; Out of stock';
-    if(stock <= config.lowThreshold) return '&#9888; Low stock — only ' + stock + ' left';
-    return '&#10003; In stock (' + stock + ' available)';
+    return '&#10003; In stock';
   }
 
   function update() {
-    const needsSize  = sizeSwatches.length > 0;
-    const needsColor = swatches.length > 0;
-
-    if(needsSize && selected.color) {
-      sizeSwatches.forEach(opt => {
-        const sz = opt.dataset.size;
-        const v = variants.find(v => v.color_name === selected.color && v.size === sz);
-        opt.classList.toggle('is-disabled', !v || v.stock <= 0);
-      });
-    } else if(needsSize) {
-      sizeSwatches.forEach(opt => opt.classList.remove('is-disabled'));
+    if(needsSize) {
+      if(needsColor && selected.color) {
+        sizeSwatches.forEach(opt => {
+          const sz = opt.dataset.size;
+          const v = variants.find(v => v.color_name === selected.color && v.size === sz);
+          opt.classList.toggle('is-disabled', !v || v.stock <= 0);
+        });
+      } else if(!needsColor) {
+        sizeSwatches.forEach(opt => {
+          const sz = opt.dataset.size;
+          const v = variants.find(v => v.size === sz);
+          opt.classList.toggle('is-disabled', !v || v.stock <= 0);
+        });
+      } else {
+        sizeSwatches.forEach(opt => opt.classList.remove('is-disabled'));
+      }
     }
 
-    if(selected.size && needsColor) {
-      swatches.forEach(s => {
-        const v = variants.find(v => v.size === selected.size && v.color_name === s.dataset.color);
-        s.classList.toggle('is-disabled', !v || v.stock <= 0);
-      });
-    } else {
-      swatches.forEach(s => s.classList.remove('is-disabled'));
+    if(needsColor) {
+      if(needsSize && selected.size) {
+        swatches.forEach(s => {
+          const v = variants.find(v => v.size === selected.size && v.color_name === s.dataset.color);
+          s.classList.toggle('is-disabled', !v || v.stock <= 0);
+        });
+      } else if(!needsSize) {
+        swatches.forEach(s => {
+          const v = variants.find(v => v.color_name === s.dataset.color);
+          s.classList.toggle('is-disabled', !v || v.stock <= 0);
+        });
+      } else {
+        swatches.forEach(s => s.classList.remove('is-disabled'));
+      }
     }
 
     let matched = null;

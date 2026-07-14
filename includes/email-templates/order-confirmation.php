@@ -65,7 +65,7 @@ $accent    = '#C4714A';
               <tr>
                 <td style="padding:16px 20px;border-top:1px solid <?= $border ?>;border-right:1px solid <?= $border ?>;">
                   <p style="margin:0 0 4px;font-size:10px;text-transform:uppercase;letter-spacing:.15em;color:<?= $muted ?>;">Payment</p>
-                  <p style="margin:0;font-size:14px;color:<?= $text ?>"><?= $order['payment_method'] === 'online' ? 'Online Card' : 'Cash on Delivery' ?></p>
+                  <p style="margin:0;font-size:14px;color:<?= $text ?>"><?= $order['payment_method'] === 'online' ? 'Online Card' : ($order['payment_method'] === 'instapay' ? 'InstaPay' : 'Cash on Delivery') ?></p>
                 </td>
                 <td style="padding:16px 20px;border-top:1px solid <?= $border ?>;">
                   <p style="margin:0 0 4px;font-size:10px;text-transform:uppercase;letter-spacing:.15em;color:<?= $muted ?>;">Ship To</p>
@@ -158,10 +158,33 @@ $accent    = '#C4714A';
                style="display:inline-block;padding:14px 36px;background:<?= $gold ?>;color:#0a0a0a;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;border-radius:2px;margin:0 5px 10px;">
               Track Order
             </a>
+            
+            <?php if ($order['payment_method'] === 'instapay'): 
+                $waNum = setting('instapay_whatsapp', '');
+                $ipa = setting('instapay_username', 'your_instapay_username@instapay');
+                $waLink = "https://wa.me/" . preg_replace('/[^0-9]/', '', $waNum) . "?text=" . urlencode("Hello, here is my payment receipt for order #" . $order['order_number']);
+            ?>
+            <div style="background:<?= $bg ?>;border:1px solid <?= $border ?>;border-radius:6px;padding:24px;margin-top:24px;text-align:left;">
+                <h3 style="margin:0 0 16px;color:<?= $gold ?>;font-size:16px;">Complete Your Payment</h3>
+                <p style="margin:0 0 16px;color:<?= $muted ?>;font-size:14px;line-height:1.6;">Your order has been placed, but we need you to complete the payment via InstaPay to process it.</p>
+                <ol style="color:<?= $muted ?>;font-size:14px;line-height:1.6;margin:0 0 24px 20px;padding:0;">
+                    <li style="margin-bottom:8px">Send exactly <strong style="color:<?= $gold ?>"><?= htmlspecialchars(money((float)$order['total'])) ?></strong> to the following InstaPay Address:<br><strong style="color:<?= $text ?>;display:inline-block;margin-top:4px;padding:4px 8px;background:#111;border:1px solid <?= $border ?>;border-radius:4px;"><?= htmlspecialchars($ipa) ?></strong></li>
+                    <li style="margin-bottom:8px">Take a screenshot of the confirmation screen.</li>
+                    <li>Click the button below to open WhatsApp and send us the screenshot.</li>
+                </ol>
+                <div style="text-align:center;">
+                  <a href="<?= $waLink ?>"
+                     style="display:inline-block;padding:14px 36px;background:#25D366;color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;border-radius:2px;margin:0 5px 10px;">
+                    Send Receipt via WhatsApp
+                  </a>
+                </div>
+            </div>
+            <?php else: ?>
             <a href="<?= $siteUrl ?>/shop.php"
                style="display:inline-block;padding:14px 36px;background:transparent;border:1px solid <?= $gold ?>;color:<?= $gold ?>;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;border-radius:2px;margin:0 5px 10px;">
               Continue Shopping
             </a>
+            <?php endif; ?>
           </td>
         </tr>
 

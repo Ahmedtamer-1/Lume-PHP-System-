@@ -463,6 +463,21 @@ require_once __DIR__ . '/includes/header.php';
                 <span class="admin-form__hint">0 = never free shipping</span>
             </div>
         </div>
+        
+        <hr style="border:none;border-top:1px solid var(--a-border);margin:24px 0">
+        <h3 style="font-size:.9rem;font-weight:600;margin-bottom:16px;">InstaPay Setup</h3>
+        
+        <div class="admin-form__row-2">
+            <div class="admin-form__group">
+                <label>InstaPay Address (IPA)</label>
+                <input type="text" name="instapay_username" value="<?= h($s('instapay_username', 'your_instapay_username@instapay')) ?>">
+            </div>
+            <div class="admin-form__group">
+                <label>WhatsApp Number</label>
+                <input type="text" name="instapay_whatsapp" value="<?= h($s('instapay_whatsapp', '201000000000')) ?>">
+                <span class="admin-form__hint">Include country code (e.g. 20 for Egypt) without + or 00.</span>
+            </div>
+        </div>
     </div>
 
     <!-- ── Paymob Integration ── -->

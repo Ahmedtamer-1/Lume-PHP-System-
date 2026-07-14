@@ -242,11 +242,7 @@ $sizeChart = $product['size_chart'] ?? null;
             <?php if ($showStock): ?>
             <p class="lume-product-single__stock in-stock" id="stock-info">
                 <?php if (!$hasVariants): ?>
-                    <?php if ($stockDisplay <= $lowThreshold && $stockDisplay > 0): ?>
-                        &#9888; Low stock — only <?= $stockDisplay ?> left
-                    <?php else: ?>
-                        &#10003; In stock (<?= $stockDisplay ?> available)
-                    <?php endif; ?>
+                    &#10003; In stock
                 <?php endif; ?>
             </p>
             <?php else: ?>
