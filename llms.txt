@@ -1,0 +1,30 @@
+# Lume PHP System
+
+Lume is a bespoke, vanilla PHP e-commerce platform built specifically for luxury fashion brands. It uses no heavy frameworks (no Laravel, no Symfony), relying purely on native PHP (8.0+) features, procedural functional approaches, and clean vanilla Javascript/CSS for maximum performance and complete control.
+
+## Architecture & Stack
+- **Backend:** Vanilla PHP 8+. Uses procedural, functional patterns primarily located in `includes/functions.php`.
+- **Database:** MySQL/MariaDB accessed via PDO. Connections are established in `config/db.php`.
+- **Frontend:** Vanilla HTML5, CSS3 with native variables (`assets/css/base.css`, `components.css`, `variants.css`), and Vanilla Javascript (`assets/js/main.js`). No frontend frameworks like React or Vue are used.
+- **Admin Panel:** Native PHP-based dashboards located in the `/admin/` directory.
+- **Routing:** Direct file-based routing. For example, `/product.php?slug=...` or `/shop.php`.
+- **State Management:** Session-based authentication and cart state.
+
+## Directory Structure
+- `/admin/` - The entire secure backend dashboard for managing products, categories, orders, and homepage sections.
+- `/api/` - Endpoint scripts that handle AJAX requests (e.g., adding to cart, checkout processing, Paymob webhook callbacks). Returns JSON.
+- `/assets/` - Static assets including CSS, JS, images, and user uploads.
+- `/config/` - Core configuration files (`config.php`, `db.php`) and `.env` fallback handling.
+- `/includes/` - Reusable layout components (`header.php`, `footer.php`) and the core logic file (`functions.php`).
+- `/*` (Root) - Public-facing pages like `index.php`, `shop.php`, `product.php`, `checkout.php`.
+
+## Key Features
+- **Dynamic Homepage Builder:** An admin interface that allows arranging and configuring predefined sections (hero, featured products, category grid) dynamically.
+- **Paymob Integration:** Native integration with the Paymob payment gateway via `api/paymob_callback.php` and `checkout-paymob.php`.
+- **Variant Management:** Products support robust variant management (size, color, stock) handled dynamically.
+- **Activity Logging:** A robust activity log system tracks all admin actions (logging in, creating products, fulfilling orders) via `log_activity()`.
+
+## Core Philosophies
+1. **Zero Dependencies:** Avoid pulling in Composer packages unless absolutely necessary.
+2. **Readability & Simplicity:** Use clear, procedural functions over complex, heavily-abstracted OOP classes.
+3. **High-Performance UI:** The frontend must load instantly, leveraging modern CSS features (grid, custom properties) and native JS micro-animations without bloated libraries.
