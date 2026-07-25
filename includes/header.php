@@ -78,6 +78,11 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <!-- Canonical URL -->
     <link rel="canonical" href="<?= h($canonicalUrl) ?>">
 
+    <?php if (!empty($preloadImage)): ?>
+    <!-- LCP Optimization -->
+    <link rel="preload" as="image" href="<?= h($preloadImage) ?>">
+    <?php endif; ?>
+
     <!-- Open Graph -->
     <meta property="og:type"        content="<?= h($ogType) ?>">
     <meta property="og:title"       content="<?= h($pageTitle) ?>">

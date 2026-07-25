@@ -193,14 +193,7 @@ function initReveal(){
 document.addEventListener('DOMContentLoaded',initReveal);
 
 // ─── Hero parallax ───
-(function(){
-  const heroBg=document.querySelector('.lume-hero__bg');
-  if(!heroBg)return;
-  let ticking=false;
-  window.addEventListener('scroll',()=>{
-    if(!ticking){requestAnimationFrame(()=>{heroBg.style.transform='translateY('+window.scrollY*0.35+'px)';ticking=false;});ticking=true;}
-  },{passive:true});
-})();
+// Parallax removed due to scroll performance.
 
 // ─── Page transition ───
 (function(){

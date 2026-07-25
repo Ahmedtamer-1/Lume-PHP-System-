@@ -1,10 +1,7 @@
 <?php
 require_once __DIR__ . '/includes/functions.php';
-$pageTitle = setting('site_name', SITE_NAME) . ' — ' . setting('site_tagline', SITE_TAGLINE);
-$pageDescription = setting('default_meta_description', 'Discover ' . setting('site_name', SITE_NAME) . ' — a luxury fashion brand.');
-require_once __DIR__ . '/includes/header.php';
 
-// Load dynamic homepage sections from DB
+// Load dynamic homepage sections from DB FIRST so we can preload the hero image
 $sections = [];
 try {
     $sections = get_homepage_sections(true);
@@ -23,6 +20,20 @@ if (empty($sections)) {
         ['section_type' => 'brand_story',       'title' => 'Born from Light', 'subtitle' => null, 'content' => "LUMEEGY was born from a simple belief — that style is a ritual, not a routine. Rooted in the spirit of Egyptian elegance, each piece is crafted to bring a moment of luxury into your everyday.\n\nFrom our signature silhouettes to carefully selected fabrics, every detail is designed to illuminate — your look, your confidence, your spirit.", 'button_text' => 'Read Our Story', 'button_url' => '/about.php', 'settings' => '{"eyebrow":"Our Story","image":"assets/images/hero-bg.png"}', 'image' => null],
     ];
 }
+
+// Find the hero image to preload
+foreach ($sections as $section) {
+    if ($section['section_type'] === 'hero') {
+        $sett = json_decode($section['settings'] ?? '{}', true) ?: [];
+        $bgImage = !empty($section['image']) ? $section['image'] : ($sett['bg_image'] ?? 'assets/images/hero-bg.png');
+        $preloadImage = SITE_URL . '/' . $bgImage;
+        break;
+    }
+}
+
+$pageTitle = setting('site_name', SITE_NAME) . ' — ' . setting('site_tagline', SITE_TAGLINE);
+$pageDescription = setting('default_meta_description', 'Discover ' . setting('site_name', SITE_NAME) . ' — a luxury fashion brand.');
+require_once __DIR__ . '/includes/header.php';
 
 foreach ($sections as $section):
     $sett = json_decode($section['settings'] ?? '{}', true) ?: [];
@@ -79,7 +90,7 @@ foreach ($sections as $section):
         <?php foreach ($featured as $p): ?>
         <div class="lume-product-card lume-reveal">
             <a href="<?= SITE_URL ?>/product.php?slug=<?= h($p['slug']) ?>" class="lume-product-card__img-wrap">
-                <img src="<?= product_image($p) ?>" alt="<?= h($p['name']) ?>" class="lume-product-card__img" loading="lazy">
+                <img src="<?= product_image($p) ?>" alt="<?= h($p['name']) ?>" width="600" height="600" class="lume-product-card__img" loading="lazy">
                 <?php if (!empty($p['sale_price'])): ?>
                 <span class="lume-product-card__badge">Sale</span>
                 <?php endif; ?>
@@ -112,8 +123,8 @@ foreach ($sections as $section):
 ?>
 <section class="lume-section container" id="story" style="<?= $padStyle ?>">
     <div class="lume-about-intro">
-        <div class="lume-about-intro__img lume-reveal-left">
-            <img src="<?= SITE_URL ?>/<?= h($storyImg) ?>" alt="<?= h($section['title'] ?? 'Brand story') ?>" loading="lazy">
+        <div class="lume-brand-story__image-wrap lume-reveal">
+            <img src="<?= SITE_URL ?>/<?= h($storyImg) ?>" alt="<?= h($section['title'] ?? 'Brand story') ?>" width="1200" height="1200" loading="lazy">
         </div>
         <div class="lume-about-intro__text lume-reveal-right">
             <p class="lume-section__eyebrow"><?= h($eyebrow) ?></p>
@@ -137,7 +148,9 @@ foreach ($sections as $section):
 ?>
 <section class="lume-section" style="padding:0; <?= $padStyle ?>">
     <div style="position:relative;aspect-ratio:21/9;overflow:hidden;background:#111">
-        <img src="<?= SITE_URL ?>/<?= h($bannerImg) ?>" alt="<?= h($section['title'] ?? '') ?>" loading="lazy" style="width:100%;height:100%;object-fit:cover;opacity:.7">
+        <div class="lume-banner__bg lume-reveal">
+            <img src="<?= SITE_URL ?>/<?= h($bannerImg) ?>" alt="<?= h($section['title'] ?? '') ?>" width="1920" height="1080" loading="lazy" style="width:100%;height:100%;object-fit:cover;opacity:.7">
+        </div>
         <?php if (!empty($section['title'])): ?>
         <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px">
             <h2 style="font-family:var(--font-serif);font-size:clamp(2rem,5vw,4rem);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px" class="lume-reveal"><?= h($section['title']) ?></h2>
@@ -215,9 +228,9 @@ foreach ($sections as $section):
     
     <div class="lume-social-carousel lume-reveal" style="margin-top: <?= empty($section['title']) ? '0' : '48px' ?>;">
         <div class="lume-social-carousel__track">
-            <?php foreach ($imagesList as $imgUrl): ?>
-            <div class="lume-social-carousel__item">
-                <img src="<?= SITE_URL ?>/<?= ltrim(h($imgUrl), '/') ?>" alt="Social image" loading="lazy">
+            <?php $i = 0; foreach ($imagesList as $imgUrl): ?>
+            <div class="lume-social-carousel__item" style="transition-delay:<?= $i++*0.1 ?>s">
+                <img src="<?= SITE_URL ?>/<?= ltrim(h($imgUrl), '/') ?>" alt="Social image" width="400" height="400" loading="lazy">
             </div>
             <?php endforeach; ?>
         </div>

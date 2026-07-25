@@ -49,9 +49,7 @@ $s = function(string $key, string $default = '') use ($settings) {
 require_once __DIR__ . '/includes/header.php';
 ?>
 
-<!-- Include Quill.js for Rich Text Editing -->
-<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+<!-- Removed Quill.js dependency for better reliability -->
 
 <style>
 .admin-tabs { display: flex; gap: 16px; margin-bottom: 24px; border-bottom: 1px solid var(--a-border); padding-bottom: 12px; }
@@ -61,12 +59,6 @@ require_once __DIR__ . '/includes/header.php';
 .admin-tab-content { display: none; }
 .admin-tab-content.active { display: block; animation: fadeIn .3s ease; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-.ql-container { font-family: var(--font-sans, inherit) !important; font-size: 14px; background: var(--a-bg); border-color: var(--a-border) !important; color: var(--a-text); }
-.ql-toolbar { background: var(--a-surface); border-color: var(--a-border) !important; }
-.ql-editor { min-height: 400px; }
-.ql-snow .ql-stroke { stroke: var(--a-muted); }
-.ql-snow .ql-fill { fill: var(--a-muted); }
-.ql-snow .ql-picker { color: var(--a-muted); }
 </style>
 
 <?php if ($success): ?>
@@ -188,8 +180,8 @@ require_once __DIR__ . '/includes/header.php';
         <div class="admin-settings-section" style="margin-bottom:32px;padding:24px;background:var(--a-surface);border:1px solid var(--a-border);border-radius:var(--a-radius)">
             <div class="admin-form__group">
                 <label>Privacy Policy Content</label>
-                <input type="hidden" name="page_privacy_content" id="input-privacy">
-                <div id="editor-privacy"><?= $s('page_privacy_content') ?></div>
+                <textarea name="page_privacy_content" rows="15" style="width:100%;font-family:var(--font-sans, inherit);font-size:14px;padding:12px;background:var(--a-bg);border:1px solid var(--a-border);color:var(--a-text);border-radius:var(--a-radius)"><?= h($s('page_privacy_content')) ?></textarea>
+                <span class="admin-form__hint" style="color:var(--a-accent)">Leave blank to use the default policy. You can use HTML tags to format your content.</span>
             </div>
         </div>
     </div>
@@ -199,8 +191,8 @@ require_once __DIR__ . '/includes/header.php';
         <div class="admin-settings-section" style="margin-bottom:32px;padding:24px;background:var(--a-surface);border:1px solid var(--a-border);border-radius:var(--a-radius)">
             <div class="admin-form__group">
                 <label>Terms of Service Content</label>
-                <input type="hidden" name="page_terms_content" id="input-terms">
-                <div id="editor-terms"><?= $s('page_terms_content') ?></div>
+                <textarea name="page_terms_content" rows="15" style="width:100%;font-family:var(--font-sans, inherit);font-size:14px;padding:12px;background:var(--a-bg);border:1px solid var(--a-border);color:var(--a-text);border-radius:var(--a-radius)"><?= h($s('page_terms_content')) ?></textarea>
+                <span class="admin-form__hint" style="color:var(--a-accent)">Leave blank to use the default terms. You can use HTML tags to format your content.</span>
             </div>
         </div>
     </div>
@@ -210,8 +202,8 @@ require_once __DIR__ . '/includes/header.php';
         <div class="admin-settings-section" style="margin-bottom:32px;padding:24px;background:var(--a-surface);border:1px solid var(--a-border);border-radius:var(--a-radius)">
             <div class="admin-form__group">
                 <label>Shipping & Returns Content</label>
-                <input type="hidden" name="page_shipping_content" id="input-shipping">
-                <div id="editor-shipping"><?= $s('page_shipping_content') ?></div>
+                <textarea name="page_shipping_content" rows="15" style="width:100%;font-family:var(--font-sans, inherit);font-size:14px;padding:12px;background:var(--a-bg);border:1px solid var(--a-border);color:var(--a-text);border-radius:var(--a-radius)"><?= h($s('page_shipping_content')) ?></textarea>
+                <span class="admin-form__hint" style="color:var(--a-accent)">Leave blank to use the default policy. You can use HTML tags to format your content.</span>
             </div>
         </div>
     </div>
@@ -333,28 +325,7 @@ document.getElementById('media-picker-modal').addEventListener('click', function
     if (e.target === this) closePagesMediaPicker(); 
 });
 
-// Quill Rich Text Editors
-const quillOptions = {
-    theme: 'snow',
-    modules: {
-        toolbar: [
-            [{ 'header': [2, 3, false] }],
-            ['bold', 'italic', 'underline'],
-            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-            ['link', 'clean']
-        ]
-    }
-};
-const quillPrivacy = new Quill('#editor-privacy', quillOptions);
-const quillTerms = new Quill('#editor-terms', quillOptions);
-const quillShipping = new Quill('#editor-shipping', quillOptions);
-
-// On form submit, copy Quill HTML to hidden inputs
-document.getElementById('pages-form').addEventListener('submit', function() {
-    document.getElementById('input-privacy').value = quillPrivacy.root.innerHTML;
-    document.getElementById('input-terms').value = quillTerms.root.innerHTML;
-    document.getElementById('input-shipping').value = quillShipping.root.innerHTML;
-});
+// Textareas handle their own values on submit natively
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

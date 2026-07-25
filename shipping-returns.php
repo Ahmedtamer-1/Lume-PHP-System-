@@ -15,7 +15,7 @@ $freeShipOver = setting('free_shipping_over', '2000');
         <div class="lume-divider lume-reveal" style="margin-bottom:12px"></div>
 
         <div class="lume-legal__body lume-reveal">
-            <?php $content = setting('page_shipping_content'); if ($content): echo $content; else: ?>
+            <?php $content = setting('page_shipping_content'); if (trim($content) && trim($content) !== '<p><br></p>'): echo $content; else: ?>
 
             <h2>Shipping</h2>
 

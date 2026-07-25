@@ -15,7 +15,7 @@ $contactEmail = setting('contact_email', 'hello@lumeegy.com');
         <p class="lume-legal__updated lume-reveal">Last updated: <?= date('F j, Y') ?></p>
 
         <div class="lume-legal__body lume-reveal">
-            <?php $content = setting('page_terms_content'); if ($content): echo $content; else: ?>
+            <?php $content = setting('page_terms_content'); if (trim($content) && trim($content) !== '<p><br></p>'): echo $content; else: ?>
 
             <h2>1. Acceptance of Terms</h2>
             <p>By accessing or using the <?= h($brandName) ?> website, you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any part of these terms, you may not use our website.</p>

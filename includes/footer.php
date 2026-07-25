@@ -105,5 +105,92 @@ $marqueeText    = setting('marquee_text', '');
 
 <!-- Scripts -->
 <script src="<?= SITE_URL ?>/assets/js/main.js?v=<?= filemtime(ROOT_PATH.'/assets/js/main.js') ?>"></script>
+<style>
+/* Elevate content above the background layer */
+section, main, .container, footer {
+    position: relative;
+    z-index: 1;
+}
+
+.lume-hieroglyphs-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 0; /* Behind relative sections, but above html background */
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.lume-h-char {
+    position: absolute;
+    color: var(--gold);
+    opacity: 0.05;
+    font-family: serif;
+    will-change: opacity, color;
+    animation: hieroglyph-wave 6s infinite linear;
+}
+
+@keyframes hieroglyph-wave {
+    0% { opacity: 0.05; color: var(--gold); }
+    10% { opacity: 0.4; color: #fff; }
+    20% { opacity: 0.05; color: var(--gold); }
+    100% { opacity: 0.05; }
+}
+</style>
+<script>
+window.addEventListener('load', function() {
+    const bgContainer = document.createElement('div');
+    bgContainer.className = 'lume-hieroglyphs-bg';
+    // Prepend to be the first element, rendering behind others
+    document.body.prepend(bgContainer);
+
+    const hieroglyphs = [
+        '𓀀', '𓀁', '𓀂', '𓀃', '𓀄', '𓀅', '𓀆', '𓀇', '𓀈', '𓀉', 
+        '𓃀', '𓃁', '𓃂', '𓃃', '𓃄', '𓃅', '𓃆', '𓃇', '𓃈', '𓃉', 
+        '𓄀', '𓄁', '𓄂', '𓄃', '𓄄', '𓄅', '𓄆', '𓄇', '𓄈', '𓄉',
+        '𓅀', '𓅁', '𓅂', '𓅃', '𓅄', '𓅅', '𓅆', '𓅇', '𓅈', '𓅉',
+        '𓆀', '𓆁', '𓆂', '𓆃', '𓆄', '𓆅', '𓆆', '𓆇', '𓆈', '𓆉'
+    ];
+
+    const docHeight = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+    bgContainer.style.height = docHeight + 'px';
+
+    const colWidth = 90;
+    const rowHeight = 90;
+    const numCols = Math.ceil(window.innerWidth / colWidth);
+    const numRows = Math.ceil(docHeight / rowHeight);
+    
+    for (let i = 0; i < numCols; i++) {
+        for (let j = 0; j < numRows; j++) {
+            // Very occasional gaps to look like worn ancient text, but mostly structured
+            if (Math.random() > 0.85) continue;
+
+            const span = document.createElement('span');
+            span.className = 'lume-h-char';
+            span.textContent = hieroglyphs[Math.floor(Math.random() * hieroglyphs.length)];
+            
+            // Perfect grid alignment
+            const x = i * colWidth;
+            const y = j * rowHeight;
+            
+            span.style.left = `${x}px`;
+            span.style.top = `${y}px`;
+            
+            // Adjusted size
+            span.style.fontSize = `2.5rem`;
+
+            const waveSpeed = 250; 
+            const baseDelay = x / waveSpeed;
+            // Slight delay variation so the wave isn't a rigid perfectly straight line
+            const randomDelay = baseDelay + (Math.random() * 0.2);
+            
+            span.style.animationDelay = `-${randomDelay % 6}s`;
+            
+            bgContainer.appendChild(span);
+        }
+    }
+});
+</script>
 </body>
 </html>

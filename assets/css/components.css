@@ -1,6 +1,6 @@
 /* HERO */
 .lume-hero{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.lume-hero__bg{position:absolute;top:0;left:0;width:100%;height:110%;background-size:cover;background-position:center;z-index:0;will-change:transform}
+.lume-hero__bg{position:absolute;top:0;left:0;width:100%;height:100%;background-size:cover;background-position:center;z-index:0}
 .lume-hero__overlay{position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(180deg,rgba(10,10,10,.3)0%,rgba(10,10,10,.6)60%,rgba(10,10,10,.95)100%);z-index:1}
 .lume-hero__content{position:relative;z-index:2;text-align:center;padding:0 24px}
 .lume-hero__title{font-family:var(--font-serif);font-size:clamp(3rem,8vw,8rem);font-weight:900;text-transform:uppercase;letter-spacing:.04em;color:var(--cream);line-height:1;margin-bottom:16px;opacity:0;transform:translateY(30px) scale(.96);animation:heroTitleIn 1s .3s cubic-bezier(.16,1,.3,1) forwards}
